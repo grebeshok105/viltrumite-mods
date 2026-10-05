@@ -1018,7 +1018,6 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
       if (!player.isRemoved() && player.isAlive()) {
          LivingEntity currentTarget;
          currentTarget = this.getGrabbedTarget();
-         label153:
          if (!player.level().isClientSide() && this.isTryingToGrab() && currentTarget == null) {
             Vec3 eyePos = player.getEyePosition();
             Vec3 lookDir = player.getLookAngle().normalize();
@@ -1033,13 +1032,9 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
             );
             Iterator targetBox = player.level().getEntities(player, grabBox).iterator();
 
-            while (true) {
-               if (!targetBox.hasNext()) {
-                  break label153;
-               }
-
-               Entity entity = (Entity)targetBox.next();
-               if (entity instanceof LivingEntity target && target.isAlive()) {
+             while (targetBox.hasNext()) {
+                Entity entity = (Entity)targetBox.next();
+                if (entity instanceof LivingEntity target && target.isAlive()) {
                   boolean isAlreadyGrabbed = false;
 
                   for (Player p : player.level().players()) {
@@ -1049,36 +1044,39 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
                      }
                   }
 
-                  if (!isAlreadyGrabbed) {
-                     if (!(target instanceof ViltrumiteCorePlayer targetCore)) {
-                        break;
-                     }
+                   if (isAlreadyGrabbed) {
+                      continue;
+                   }
 
-                     if (targetCore.getGrabbedTarget() == null) {
-                        if (targetCore.isTryingToGrab()) {
-                           targetCore.setTryingToGrab(false);
-                        }
-                        break;
+                   if (target instanceof ViltrumiteCorePlayer targetCore) {
+                      // don't grab someone who is already holding a target
+                      if (targetCore.getGrabbedTarget() != null) {
+                         continue;
+                      }
+
+                      if (targetCore.isTryingToGrab()) {
+                         targetCore.setTryingToGrab(false);
+                      }
+                   }
+
+                  this.setGrabbedTarget(target);
+                  this.setTryingToGrab(false);
+                  player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.IRON_GOLEM_ATTACK, SoundSource.PLAYERS, 1.0F, 0.5F);
+                  if (target instanceof Mob mob) {
+                     mob.setNoAi(true);
+                  }
+
+                  if (target instanceof ServerPlayer grabbedPlayer) {
+                     CoreMessages.sendToPlayer(new PlayerGrabStateSyncS2CPacket(true, player.getUUID()), grabbedPlayer);
+                     if (grabbedPlayer instanceof ViltrumiteFlightPlayer flightPlayer) {
+                        flightPlayer.stopFlight();
                      }
                   }
-               }
-            }
 
-            this.setGrabbedTarget(target);
-            this.setTryingToGrab(false);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.IRON_GOLEM_ATTACK, SoundSource.PLAYERS, 1.0F, 0.5F);
-            if (target instanceof Mob mob) {
-               mob.setNoAi(true);
-            }
-
-            if (target instanceof ServerPlayer grabbedPlayer) {
-               CoreMessages.sendToPlayer(new PlayerGrabStateSyncS2CPacket(true, player.getUUID()), grabbedPlayer);
-               if (grabbedPlayer instanceof ViltrumiteFlightPlayer flightPlayer) {
-                  flightPlayer.stopFlight();
-               }
-            }
-
-            target.addTag("ViltrumiteGrabbed");
+                  target.addTag("ViltrumiteGrabbed");
+                   break;
+                }
+             }
          }
 
          if (currentTarget != null) {
