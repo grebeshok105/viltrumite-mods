@@ -44,6 +44,8 @@ mixin {
 
 repositories {
     maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+    // GeckoLib (GeckoLibGrabRendererMixin targets GeoEntityRenderer)
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
 }
 
 dependencies {
@@ -51,6 +53,8 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     // compile against flight's dev (non-reobf) classes; at runtime it is loaded as a mod via runs.mods
     compileOnly files(project(':viltrumiteflight').sourceSets.main.output)
+    // optional integration: only needed to compile, not bundled
+    compileOnly fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
 }
 
 processResources {
