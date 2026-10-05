@@ -1,0 +1,75 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle'
+    id 'org.spongepowered.mixin'
+}
+
+// core uses classes from viltrumiteflight
+evaluationDependsOn(':viltrumiteflight')
+
+version = '1.10.3'
+group = 'dev.baranhan.viltrumitecore'
+base { archivesName = 'viltrumitecore-forge' }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
+    copyIdeResources = true
+
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            // load viltrumiteflight's mixins too, since both mods run together here
+            args '-mixin.config=viltrumiteflight.mixins.json', '-mixin.config=viltrumiteflight.client.mixins.json'
+            mods {
+                viltrumitecore { source sourceSets.main }
+                viltrumiteflight { source project(':viltrumiteflight').sourceSets.main }
+            }
+        }
+        client {}
+        server { args '--nogui' }
+    }
+}
+
+mixin {
+    add sourceSets.main, 'viltrumitecore.refmap.json'
+    config 'viltrumitecore.mixins.json'
+    config 'viltrumitecore.client.mixins.json'
+}
+
+repositories {
+    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    // compile against flight's dev (non-reobf) classes; at runtime it is loaded as a mod via runs.mods
+    compileOnly files(project(':viltrumiteflight').sourceSets.main.output)
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') {
+        filter { line -> line.replace('@MOD_VERSION@', project.version.toString()) }
+    }
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title'   : 'viltrumitecore',
+            'Specification-Version' : '1',
+            'Implementation-Title'  : 'viltrumitecore',
+            'Implementation-Version': project.version,
+        ])
+    }
+    finalizedBy 'reobfJar'
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
