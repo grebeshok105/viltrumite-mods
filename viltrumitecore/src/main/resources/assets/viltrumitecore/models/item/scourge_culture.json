@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": { "layer0": "viltrumitecore:item/scourge_culture" }
+}

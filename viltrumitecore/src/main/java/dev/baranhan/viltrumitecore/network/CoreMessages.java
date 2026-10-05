@@ -1,0 +1,181 @@
+package dev.baranhan.viltrumitecore.network;
+
+import dev.baranhan.viltrumitecore.network.packet.BarrageHitS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.BarrageStateC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.BlockToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.BlockVFXS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.ChopBleedS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.ChopC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.ChopHitS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.CoreConfigSyncC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.DashToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.EquipAbilityC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.FlightConfigSyncC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.GrabToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.GrabbedPosSyncS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.HandPosSyncC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.MeltedBlocksS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.OpenRaceScreenS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.PlayerGrabStateSyncS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.PunchC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.RaceChoiceC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.SpawnNpcC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.SpeedToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.SwapAbilityBarC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.ThunderclapC2SPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.NetworkRegistry.ChannelBuilder;
+import net.minecraftforge.network.simple.SimpleChannel;
+
+public class CoreMessages {
+   private static SimpleChannel INSTANCE;
+   private static int packetId = 0;
+
+   private static int id() {
+      return packetId++;
+   }
+
+   public static void register() {
+      SimpleChannel net = ChannelBuilder.named(new ResourceLocation("viltrumitecore", "messages"))
+         .networkProtocolVersion(() -> "1.0")
+         .clientAcceptedVersions(s -> true)
+         .serverAcceptedVersions(s -> true)
+         .simpleChannel();
+      INSTANCE = net;
+      net.messageBuilder(BlockToggleC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(BlockToggleC2SPacket::new)
+         .encoder(BlockToggleC2SPacket::encode)
+         .consumerMainThread(BlockToggleC2SPacket::handle)
+         .add();
+      net.messageBuilder(ChopC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(ChopC2SPacket::new)
+         .encoder(ChopC2SPacket::encode)
+         .consumerMainThread(ChopC2SPacket::handle)
+         .add();
+      net.messageBuilder(DashToggleC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(DashToggleC2SPacket::new)
+         .encoder(DashToggleC2SPacket::encode)
+         .consumerMainThread(DashToggleC2SPacket::handle)
+         .add();
+      net.messageBuilder(EquipAbilityC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(EquipAbilityC2SPacket::new)
+         .encoder(EquipAbilityC2SPacket::encode)
+         .consumerMainThread(EquipAbilityC2SPacket::handle)
+         .add();
+      net.messageBuilder(GrabToggleC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(GrabToggleC2SPacket::new)
+         .encoder(GrabToggleC2SPacket::encode)
+         .consumerMainThread(GrabToggleC2SPacket::handle)
+         .add();
+      net.messageBuilder(HandPosSyncC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(HandPosSyncC2SPacket::new)
+         .encoder(HandPosSyncC2SPacket::encode)
+         .consumerMainThread(HandPosSyncC2SPacket::handle)
+         .add();
+      net.messageBuilder(PunchC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(PunchC2SPacket::new)
+         .encoder(PunchC2SPacket::encode)
+         .consumerMainThread(PunchC2SPacket::handle)
+         .add();
+      net.messageBuilder(RaceChoiceC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(RaceChoiceC2SPacket::new)
+         .encoder(RaceChoiceC2SPacket::encode)
+         .consumerMainThread(RaceChoiceC2SPacket::handle)
+         .add();
+      net.messageBuilder(SpeedToggleC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(SpeedToggleC2SPacket::new)
+         .encoder(SpeedToggleC2SPacket::encode)
+         .consumerMainThread(SpeedToggleC2SPacket::handle)
+         .add();
+      net.messageBuilder(SwapAbilityBarC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(SwapAbilityBarC2SPacket::new)
+         .encoder(SwapAbilityBarC2SPacket::encode)
+         .consumerMainThread(SwapAbilityBarC2SPacket::handle)
+         .add();
+      net.messageBuilder(ThunderclapC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(ThunderclapC2SPacket::new)
+         .encoder(ThunderclapC2SPacket::encode)
+         .consumerMainThread(ThunderclapC2SPacket::handle)
+         .add();
+      net.messageBuilder(BarrageStateC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(BarrageStateC2SPacket::new)
+         .encoder(BarrageStateC2SPacket::encode)
+         .consumerMainThread(BarrageStateC2SPacket::handle)
+         .add();
+      net.messageBuilder(CoreConfigSyncC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(CoreConfigSyncC2SPacket::new)
+         .encoder(CoreConfigSyncC2SPacket::toBytes)
+         .consumerMainThread(CoreConfigSyncC2SPacket::handle)
+         .add();
+      net.messageBuilder(FlightConfigSyncC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(FlightConfigSyncC2SPacket::new)
+         .encoder(FlightConfigSyncC2SPacket::toBytes)
+         .consumerMainThread(FlightConfigSyncC2SPacket::handle)
+         .add();
+      net.messageBuilder(SpawnNpcC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(SpawnNpcC2SPacket::new)
+         .encoder(SpawnNpcC2SPacket::toBytes)
+         .consumerMainThread(SpawnNpcC2SPacket::handle)
+         .add();
+      net.messageBuilder(BlockVFXS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(BlockVFXS2CPacket::new)
+         .encoder(BlockVFXS2CPacket::encode)
+         .consumerMainThread(BlockVFXS2CPacket::handle)
+         .add();
+      net.messageBuilder(ChopBleedS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(ChopBleedS2CPacket::new)
+         .encoder(ChopBleedS2CPacket::encode)
+         .consumerMainThread(ChopBleedS2CPacket::handle)
+         .add();
+      net.messageBuilder(ChopHitS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(ChopHitS2CPacket::new)
+         .encoder(ChopHitS2CPacket::encode)
+         .consumerMainThread(ChopHitS2CPacket::handle)
+         .add();
+      net.messageBuilder(GrabbedPosSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(GrabbedPosSyncS2CPacket::new)
+         .encoder(GrabbedPosSyncS2CPacket::encode)
+         .consumerMainThread(GrabbedPosSyncS2CPacket::handle)
+         .add();
+      net.messageBuilder(MeltedBlocksS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(MeltedBlocksS2CPacket::new)
+         .encoder(MeltedBlocksS2CPacket::encode)
+         .consumerMainThread(MeltedBlocksS2CPacket::handle)
+         .add();
+      net.messageBuilder(OpenRaceScreenS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(OpenRaceScreenS2CPacket::new)
+         .encoder(OpenRaceScreenS2CPacket::encode)
+         .consumerMainThread(OpenRaceScreenS2CPacket::handle)
+         .add();
+      net.messageBuilder(PlayerGrabStateSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(PlayerGrabStateSyncS2CPacket::new)
+         .encoder(PlayerGrabStateSyncS2CPacket::encode)
+         .consumerMainThread(PlayerGrabStateSyncS2CPacket::handle)
+         .add();
+      net.messageBuilder(BarrageHitS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(BarrageHitS2CPacket::new)
+         .encoder(BarrageHitS2CPacket::encode)
+         .consumerMainThread(BarrageHitS2CPacket::handle)
+         .add();
+   }
+
+   public static <MSG> void sendToServer(MSG message) {
+      INSTANCE.sendToServer(message);
+   }
+
+   public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
+      INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
+   }
+
+   public static <MSG> void sendToTracking(MSG message, Entity entity) {
+      INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+   }
+
+   public static <MSG> void sendToAll(MSG message) {
+      INSTANCE.send(PacketDistributor.ALL.noArg(), message);
+   }
+}

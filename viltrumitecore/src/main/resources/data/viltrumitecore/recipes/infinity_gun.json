@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "viltrumitecore:infinity_gun_base"
+    },
+    {
+      "item": "viltrumitecore:infinity_gun_handle"
+    },
+    {
+      "item": "viltrumitecore:infinity_gun_barrel"
+    }
+  ],
+  "result": {
+    "item": "viltrumitecore:infinity_gun",
+    "count": 1
+  }
+}

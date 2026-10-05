@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "viltrumitecore:viltrumite_blood_sample" },
+    { "item": "viltrumitecore:viltrumite_blood_sample" },
+    { "item": "viltrumitecore:viltrumite_blood_sample" },
+    { "item": "viltrumitecore:viltrumite_blood_sample" },
+    { "item": "viltrumitecore:viltrumite_blood_sample" },
+    { "item": "viltrumitecore:viltrumite_blood_sample" },
+    { "item": "minecraft:fermented_spider_eye" },
+    { "item": "minecraft:fermented_spider_eye" },
+    { "item": "minecraft:fermented_spider_eye" }
+  ],
+  "result": {
+    "item": "viltrumitecore:scourge_culture"
+  }
+}

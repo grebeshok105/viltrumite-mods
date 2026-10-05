@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "viltrumitecore:block/viltrumite_blood_stain"
+  }
+}

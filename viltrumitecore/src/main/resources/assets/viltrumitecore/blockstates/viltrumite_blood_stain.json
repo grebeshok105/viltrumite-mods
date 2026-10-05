@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "viltrumite=true":  { "model": "viltrumitecore:block/viltrumite_blood_stain" },
+    "viltrumite=false": { "model": "viltrumitecore:block/human_blood_stain" }
+  }
+}

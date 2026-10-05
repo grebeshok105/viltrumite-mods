@@ -1,0 +1,210 @@
+#version 150
+
+uniform sampler2D DiffuseSampler;
+// YENİ: Bir önceki frame'in çıktısı. post/dash_impact.json'daki "prev" target'ı.
+uniform sampler2D PrevSampler;
+
+uniform float DashIntensity;
+uniform float PunchIntensity;
+uniform float ShakeIntensity;
+uniform float GrabIntensity;
+uniform float LockIntensity;
+uniform float Time;
+
+uniform float ChopIntensity;
+uniform float ChopType;
+uniform float ChopIsLeft;
+
+uniform float BarrageIntensity;
+uniform float BarrageIsLeft;
+
+// YENİ: SCOURGE VIRUS
+uniform float ScourgeIntensity;   // 0..1 (amplifier ile 1.5'e kadar)
+uniform float ScourgeTurn;        // 0..1, kamera ne kadar hızlı dönüyor
+
+in vec2 texCoord;
+out vec4 fragColor;
+
+void main() {
+    vec2 baseUv = texCoord;
+    vec2 center = vec2(0.5, 0.5);
+
+    float safeDash = clamp(DashIntensity, 0.0, 1.5);
+    float safePunch = clamp(PunchIntensity, 0.0, 1.5);
+    float safeShake = clamp(ShakeIntensity, 0.0, 1.5);
+    float safeGrab = clamp(GrabIntensity, 0.0, 1.0);
+    float safeLock = clamp(LockIntensity, 0.0, 1.0);
+    float safeChop = clamp(ChopIntensity, 0.0, 1.0);
+    float safeBarrage = clamp(BarrageIntensity, 0.0, 1.0);
+    float safeScourge = clamp(ScourgeIntensity, 0.0, 1.5);
+    float safeTurn = clamp(ScourgeTurn, 0.0, 1.0);
+
+    // Hiçbir efekt yoksa boş döndür (Performans)
+    if (safeDash <= 0.001 && safePunch <= 0.001 && safeShake <= 0.001 && safeGrab <= 0.001 && safeLock <= 0.001 && safeChop <= 0.001 && safeBarrage <= 0.001 && safeScourge <= 0.001) {
+        vec4 defaultColor = texture(DiffuseSampler, baseUv);
+        defaultColor.a = 1.0;
+        fragColor = defaultColor;
+        return;
+    }
+
+    // ==========================================
+    // CAMERA SHAKE (Kamera Titremesi)
+    // ==========================================
+    float shakeAmplitude = (0.015 * safeDash) + (0.032 * safeShake) + (0.005 * safeGrab);
+    float shakeX = sin(Time * (80.0 + (safeShake * 40.0) + (safeGrab * 150.0))) * shakeAmplitude;
+    float shakeY = cos(Time * (95.0 + (safeShake * 40.0) + (safeGrab * 150.0))) * shakeAmplitude;
+
+    // CHOP KIRBACI
+    if (safeChop > 0.0) {
+        float baseDir = (ChopIsLeft > 0.5) ? -1.0 : 1.0;
+        float typeMultiplier = (ChopType > 0.5) ? 1.0 : -1.0;
+        float chopDir = baseDir * typeMultiplier;
+        shakeX += sin(safeChop * 3.1415) * 0.025 * chopDir;
+    }
+
+    // BARRAGE TOKADI (Sadece vuruş anında ekranı sağa/sola sertçe teper)
+    if (safeBarrage > 0.0) {
+        float barrageDir = (BarrageIsLeft > 0.5) ? -1.0 : 1.0;
+        shakeX += (safeBarrage * 0.0025 * barrageDir); // Yatayda sert darbe
+        shakeY += (safeBarrage * 0.0015 * sin(Time * 200.0)); // Dikeyde mikro titreme
+    }
+
+    // SCOURGE: sürekli hastalıklı mikro titreşim, kafa çevirince belirginleşir
+    if (safeScourge > 0.0) {
+        float jitter = safeScourge * (0.35 + 0.65 * safeTurn);
+        shakeX += sin(Time * 27.0) * 0.0018 * jitter;
+        shakeY += cos(Time * 31.0) * 0.0015 * jitter;
+    }
+
+    baseUv.x += shakeX;
+    baseUv.y += shakeY;
+
+    float dist = distance(baseUv, center);
+    float effectRadius = smoothstep(0.1, 0.8, dist);
+
+    float dashPower = safeDash * effectRadius;
+    float punchPower = safePunch * effectRadius;
+
+    vec4 finalColor;
+
+    // ==========================================
+    // 1. CHOP EFEKTİ
+    // ==========================================
+    if (safeChop > 0.0) {
+        vec2 toCenter = baseUv - center;
+        vec4 chopColor = vec4(0.0);
+
+        float baseSwirlDir = (ChopIsLeft > 0.5) ? -1.0 : 1.0;
+        float typeSwirlMult = (ChopType > 0.5) ? 1.0 : -1.0;
+        float swirlDir = baseSwirlDir * typeSwirlMult;
+
+        float swirlStrength = safeChop * 0.25 * smoothstep(0.1, 0.9, dist) * swirlDir;
+        for(int i = 0; i < 5; i++) {
+            float angle = swirlStrength * (float(i) / 4.0);
+            float s = sin(angle);
+            float c = cos(angle);
+            vec2 rotUv = vec2(toCenter.x * c - toCenter.y * s, toCenter.x * s + toCenter.y * c) + center;
+            chopColor += texture(DiffuseSampler, rotUv);
+        }
+        chopColor /= 5.0;
+        chopColor.r += safeChop * 0.1 * effectRadius;
+        chopColor.b -= safeChop * 0.035 * effectRadius;
+
+        finalColor = chopColor;
+    }
+    // ==========================================
+    // 2. BARRAGE (SERİ YUMRUK) EFEKTİ
+    // ==========================================
+    else if (safeBarrage > 0.0) {
+        vec2 toCenter = baseUv - center;
+
+        // Vuruş anında ekranı oyuncuya doğru hafifçe ezer (Impact Zoom)
+        vec2 bUv = baseUv + toCenter * (safeBarrage * -0.04);
+
+        vec4 bColor = texture(DiffuseSampler, bUv);
+
+        // Altın sarısı/vahşet tonu ekler
+        bColor.r += safeBarrage * 0.15 * effectRadius;
+        bColor.g += safeBarrage * 0.05 * effectRadius;
+        bColor.b -= safeBarrage * 0.05 * effectRadius;
+
+        finalColor = bColor;
+    }
+    // ==========================================
+    // 3. PUNCH / DASH EFEKTİ
+    // ==========================================
+    else if ((dashPower + punchPower) > 0.0 && dist > 0.001) {
+        vec2 dir = normalize(baseUv - center);
+        float caOffset = (0.065 * dashPower) + (0.12 * punchPower);
+        float r = texture(DiffuseSampler, baseUv + dir * caOffset).r;
+        float g = texture(DiffuseSampler, baseUv).g;
+        float b = texture(DiffuseSampler, baseUv - dir * caOffset).b;
+        vec4 caColor = vec4(r, g, b, 1.0);
+
+        if (safePunch > 0.0) {
+            caColor.r += safePunch * 0.25 * effectRadius;
+            caColor.g -= safePunch * 0.05 * effectRadius;
+            caColor.b -= safePunch * 0.05 * effectRadius;
+        }
+
+        float blurStrength = (0.081 * dashPower) + (0.18 * punchPower);
+        vec4 blurColor = vec4(0.0);
+        blurColor += texture(DiffuseSampler, baseUv + dir * (blurStrength * 0.00));
+        blurColor += texture(DiffuseSampler, baseUv + dir * (blurStrength * 0.25));
+        blurColor += texture(DiffuseSampler, baseUv + dir * (blurStrength * 0.50));
+        blurColor += texture(DiffuseSampler, baseUv + dir * (blurStrength * 0.75));
+        blurColor += texture(DiffuseSampler, baseUv + dir * (blurStrength * 1.00));
+        blurColor /= 5.0;
+
+        finalColor = mix(caColor, blurColor, 0.6);
+    } else {
+        finalColor = texture(DiffuseSampler, baseUv);
+    }
+
+    // ==========================================
+    // 4. TARGET LOCK VIGNETTE
+    // ==========================================
+    if (safeLock > 0.0) {
+        float vignette = smoothstep(0.85, 0.35, dist);
+        finalColor.rgb = mix(finalColor.rgb, finalColor.rgb * vignette, safeLock * 0.85);
+    }
+
+    // ==========================================
+    // 5. SCOURGE VIRUS
+    //
+    // En sonda duruyor ki iz (trail) bir önceki frame'in NİHAİ çıktısını okusun.
+    // "prev" target'ına yazılan da bu; yani geri besleme döngüsü kapanıyor.
+    // ==========================================
+    // ==========================================
+    // 5. SCOURGE VIRUS
+    // ==========================================
+    if (safeScourge > 0.0) {
+        float s = min(safeScourge, 1.0);
+
+        // --- Hastalıklı yeşil ---
+        float lum = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
+        vec3 sick = vec3(lum * 0.30, lum * 1.10 + 0.04, lum * 0.32);
+        finalColor.rgb = mix(finalColor.rgb, sick, s * 0.78);
+
+        // --- Nabız gibi atan vinyet ---
+        // Geri beslemede her frame yeniden uygulandığı için birikiyor; o yüzden hafif.
+        float pulse = 0.5 + 0.5 * sin(Time * 2.2);
+        float vig = smoothstep(1.05, 0.35, dist);
+        finalColor.rgb *= mix(1.0, vig, s * (0.12 + 0.08 * pulse));
+
+        // --- Geride kalma izi ---
+        // İz EN SONDA, tonlamadan sonra: prev zaten tonlanmış görüntüyü tutuyor,
+        // böylece döngü renk olarak tutarlı kalıyor.
+        // 0.62 durumda hafif smear, kafa çevirince 0.92'ye çıkıp uzun kuyruk bırakıyor.
+        float persistence = (0.72 + 0.30 * safeTurn) * s;
+        vec3 prev = texture(PrevSampler, baseUv).rgb;
+        finalColor.rgb = mix(finalColor.rgb, prev, persistence);
+
+        // --- Grenli titreşim ---
+        float grain = fract(sin(dot(baseUv * 512.0 + Time * 3.0, vec2(12.9898, 78.233))) * 43758.5453);
+        finalColor.rgb += (grain - 0.5) * 0.02 * s;
+    }
+
+    finalColor.a = 1.0;
+    fragColor = finalColor;
+}

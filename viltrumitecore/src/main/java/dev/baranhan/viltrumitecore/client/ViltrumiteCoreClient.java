@@ -1,0 +1,290 @@
+package dev.baranhan.viltrumitecore.client;
+
+import dev.baranhan.viltrumitecore.client.gui.ViltrumiteAbilityScreen;
+import dev.baranhan.viltrumitecore.config.ViltrumiteCameraConfig;
+import dev.baranhan.viltrumitecore.config.ViltrumiteClientConfig;
+import dev.baranhan.viltrumitecore.config.ViltrumitePostProcessingConfig;
+import dev.baranhan.viltrumitecore.network.CoreMessages;
+import dev.baranhan.viltrumitecore.network.packet.BarrageStateC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.BlockToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.ChopC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.DashToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.GrabToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.PunchC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.SpeedToggleC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.ThunderclapC2SPacket;
+import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
+import dev.baranhan.viltrumiteflight.util.FlightState;
+import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
+import java.util.UUID;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
+import net.minecraftforge.event.TickEvent.ClientTickEvent;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+
+@EventBusSubscriber(
+   modid = "viltrumitecore",
+   value = {Dist.CLIENT},
+   bus = Bus.MOD
+)
+public class ViltrumiteCoreClient {
+   public static boolean isWorldRendering = false;
+   public static UUID iAmBeingGrabbedBy = null;
+   public static Vec3 exactHandPos = null;
+   public static Vec3 exactVelocity = Vec3.ZERO;
+   public static Vec3 prevHandPos = null;
+   public static Vec3 currentHandPos = null;
+   public static CameraType preGrabPerspective = null;
+
+   @SubscribeEvent
+   public static void onClientSetup(FMLClientSetupEvent event) {
+      event.enqueueWork(() -> {
+         CosmeticLoader.init();
+         ViltrumiteCameraConfig.load();
+         ViltrumitePostProcessingConfig.load();
+         ViltrumiteClientConfig.load();
+      });
+   }
+
+   @SubscribeEvent
+   public static void onKeyRegister(RegisterKeyMappingsEvent event) {
+      AbilityInputManager.registerKeys(event);
+   }
+
+   @EventBusSubscriber(
+      modid = "viltrumitecore",
+      value = {Dist.CLIENT},
+      bus = Bus.FORGE
+   )
+   public static class ForgeClientEvents {
+      @SubscribeEvent
+      public static void onClientTick(ClientTickEvent event) {
+         Minecraft client = Minecraft.getInstance();
+         if (event.phase == Phase.START) {
+            if (ViltrumiteCoreClient.iAmBeingGrabbedBy != null && ViltrumiteCoreClient.exactHandPos != null && client.player != null) {
+               if (ViltrumiteCoreClient.currentHandPos == null) {
+                  ViltrumiteCoreClient.currentHandPos = ViltrumiteCoreClient.exactHandPos;
+                  ViltrumiteCoreClient.prevHandPos = ViltrumiteCoreClient.exactHandPos;
+               } else {
+                  ViltrumiteCoreClient.prevHandPos = ViltrumiteCoreClient.currentHandPos;
+                  ViltrumiteCoreClient.currentHandPos = ViltrumiteCoreClient.exactHandPos;
+               }
+
+               client.player.setDeltaMovement(Vec3.ZERO);
+               client.player.fallDistance = 0.0F;
+            } else {
+               ViltrumiteCoreClient.currentHandPos = null;
+               ViltrumiteCoreClient.prevHandPos = null;
+            }
+         }
+
+         if (event.phase == Phase.END) {
+            if (client.player == null) {
+               return;
+            }
+
+            AbilityInputManager.tick(client);
+            if (client.player instanceof ViltrumiteCorePlayer corePlayer) {
+               if (TargetLockManager.lockedTarget != null && corePlayer.getGrabbedTarget() == TargetLockManager.lockedTarget) {
+                  TargetLockManager.toggleLock(client);
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:dash")) {
+                  if (corePlayer.isViltrumite() && !corePlayer.isBlocking() && ViltrumiteCoreClient.iAmBeingGrabbedBy == null) {
+                     corePlayer.startDash();
+                     CoreMessages.sendToServer(new DashToggleC2SPacket());
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:punch")) {
+                  if (corePlayer.isViltrumite()
+                     && corePlayer.getPunchTicks() <= 0
+                     && corePlayer.getChopTicks() <= 0
+                     && corePlayer.getThunderclapTicks() <= 0
+                     && !corePlayer.isBlocking()
+                     && !corePlayer.isBarraging()
+                     && corePlayer.getBarrageTicks() == 0
+                     && corePlayer.getPunchCooldown() <= 0) {
+                     boolean shouldBeRight = corePlayer.isTryingToGrab() || corePlayer.getGrabbedTarget() != null;
+                     boolean isLeft = !shouldBeRight && client.level.random.nextBoolean();
+                     corePlayer.setLeftArmPunch(isLeft);
+                     corePlayer.setPunchTicks(20);
+                     CoreMessages.sendToServer(new PunchC2SPacket(isLeft));
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:grab")) {
+                  boolean isLeftPunching = corePlayer.getPunchTicks() > 0 && corePlayer.isLeftArmPunch();
+                  boolean isLeftChopping = corePlayer.getChopTicks() > 0 && corePlayer.isLeftChop();
+                  boolean isThunderclapping = corePlayer.getThunderclapTicks() > 0;
+                  if (corePlayer.isViltrumite()
+                     && ViltrumiteCoreClient.iAmBeingGrabbedBy == null
+                     && !corePlayer.isBlocking()
+                     && !isLeftPunching
+                     && !isLeftChopping
+                     && !isThunderclapping
+                     && !corePlayer.isBarraging()
+                     && corePlayer.getBarrageTicks() == 0) {
+                     if (corePlayer.getGrabbedTarget() != null) {
+                        corePlayer.releaseTarget();
+                     } else if (corePlayer.isTryingToGrab()) {
+                        corePlayer.setTryingToGrab(false);
+                     } else {
+                        corePlayer.setTryingToGrab(true);
+                     }
+
+                     CoreMessages.sendToServer(new GrabToggleC2SPacket());
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:block")) {
+                  if (corePlayer.isViltrumite()
+                     && !corePlayer.isTryingToGrab()
+                     && !corePlayer.isDashing()
+                     && corePlayer.getPunchTicks() <= 0
+                     && corePlayer.getChopTicks() <= 0
+                     && corePlayer.getThunderclapTicks() <= 0
+                     && !corePlayer.isBarraging()
+                     && corePlayer.getBarrageTicks() == 0
+                     && corePlayer.getBlockCooldown() <= 0) {
+                     corePlayer.setBlocking(!corePlayer.isBlocking());
+                     CoreMessages.sendToServer(new BlockToggleC2SPacket());
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:lock")) {
+                  if (corePlayer.isViltrumite()) {
+                     TargetLockManager.toggleLock(client);
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:speed")) {
+                  if (corePlayer.isViltrumite()) {
+                     if (client.player instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightState() != FlightState.NONE) {
+                        return;
+                     }
+
+                     CoreMessages.sendToServer(new SpeedToggleC2SPacket());
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:chop")) {
+                  if (corePlayer.isViltrumite()
+                     && corePlayer.getChopTicks() <= 0
+                     && corePlayer.getPunchTicks() <= 0
+                     && corePlayer.getThunderclapTicks() <= 0
+                     && !corePlayer.isBlocking()
+                     && !corePlayer.isBarraging()
+                     && corePlayer.getBarrageTicks() == 0) {
+                     boolean shouldBeRight = corePlayer.isTryingToGrab() || corePlayer.getGrabbedTarget() != null;
+                     boolean isLeft = !shouldBeRight && client.level.random.nextBoolean();
+                     int chopType = client.level.random.nextInt(2);
+                     corePlayer.setLeftChop(isLeft);
+                     corePlayer.setChopType(chopType);
+                     corePlayer.setChopTicks(20);
+                     CoreMessages.sendToServer(new ChopC2SPacket(isLeft, chopType));
+                  }
+               }
+
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:thunderclap")) {
+                  if (corePlayer.isViltrumite()
+                     && corePlayer.getThunderclapTicks() <= 0
+                     && corePlayer.getPunchTicks() <= 0
+                     && corePlayer.getChopTicks() <= 0
+                     && !corePlayer.isBlocking()
+                     && !corePlayer.isBarraging()
+                     && corePlayer.getBarrageTicks() == 0) {
+                     corePlayer.setThunderclapTicks(20);
+                     CoreMessages.sendToServer(new ThunderclapC2SPacket());
+                  }
+               }
+
+               boolean isBarrageKeyDown = AbilityInputManager.isAbilityKeyDown(client.player, "viltrumite:barrage");
+               boolean canBarrage = corePlayer.isViltrumite()
+                  && !corePlayer.isBlocking()
+                  && !corePlayer.isDashing()
+                  && corePlayer.getChopTicks() <= 0
+                  && corePlayer.getPunchTicks() <= 0
+                  && corePlayer.getThunderclapTicks() <= 0
+                  && !corePlayer.isTryingToGrab()
+                  && corePlayer.getGrabbedTarget() == null
+                  && corePlayer.getBarrageTicks() >= 0
+                  && corePlayer.getBarrageCooldown() <= 0;
+               boolean shouldBeBarraging = isBarrageKeyDown && canBarrage;
+               if (corePlayer.isBarraging() != shouldBeBarraging) {
+                  corePlayer.setBarraging(shouldBeBarraging);
+                  CoreMessages.sendToServer(new BarrageStateC2SPacket(shouldBeBarraging));
+               }
+
+               while (AbilityInputManager.abilityMenuKey.consumeClick()) {
+                  if (corePlayer.isViltrumite() && client.screen == null) {
+                     client.setScreen(new ViltrumiteAbilityScreen());
+                  }
+               }
+            }
+
+            TargetLockManager.tickClient(client);
+            if (ViltrumiteCoreClient.iAmBeingGrabbedBy != null) {
+               if (ViltrumiteCoreClient.preGrabPerspective == null) {
+                  ViltrumiteCoreClient.preGrabPerspective = client.options.getCameraType();
+               }
+
+               if (client.options.getCameraType() != CameraType.THIRD_PERSON_BACK) {
+                  client.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+               }
+            } else if (ViltrumiteCoreClient.preGrabPerspective != null) {
+               client.options.setCameraType(ViltrumiteCoreClient.preGrabPerspective);
+               ViltrumiteCoreClient.preGrabPerspective = null;
+            }
+         }
+      }
+
+      @SubscribeEvent
+      public static void onRenderLevel(RenderLevelStageEvent event) {
+         Minecraft client = Minecraft.getInstance();
+         if (event.getStage() == Stage.AFTER_SKY) {
+            ViltrumiteCoreClient.isWorldRendering = true;
+            if (client.player == null) {
+               return;
+            }
+
+            if (ViltrumiteCoreClient.iAmBeingGrabbedBy != null && ViltrumiteCoreClient.prevHandPos != null && ViltrumiteCoreClient.currentHandPos != null) {
+               float partialTicks = event.getPartialTick();
+               double lerpX = Mth.lerp((double)partialTicks, ViltrumiteCoreClient.prevHandPos.x, ViltrumiteCoreClient.currentHandPos.x);
+               double lerpY = Mth.lerp((double)partialTicks, ViltrumiteCoreClient.prevHandPos.y, ViltrumiteCoreClient.currentHandPos.y);
+               double lerpZ = Mth.lerp((double)partialTicks, ViltrumiteCoreClient.prevHandPos.z, ViltrumiteCoreClient.currentHandPos.z);
+               double neckOffset = (double)client.player.getBbHeight() * 0.85;
+               double finalY = lerpY - neckOffset;
+               client.player.setPos(lerpX, finalY, lerpZ);
+               client.player.setDeltaMovement(ViltrumiteCoreClient.exactVelocity);
+               client.player.fallDistance = 0.0F;
+               client.player.xo = lerpX;
+               client.player.yo = finalY;
+               client.player.zo = lerpZ;
+               client.player.xOld = lerpX;
+               client.player.yOld = finalY;
+               client.player.zOld = lerpZ;
+               Player grabber = client.level.getPlayerByUUID(ViltrumiteCoreClient.iAmBeingGrabbedBy);
+               if (grabber != null) {
+                  grabber.setDeltaMovement(ViltrumiteCoreClient.exactVelocity);
+               }
+            }
+         }
+
+         if (event.getStage() == Stage.AFTER_LEVEL) {
+            ViltrumiteCoreClient.isWorldRendering = false;
+         }
+      }
+   }
+}

@@ -1,0 +1,36 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.baranhan.viltrumitecore.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "viltrumitecore.refmap.json",
+  "plugin": "dev.baranhan.viltrumitecore.plugin.ViltrumiteMixinPlugin",
+  "mixins": [
+    "AntiCheatBypassMixin",
+    "BlockDamageMixin",
+    "CoreFlightHookMixin",
+    "EntityCollisionMixin",
+    "EntityFireMixin",
+    "EntityFreezeMixin",
+    "GrabbedEntityPhysicsMixin",
+    "LivingEntityGrabFailsafeMixin",
+    "LivingEntityMixin",
+    "LivingEntityStatsMixin",
+    "MowziesRepelBypassMixin",
+    "PlayerAbilityMixin",
+    "PlayerCosmeticsMixin",
+    "PlayerEntityCoreMixin",
+    "PlayerStatsMixin",
+    "SolidEntityBypassMixin",
+    "WroughtnautDamageBypassMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "client": [
+    "EntityRendererMixin"
+  ]
+}

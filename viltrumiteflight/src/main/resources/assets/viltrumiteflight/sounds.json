@@ -1,0 +1,24 @@
+{
+  "sonic_boom": {
+    "category": "player",
+    "sounds": [
+      "viltrumiteflight:sonic_boom"
+    ]
+  },
+  "wind_loop": {
+    "category": "player",
+    "sounds": [
+      {
+        "name": "viltrumiteflight:wind_loop",
+        "stream": true
+      }
+    ]
+  },
+  "takeoff": {
+    "category": "player",
+    "subtitle": "Take-off",
+    "sounds": [
+      "viltrumiteflight:takeoff2"
+    ]
+  }
+}
