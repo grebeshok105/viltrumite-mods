@@ -40,7 +40,7 @@ public abstract class GrabModelMixin<T extends LivingEntity> extends HumanoidMod
                this.leftArm.xRot = Mth.lerp(weight, this.leftArm.xRot, targetPitch);
                this.leftArm.yRot = Mth.lerp(weight, this.leftArm.yRot, targetYaw);
                this.leftArm.zRot = Mth.lerp(weight, this.leftArm.zRot, targetRoll);
-               PlayerModel<T> model = (PlayerModel<T>)this;
+               PlayerModel<T> model = (PlayerModel<T>)(Object)this;
                model.leftSleeve.copyFrom(this.leftArm);
             }
          }

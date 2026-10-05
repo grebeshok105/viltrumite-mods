@@ -40,7 +40,7 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       at = {@At("TAIL")}
    )
    protected void onInitStatTracker(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       player.getEntityData().define(STAT_BASE_DAMAGE, 19.0F);
       player.getEntityData().define(STAT_DAMAGE_IGNORE_THRESHOLD, ViltrumiteCoreConfig.INSTANCE.damageIgnoreThreshold);
       player.getEntityData().define(STAT_DAMAGE_REDUCTION, ViltrumiteCoreConfig.INSTANCE.damageReductionPercent);
@@ -49,42 +49,42 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
 
    @Override
    public float getBaseDamage() {
-      return (Float)((Player)this).getEntityData().get(STAT_BASE_DAMAGE);
+      return (Float)((Player)(Object)this).getEntityData().get(STAT_BASE_DAMAGE);
    }
 
    @Override
    public void setBaseDamage(float damage) {
-      ((Player)this).getEntityData().set(STAT_BASE_DAMAGE, damage);
+      ((Player)(Object)this).getEntityData().set(STAT_BASE_DAMAGE, damage);
    }
 
    @Override
    public float getDamageIgnoreThreshold() {
-      return (Float)((Player)this).getEntityData().get(STAT_DAMAGE_IGNORE_THRESHOLD);
+      return (Float)((Player)(Object)this).getEntityData().get(STAT_DAMAGE_IGNORE_THRESHOLD);
    }
 
    @Override
    public void setDamageIgnoreThreshold(float threshold) {
-      ((Player)this).getEntityData().set(STAT_DAMAGE_IGNORE_THRESHOLD, threshold);
+      ((Player)(Object)this).getEntityData().set(STAT_DAMAGE_IGNORE_THRESHOLD, threshold);
    }
 
    @Override
    public float getDamageReduction() {
-      return (Float)((Player)this).getEntityData().get(STAT_DAMAGE_REDUCTION);
+      return (Float)((Player)(Object)this).getEntityData().get(STAT_DAMAGE_REDUCTION);
    }
 
    @Override
    public void setDamageReduction(float reduction) {
-      ((Player)this).getEntityData().set(STAT_DAMAGE_REDUCTION, reduction);
+      ((Player)(Object)this).getEntityData().set(STAT_DAMAGE_REDUCTION, reduction);
    }
 
    @Override
    public float getHealFactor() {
-      return (Float)((Player)this).getEntityData().get(STAT_HEAL_FACTOR);
+      return (Float)((Player)(Object)this).getEntityData().get(STAT_HEAL_FACTOR);
    }
 
    @Override
    public void setHealFactor(float factor) {
-      ((Player)this).getEntityData().set(STAT_HEAL_FACTOR, factor);
+      ((Player)(Object)this).getEntityData().set(STAT_HEAL_FACTOR, factor);
    }
 
    @Inject(
@@ -93,8 +93,8 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       cancellable = true
    )
    private void ignoreWeakDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-      if (((ViltrumiteCorePlayer)this).isViltrumite()) {
-         if (this instanceof ViltrumiteFakePlayer thisFakePlayer
+      if (((ViltrumiteCorePlayer)(Object)this).isViltrumite()) {
+         if ((Object)this instanceof ViltrumiteFakePlayer thisFakePlayer
             && source.getEntity() instanceof ViltrumiteFakePlayer
             && thisFakePlayer.getTargetMode() == ViltrumiteFakePlayer.TargetMode.AGGRESSIVE_NO_ALLIES) {
             cir.setReturnValue(false);
@@ -116,7 +116,7 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       argsOnly = true
    )
    private float reduceIncomingDamage(float amount, DamageSource source) {
-      if (!((ViltrumiteCorePlayer)this).isViltrumite()) {
+      if (!((ViltrumiteCorePlayer)(Object)this).isViltrumite()) {
          return amount;
       } else {
          return !source.is(DamageTypes.FELL_OUT_OF_WORLD) && !source.is(DamageTypes.GENERIC_KILL)
@@ -131,7 +131,7 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       argsOnly = true
    )
    private float reduceExhaustion(float exhaustion) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       if (!((ViltrumiteCorePlayer)player).isViltrumite()) {
          return exhaustion;
       } else {
@@ -144,7 +144,7 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       at = {@At("TAIL")}
    )
    private void onTick(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       if (((ViltrumiteCorePlayer)player).isViltrumite()) {
          if (!player.getAbilities().mayfly) {
             player.getAbilities().mayfly = true;
@@ -164,14 +164,14 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       at = {@At("TAIL")}
    )
    private void onWriteViltrumiteStatsNbt(CompoundTag nbt, CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       CompoundTag stats = new CompoundTag();
       stats.putFloat("BaseDamage", this.getBaseDamage());
       stats.putFloat("DamageIgnoreThreshold", this.getDamageIgnoreThreshold());
       stats.putFloat("DamageReduction", this.getDamageReduction());
       stats.putFloat("HealFactor", this.getHealFactor());
-      stats.putFloat("MaxFlightSpeed", ((ViltrumiteFlightPlayer)this).getMaxFlightSpeed());
-      stats.putFloat("ThrottleSpeed", ((ViltrumiteFlightPlayer)this).getThrottleSpeed());
+      stats.putFloat("MaxFlightSpeed", ((ViltrumiteFlightPlayer)(Object)this).getMaxFlightSpeed());
+      stats.putFloat("ThrottleSpeed", ((ViltrumiteFlightPlayer)(Object)this).getThrottleSpeed());
       nbt.put("ViltrumiteStats", stats);
    }
 
@@ -180,7 +180,7 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
       at = {@At("TAIL")}
    )
    private void onReadViltrumiteStatsNbt(CompoundTag nbt, CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       if (nbt.contains("ViltrumiteStats")) {
          CompoundTag stats = nbt.getCompound("ViltrumiteStats");
          if (stats.contains("BaseDamage")) {
@@ -200,11 +200,11 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
          }
 
          if (stats.contains("MaxFlightSpeed")) {
-            ((ViltrumiteFlightPlayer)this).setMaxFlightSpeed(stats.getFloat("MaxFlightSpeed"));
+            ((ViltrumiteFlightPlayer)(Object)this).setMaxFlightSpeed(stats.getFloat("MaxFlightSpeed"));
          }
 
          if (stats.contains("ThrottleSpeed")) {
-            ((ViltrumiteFlightPlayer)this).setThrottleSpeed(stats.getFloat("ThrottleSpeed"));
+            ((ViltrumiteFlightPlayer)(Object)this).setThrottleSpeed(stats.getFloat("ThrottleSpeed"));
          }
       }
    }

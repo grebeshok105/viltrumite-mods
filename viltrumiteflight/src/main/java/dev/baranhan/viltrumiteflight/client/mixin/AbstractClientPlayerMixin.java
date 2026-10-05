@@ -25,7 +25,7 @@ public abstract class AbstractClientPlayerMixin {
       cancellable = true
    )
    private void onGetFovMultiplier(CallbackInfoReturnable<Float> cir) {
-      AbstractClientPlayer player = (AbstractClientPlayer)this;
+      AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
       if (ViltrumiteConfigClient.INSTANCE.enableFovEffect && player instanceof ViltrumiteFlightPlayer flightPlayer) {
          if (flightPlayer.getFlightState() == FlightState.NONE) {
             return;
@@ -45,7 +45,7 @@ public abstract class AbstractClientPlayerMixin {
       at = {@At("RETURN")}
    )
    private void stabilizeHighSpeedCape(CallbackInfo ci) {
-      AbstractClientPlayer player = (AbstractClientPlayer)this;
+      AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
       if (player.level().isClientSide() && player instanceof ViltrumiteFlightPlayer flightPlayer) {
          FlightState state = flightPlayer.getFlightState();
          float throttle = flightPlayer.getFlightThrottle();

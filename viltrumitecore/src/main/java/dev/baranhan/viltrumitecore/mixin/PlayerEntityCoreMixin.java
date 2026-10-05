@@ -165,7 +165,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
       at = {@At("TAIL")}
    )
    protected void onInitDataTracker(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       player.getEntityData().define(IS_VILTRUMITE, ViltrumiteCoreConfig.INSTANCE.isViltrumiteByDefault);
       player.getEntityData().define(HAS_CHOSEN_RACE, false);
       player.getEntityData().define(IS_DASHING, false);
@@ -196,12 +196,12 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          this.localIsDashing = dashing;
       }
 
-      ((Player)this).getEntityData().set(IS_DASHING, dashing);
+      ((Player)(Object)this).getEntityData().set(IS_DASHING, dashing);
    }
 
    @Unique
    private int getInternalDashTicks() {
-      return this.isViltrumiteLocal() ? this.localDashTicks : (Integer)((Player)this).getEntityData().get(DASH_TICKS);
+      return this.isViltrumiteLocal() ? this.localDashTicks : (Integer)((Player)(Object)this).getEntityData().get(DASH_TICKS);
    }
 
    @Unique
@@ -210,39 +210,39 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          this.localDashTicks = ticks;
       }
 
-      ((Player)this).getEntityData().set(DASH_TICKS, ticks);
+      ((Player)(Object)this).getEntityData().set(DASH_TICKS, ticks);
    }
 
    @Override
    public boolean isViltrumite() {
-      return (Boolean)((Player)this).getEntityData().get(IS_VILTRUMITE);
+      return (Boolean)((Player)(Object)this).getEntityData().get(IS_VILTRUMITE);
    }
 
    @Override
    public void setViltrumite(boolean isViltrumite) {
-      ((Player)this).getEntityData().set(IS_VILTRUMITE, isViltrumite);
+      ((Player)(Object)this).getEntityData().set(IS_VILTRUMITE, isViltrumite);
    }
 
    @Override
    public boolean hasChosenRace() {
-      return (Boolean)((Player)this).getEntityData().get(HAS_CHOSEN_RACE);
+      return (Boolean)((Player)(Object)this).getEntityData().get(HAS_CHOSEN_RACE);
    }
 
    @Override
    public void setChosenRace(boolean chosen) {
-      ((Player)this).getEntityData().set(HAS_CHOSEN_RACE, chosen);
+      ((Player)(Object)this).getEntityData().set(HAS_CHOSEN_RACE, chosen);
    }
 
    @Override
    public boolean isDashing() {
-      return this.isViltrumiteLocal() ? this.localIsDashing : (Boolean)((Player)this).getEntityData().get(IS_DASHING);
+      return this.isViltrumiteLocal() ? this.localIsDashing : (Boolean)((Player)(Object)this).getEntityData().get(IS_DASHING);
    }
 
    @Override
    public void startDash() {
       if (!this.isDashing() && !this.isBlocking()) {
-         Player player = (Player)this;
-         if (this instanceof ViltrumiteFlightPlayer flightPlayer
+         Player player = (Player)(Object)this;
+         if ((Object)this instanceof ViltrumiteFlightPlayer flightPlayer
             && (flightPlayer.getFlightState() == FlightState.NONE || flightPlayer.getFlightState() == FlightState.HOVER)) {
             this.setInternalDashing(true);
             this.setInternalDashTicks(0);
@@ -261,43 +261,43 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public boolean isLeftArmPunch() {
-      return (Boolean)((Player)this).getEntityData().get(IS_LEFT_ARM_PUNCH);
+      return (Boolean)((Player)(Object)this).getEntityData().get(IS_LEFT_ARM_PUNCH);
    }
 
    @Override
    public void setLeftArmPunch(boolean leftArm) {
-      ((Player)this).getEntityData().set(IS_LEFT_ARM_PUNCH, leftArm);
+      ((Player)(Object)this).getEntityData().set(IS_LEFT_ARM_PUNCH, leftArm);
    }
 
    @Override
    public float getPunchStrength() {
-      return (Float)((Player)this).getEntityData().get(PUNCH_STRENGTH);
+      return (Float)((Player)(Object)this).getEntityData().get(PUNCH_STRENGTH);
    }
 
    @Override
    public void setPunchStrength(float strength) {
-      ((Player)this).getEntityData().set(PUNCH_STRENGTH, strength);
+      ((Player)(Object)this).getEntityData().set(PUNCH_STRENGTH, strength);
    }
 
    @Override
    public int getPunchTicks() {
-      return this.isViltrumiteLocal() ? this.localPunchTicks : (Integer)((Player)this).getEntityData().get(PUNCH_TICKS);
+      return this.isViltrumiteLocal() ? this.localPunchTicks : (Integer)((Player)(Object)this).getEntityData().get(PUNCH_TICKS);
    }
 
    @Override
    public int getPunchCooldown() {
-      return (Integer)((Player)this).getEntityData().get(PUNCH_COOLDOWN);
+      return (Integer)((Player)(Object)this).getEntityData().get(PUNCH_COOLDOWN);
    }
 
    @Override
    public void setPunchCooldown(int ticks) {
-      ((Player)this).getEntityData().set(PUNCH_COOLDOWN, ticks);
+      ((Player)(Object)this).getEntityData().set(PUNCH_COOLDOWN, ticks);
    }
 
    @Override
    public void setPunchTicks(int ticks) {
       if (!this.isBlocking() || ticks <= 0) {
-         Player player = (Player)this;
+         Player player = (Player)(Object)this;
          if (ticks == 20 && !player.level().isClientSide()) {
             if (this.getPunchCooldown() > 0) {
                if (this.isViltrumiteLocal()) {
@@ -316,7 +316,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
          player.getEntityData().set(PUNCH_TICKS, ticks);
          if (ticks == 20) {
-            if (this instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightState() != FlightState.NONE) {
+            if ((Object)this instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightState() != FlightState.NONE) {
                this.setPunchStrength(flightPlayer.getFlightThrottle());
                return;
             }
@@ -328,37 +328,37 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public boolean isTryingToGrab() {
-      return (Boolean)((Player)this).getEntityData().get(TRYING_TO_GRAB);
+      return (Boolean)((Player)(Object)this).getEntityData().get(TRYING_TO_GRAB);
    }
 
    @Override
    public void setTryingToGrab(boolean trying) {
       if (!this.isBlocking() || !trying) {
-         ((Player)this).getEntityData().set(TRYING_TO_GRAB, trying);
+         ((Player)(Object)this).getEntityData().set(TRYING_TO_GRAB, trying);
       }
    }
 
    @Override
    public LivingEntity getGrabbedTarget() {
-      int id = (Integer)((Player)this).getEntityData().get(GRABBED_TARGET_ID);
+      int id = (Integer)((Player)(Object)this).getEntityData().get(GRABBED_TARGET_ID);
       if (id == -1) {
          return null;
       } else {
-         Entity entity = ((Player)this).level().getEntity(id);
+         Entity entity = ((Player)(Object)this).level().getEntity(id);
          return entity instanceof LivingEntity ? (LivingEntity)entity : null;
       }
    }
 
    @Override
    public void setGrabbedTarget(LivingEntity target) {
-      ((Player)this).getEntityData().set(GRABBED_TARGET_ID, target == null ? -1 : target.getId());
+      ((Player)(Object)this).getEntityData().set(GRABBED_TARGET_ID, target == null ? -1 : target.getId());
    }
 
    @Override
    public void releaseTarget() {
       LivingEntity target = this.getGrabbedTarget();
       if (target != null) {
-         Player player = (Player)this;
+         Player player = (Player)(Object)this;
          if (target instanceof Mob mob) {
             mob.setNoAi(false);
          }
@@ -419,35 +419,35 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public float getCloneScale() {
-      return (Float)((Player)this).getEntityData().get(CLONE_SCALE);
+      return (Float)((Player)(Object)this).getEntityData().get(CLONE_SCALE);
    }
 
    @Override
    public void setCloneScale(float scale) {
-      ((Player)this).getEntityData().set(CLONE_SCALE, scale);
+      ((Player)(Object)this).getEntityData().set(CLONE_SCALE, scale);
    }
 
    @Override
    public int getBlockCooldown() {
-      return (Integer)((Player)this).getEntityData().get(BLOCK_COOLDOWN);
+      return (Integer)((Player)(Object)this).getEntityData().get(BLOCK_COOLDOWN);
    }
 
    @Override
    public void setBlockCooldown(int ticks) {
-      ((Player)this).getEntityData().set(BLOCK_COOLDOWN, ticks);
+      ((Player)(Object)this).getEntityData().set(BLOCK_COOLDOWN, ticks);
    }
 
    @Override
    public boolean isBlocking() {
-      return (Boolean)((Player)this).getEntityData().get(IS_BLOCKING);
+      return (Boolean)((Player)(Object)this).getEntityData().get(IS_BLOCKING);
    }
 
    @Override
    public void setBlocking(boolean blocking) {
-      if (!((Player)this).level().isClientSide()) {
+      if (!((Player)(Object)this).level().isClientSide()) {
          if (blocking) {
             if (this.getBlockCooldown() > 0) {
-               ((Player)this).getEntityData().set(IS_BLOCKING, false);
+               ((Player)(Object)this).getEntityData().set(IS_BLOCKING, false);
                return;
             }
 
@@ -459,22 +459,22 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          }
       }
 
-      ((Player)this).getEntityData().set(IS_BLOCKING, blocking);
+      ((Player)(Object)this).getEntityData().set(IS_BLOCKING, blocking);
    }
 
    @Override
    public boolean isSuperSpeed() {
-      return (Boolean)((Player)this).getEntityData().get(IS_SUPER_SPEED);
+      return (Boolean)((Player)(Object)this).getEntityData().get(IS_SUPER_SPEED);
    }
 
    @Override
    public void setSuperSpeed(boolean superSpeed) {
-      ((Player)this).getEntityData().set(IS_SUPER_SPEED, superSpeed);
+      ((Player)(Object)this).getEntityData().set(IS_SUPER_SPEED, superSpeed);
    }
 
    @Override
    public int getChopTicks() {
-      return this.isViltrumiteLocal() ? this.localChopTicks : (Integer)((Player)this).getEntityData().get(CHOP_TICKS);
+      return this.isViltrumiteLocal() ? this.localChopTicks : (Integer)((Player)(Object)this).getEntityData().get(CHOP_TICKS);
    }
 
    @Override
@@ -484,13 +484,13 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
             this.localChopTicks = ticks;
          }
 
-         ((Player)this).getEntityData().set(CHOP_TICKS, ticks);
+         ((Player)(Object)this).getEntityData().set(CHOP_TICKS, ticks);
       }
    }
 
    @Override
    public boolean isLeftChop() {
-      return this.isViltrumiteLocal() ? this.localIsLeftChop : (Boolean)((Player)this).getEntityData().get(IS_LEFT_CHOP);
+      return this.isViltrumiteLocal() ? this.localIsLeftChop : (Boolean)((Player)(Object)this).getEntityData().get(IS_LEFT_CHOP);
    }
 
    @Override
@@ -499,12 +499,12 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          this.localIsLeftChop = leftChop;
       }
 
-      ((Player)this).getEntityData().set(IS_LEFT_CHOP, leftChop);
+      ((Player)(Object)this).getEntityData().set(IS_LEFT_CHOP, leftChop);
    }
 
    @Override
    public int getChopType() {
-      return this.isViltrumiteLocal() ? this.localChopType : (Integer)((Player)this).getEntityData().get(CHOP_TYPE);
+      return this.isViltrumiteLocal() ? this.localChopType : (Integer)((Player)(Object)this).getEntityData().get(CHOP_TYPE);
    }
 
    @Override
@@ -513,7 +513,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          this.localChopType = type;
       }
 
-      ((Player)this).getEntityData().set(CHOP_TYPE, type);
+      ((Player)(Object)this).getEntityData().set(CHOP_TYPE, type);
    }
 
    @Override
@@ -528,7 +528,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public int getThunderclapTicks() {
-      return this.isViltrumiteLocal() ? this.localThunderclapTicks : (Integer)((Player)this).getEntityData().get(THUNDERCLAP_TICKS);
+      return this.isViltrumiteLocal() ? this.localThunderclapTicks : (Integer)((Player)(Object)this).getEntityData().get(THUNDERCLAP_TICKS);
    }
 
    @Override
@@ -538,7 +538,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
             this.localThunderclapTicks = ticks;
          }
 
-         ((Player)this).getEntityData().set(THUNDERCLAP_TICKS, ticks);
+         ((Player)(Object)this).getEntityData().set(THUNDERCLAP_TICKS, ticks);
       }
    }
 
@@ -554,20 +554,20 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public boolean isBarraging() {
-      return this.isViltrumiteLocal() ? this.localIsBarraging : (Boolean)((Player)this).getEntityData().get(IS_BARRAGING);
+      return this.isViltrumiteLocal() ? this.localIsBarraging : (Boolean)((Player)(Object)this).getEntityData().get(IS_BARRAGING);
    }
 
    @Override
    public void setBarraging(boolean barraging) {
       if (!this.isBlocking() || !barraging) {
-         if (!((Player)this).level().isClientSide()) {
+         if (!((Player)(Object)this).level().isClientSide()) {
             if (barraging) {
                if (this.getBarrageCooldown() > 0) {
                   if (this.isViltrumiteLocal()) {
                      this.localIsBarraging = false;
                   }
 
-                  ((Player)this).getEntityData().set(IS_BARRAGING, false);
+                  ((Player)(Object)this).getEntityData().set(IS_BARRAGING, false);
                   return;
                }
             } else if (this.isBarraging()) {
@@ -579,13 +579,13 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
             this.localIsBarraging = barraging;
          }
 
-         ((Player)this).getEntityData().set(IS_BARRAGING, barraging);
+         ((Player)(Object)this).getEntityData().set(IS_BARRAGING, barraging);
       }
    }
 
    @Override
    public int getBarrageTicks() {
-      return this.isViltrumiteLocal() ? this.localBarrageTicks : (Integer)((Player)this).getEntityData().get(BARRAGE_TICKS);
+      return this.isViltrumiteLocal() ? this.localBarrageTicks : (Integer)((Player)(Object)this).getEntityData().get(BARRAGE_TICKS);
    }
 
    @Override
@@ -594,12 +594,12 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          this.localBarrageTicks = ticks;
       }
 
-      ((Player)this).getEntityData().set(BARRAGE_TICKS, ticks);
+      ((Player)(Object)this).getEntityData().set(BARRAGE_TICKS, ticks);
    }
 
    @Override
    public boolean isLeftBarrageArm() {
-      return this.isViltrumiteLocal() ? this.localIsLeftBarrageArm : (Boolean)((Player)this).getEntityData().get(IS_LEFT_BARRAGE_ARM);
+      return this.isViltrumiteLocal() ? this.localIsLeftBarrageArm : (Boolean)((Player)(Object)this).getEntityData().get(IS_LEFT_BARRAGE_ARM);
    }
 
    @Override
@@ -608,17 +608,17 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
          this.localIsLeftBarrageArm = leftArm;
       }
 
-      ((Player)this).getEntityData().set(IS_LEFT_BARRAGE_ARM, leftArm);
+      ((Player)(Object)this).getEntityData().set(IS_LEFT_BARRAGE_ARM, leftArm);
    }
 
    @Override
    public int getBarrageCooldown() {
-      return (Integer)((Player)this).getEntityData().get(BARRAGE_COOLDOWN);
+      return (Integer)((Player)(Object)this).getEntityData().get(BARRAGE_COOLDOWN);
    }
 
    @Override
    public void setBarrageCooldown(int ticks) {
-      ((Player)this).getEntityData().set(BARRAGE_COOLDOWN, ticks);
+      ((Player)(Object)this).getEntityData().set(BARRAGE_COOLDOWN, ticks);
    }
 
    @Override
@@ -677,7 +677,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
       at = {@At("TAIL")}
    )
    private void onTick(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       this.prevDashProgress = this.dashProgress;
       this.tickPunch(player);
       this.tickDash(player);
@@ -855,7 +855,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
       )}
    )
    private void forceNoClipBeforeMovement(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       if (!this.isDashing()) {
          if (player instanceof ViltrumiteFlightPlayer flightPlayer) {
             float throttle = flightPlayer.getFlightThrottle();

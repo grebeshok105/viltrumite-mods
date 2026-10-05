@@ -44,7 +44,7 @@ public abstract class HandPositionTrackerMixin<T extends LivingEntity, M extends
                ItemStack mainHand = livingEntity.getMainHandItem();
                boolean isGunActive = mainHand.getItem() instanceof InfinityGunItem && InfinityGunItem.isFiring(mainHand);
                if (isGrabbing || isBarraging || isGunActive) {
-                  if (!(((LivingEntityRenderer)this).getModel() instanceof HumanoidModel<?> model)) {
+                  if (!(((LivingEntityRenderer)(Object)this).getModel() instanceof HumanoidModel<?> model)) {
                      return;
                   }
 

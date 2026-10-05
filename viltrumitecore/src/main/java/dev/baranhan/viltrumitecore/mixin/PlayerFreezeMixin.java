@@ -15,7 +15,7 @@ public abstract class PlayerFreezeMixin {
       cancellable = true
    )
    private void viltrumiteCannotFreeze(CallbackInfoReturnable<Boolean> cir) {
-      if (((ViltrumiteCorePlayer)this).isViltrumite()) {
+      if (((ViltrumiteCorePlayer)(Object)this).isViltrumite()) {
          cir.setReturnValue(false);
       }
    }

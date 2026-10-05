@@ -17,7 +17,7 @@ public class LivingEntityMixin {
       cancellable = true
    )
    private void preventSwingAnimation(InteractionHand hand, CallbackInfo ci) {
-      if (this instanceof Player player
+      if ((Object)this instanceof Player player
          && player instanceof ViltrumiteCorePlayer corePlayer
          && (corePlayer.getPunchTicks() > 0 || corePlayer.getChopTicks() > 0 || corePlayer.isDashing() || corePlayer.isBlocking())) {
          ci.cancel();

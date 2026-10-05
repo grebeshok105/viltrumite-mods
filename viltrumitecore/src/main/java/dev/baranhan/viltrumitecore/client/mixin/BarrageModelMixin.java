@@ -267,7 +267,7 @@ public abstract class BarrageModelMixin<T extends LivingEntity> extends Humanoid
                this.head.zRot = 0.0F;
                this.body.yRot = 0.0F;
                this.body.zRot = 0.0F;
-               PlayerModel<?> model = (PlayerModel<?>)this;
+               PlayerModel<?> model = (PlayerModel<?>)(Object)this;
                this.applyBarrageTransform(
                   this.head,
                   this.getT(9.66F, 9.44F, 0.0F, -0.49F, 0.32F, -1.86F, !isRight),

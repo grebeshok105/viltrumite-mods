@@ -29,7 +29,7 @@ public abstract class PlayerCosmeticsMixin implements ViltrumiteCosmeticsPlayer 
       at = {@At("TAIL")}
    )
    protected void onInitDataTracker(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       player.getEntityData().define(VILTRUMITE_SKIN, "off");
       player.getEntityData().define(VILTRUMITE_CAPE, "off");
       player.getEntityData().define(VILTRUMITE_MODEL, "default");
@@ -37,32 +37,32 @@ public abstract class PlayerCosmeticsMixin implements ViltrumiteCosmeticsPlayer 
 
    @Override
    public String getViltrumiteSkin() {
-      return (String)((Player)this).getEntityData().get(VILTRUMITE_SKIN);
+      return (String)((Player)(Object)this).getEntityData().get(VILTRUMITE_SKIN);
    }
 
    @Override
    public void setViltrumiteSkin(String skinName) {
-      ((Player)this).getEntityData().set(VILTRUMITE_SKIN, skinName);
+      ((Player)(Object)this).getEntityData().set(VILTRUMITE_SKIN, skinName);
    }
 
    @Override
    public String getViltrumiteCape() {
-      return (String)((Player)this).getEntityData().get(VILTRUMITE_CAPE);
+      return (String)((Player)(Object)this).getEntityData().get(VILTRUMITE_CAPE);
    }
 
    @Override
    public void setViltrumiteCape(String capeName) {
-      ((Player)this).getEntityData().set(VILTRUMITE_CAPE, capeName);
+      ((Player)(Object)this).getEntityData().set(VILTRUMITE_CAPE, capeName);
    }
 
    @Override
    public String getViltrumiteModel() {
-      return (String)((Player)this).getEntityData().get(VILTRUMITE_MODEL);
+      return (String)((Player)(Object)this).getEntityData().get(VILTRUMITE_MODEL);
    }
 
    @Override
    public void setViltrumiteModel(String modelName) {
-      ((Player)this).getEntityData().set(VILTRUMITE_MODEL, modelName);
+      ((Player)(Object)this).getEntityData().set(VILTRUMITE_MODEL, modelName);
    }
 
    @Inject(

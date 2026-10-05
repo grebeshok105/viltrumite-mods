@@ -26,7 +26,7 @@ public abstract class PlayerModelMixin<T extends LivingEntity> extends HumanoidM
       at = {@At("TAIL")}
    )
    private void onSetAngles(T livingEntity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
-      PlayerModel<?> playerModel = (PlayerModel<?>)this;
+      PlayerModel<?> playerModel = (PlayerModel<?>)(Object)this;
       boolean sneaking = livingEntity.isCrouching();
       if (!sneaking) {
          float headYawVan = this.head.yRot;

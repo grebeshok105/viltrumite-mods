@@ -16,7 +16,7 @@ public abstract class EntityFireMixin {
       cancellable = true
    )
    private void preventViltrumiteFireAnimation(CallbackInfoReturnable<Boolean> cir) {
-      if (this instanceof Player player && player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isViltrumite()) {
+      if ((Object)this instanceof Player player && player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isViltrumite()) {
          cir.setReturnValue(false);
       }
    }
@@ -27,7 +27,7 @@ public abstract class EntityFireMixin {
       cancellable = true
    )
    private void makeViltrumiteFireImmune(CallbackInfoReturnable<Boolean> cir) {
-      if (this instanceof Player player && player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isViltrumite()) {
+      if ((Object)this instanceof Player player && player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isViltrumite()) {
          cir.setReturnValue(true);
       }
    }

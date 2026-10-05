@@ -213,7 +213,7 @@ public abstract class ChopModelMixin2<T extends LivingEntity> extends HumanoidMo
                   time = Mth.clamp(time, 0.0F, 1.0F);
                   boolean sneaking = livingEntity.isCrouching();
                   boolean isOnGround = livingEntity.onGround();
-                  PlayerModel<?> model = (PlayerModel<?>)this;
+                  PlayerModel<?> model = (PlayerModel<?>)(Object)this;
                   boolean isLeft = corePlayer.isLeftChop();
                   float m = isLeft ? -1.0F : 1.0F;
                   float armBaseY = sneaking ? 5.2F : 2.0F;

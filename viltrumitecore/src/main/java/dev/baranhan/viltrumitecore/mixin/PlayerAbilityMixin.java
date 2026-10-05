@@ -61,7 +61,7 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
       at = {@At("TAIL")}
    )
    protected void onInitAbilityTracker(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       player.getEntityData().define(ACTIVE_PAGE, 0);
       player.getEntityData().define(S_0, "viltrumite:punch");
       player.getEntityData().define(S_1, "viltrumite:dash");
@@ -85,17 +85,17 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
 
    @Override
    public int getActivePage() {
-      return (Integer)((Player)this).getEntityData().get(ACTIVE_PAGE);
+      return (Integer)((Player)(Object)this).getEntityData().get(ACTIVE_PAGE);
    }
 
    @Override
    public void setActivePage(int page) {
-      ((Player)this).getEntityData().set(ACTIVE_PAGE, page);
+      ((Player)(Object)this).getEntityData().set(ACTIVE_PAGE, page);
    }
 
    @Override
    public String getAbilityInSlot(int slotIndex) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
 
       return switch (slotIndex) {
          case 0 -> (String)player.getEntityData().get(S_0);
@@ -122,7 +122,7 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
 
    @Override
    public void setAbilityInSlot(int slotIndex, String abilityId) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       String safeId = abilityId == null ? "" : abilityId;
       switch (slotIndex) {
          case 0:

@@ -49,7 +49,7 @@ public abstract class SilhouetteRendererMixin<T extends LivingEntity, M extends 
             return;
          }
 
-         EntityRenderer<T> renderer = (EntityRenderer<T>)this;
+         EntityRenderer<T> renderer = (EntityRenderer<T>)(Object)this;
          ResourceLocation texture = renderer.getTextureLocation(livingEntity);
          RenderType translucentLayer = RenderType.entityTranslucent(texture);
          VertexConsumer consumer = buffer.getBuffer(translucentLayer);

@@ -28,7 +28,7 @@ public abstract class WroughtnautDamageBypassMixin {
    private void bypassViltrumiteDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
       Entity attacker = source.getEntity();
       if (amount > 0.0F && attacker instanceof Player && attacker instanceof ViltrumiteCorePlayer corePlayer) {
-         LivingEntity me = (LivingEntity)this;
+         LivingEntity me = (LivingEntity)(Object)this;
          if (!corePlayer.isViltrumite()) {
             return;
          }

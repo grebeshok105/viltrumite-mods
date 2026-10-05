@@ -21,7 +21,7 @@ public abstract class LivingEntityStatsMixin {
       cancellable = true
    )
    private void rejectDebuffs(MobEffectInstance effect, CallbackInfoReturnable<Boolean> cir) {
-      if (this instanceof Player player) {
+      if ((Object)this instanceof Player player) {
          if (player.level().isClientSide()) {
             return;
          }
@@ -45,7 +45,7 @@ public abstract class LivingEntityStatsMixin {
       at = {@At("HEAD")}
    )
    private void onDamageBreakGrab(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-      LivingEntity victim = (LivingEntity)this;
+      LivingEntity victim = (LivingEntity)(Object)this;
       Entity attacker = source.getEntity();
       if (attacker != null) {
          if (attacker instanceof ViltrumiteCorePlayer coreAttacker

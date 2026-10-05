@@ -16,7 +16,7 @@ public abstract class EntityFreezeMixin {
       cancellable = true
    )
    private void viltrumiteNeverFreezesVisually(CallbackInfoReturnable<Integer> cir) {
-      if (this instanceof Player player && ((ViltrumiteCorePlayer)player).isViltrumite()) {
+      if ((Object)this instanceof Player player && ((ViltrumiteCorePlayer)player).isViltrumite()) {
          cir.setReturnValue(0);
       }
    }
@@ -27,7 +27,7 @@ public abstract class EntityFreezeMixin {
       cancellable = true
    )
    private void viltrumiteInfiniteAir(CallbackInfoReturnable<Integer> cir) {
-      if (this instanceof Player player && ((ViltrumiteCorePlayer)player).isViltrumite()) {
+      if ((Object)this instanceof Player player && ((ViltrumiteCorePlayer)player).isViltrumite()) {
          cir.setReturnValue(player.getMaxAirSupply());
       }
    }

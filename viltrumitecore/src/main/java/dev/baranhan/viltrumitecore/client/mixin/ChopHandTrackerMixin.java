@@ -31,7 +31,7 @@ public abstract class ChopHandTrackerMixin<T extends LivingEntity, M extends Ent
    ) {
       if (ViltrumiteCoreClient.isWorldRendering) {
          if (livingEntity instanceof ViltrumiteCorePlayer corePlayer && corePlayer.getChopTicks() > 0) {
-            if (!(((LivingEntityRenderer)this).getModel() instanceof HumanoidModel<?> model)) {
+            if (!(((LivingEntityRenderer)(Object)this).getModel() instanceof HumanoidModel<?> model)) {
                return;
             }
 

@@ -19,7 +19,7 @@ public abstract class EntityCollisionMixin {
       cancellable = true
    )
    private void cancelGrabbedCollision(Entity other, CallbackInfo ci) {
-      Entity me = (Entity)this;
+      Entity me = (Entity)(Object)this;
       if (me instanceof Player && me instanceof ViltrumiteCorePlayer corePlayer) {
          LivingEntity grabbed = corePlayer.getGrabbedTarget();
          if (grabbed != null && (other == grabbed || this.isPart(other, grabbed))) {

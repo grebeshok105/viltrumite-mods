@@ -84,7 +84,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public float getFlightThrottle() {
-      return (Float)this.getEntityData().get(FLIGHT_THROTTLE);
+      return (Float)(Object)this.getEntityData().get(FLIGHT_THROTTLE);
    }
 
    @Override
@@ -94,7 +94,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public boolean isFlightAccelerating() {
-      return (Boolean)this.getEntityData().get(FLIGHT_ACCELERATING);
+      return (Boolean)(Object)this.getEntityData().get(FLIGHT_ACCELERATING);
    }
 
    @Override
@@ -111,7 +111,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public float getHoverForward() {
-      return (Float)this.getEntityData().get(HOVER_FORWARD);
+      return (Float)(Object)this.getEntityData().get(HOVER_FORWARD);
    }
 
    @Override
@@ -121,7 +121,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public float getHoverSideways() {
-      return (Float)this.getEntityData().get(HOVER_SIDEWAYS);
+      return (Float)(Object)this.getEntityData().get(HOVER_SIDEWAYS);
    }
 
    @Override
@@ -131,7 +131,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public boolean isSpeedLocked() {
-      return (Boolean)this.getEntityData().get(SPEED_LOCKED);
+      return (Boolean)(Object)this.getEntityData().get(SPEED_LOCKED);
    }
 
    @Override
@@ -141,7 +141,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public int getFlightTicks() {
-      return (Integer)this.getEntityData().get(FLIGHT_TICKS);
+      return (Integer)(Object)this.getEntityData().get(FLIGHT_TICKS);
    }
 
    @Override
@@ -151,7 +151,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public int getTakeoffTicks() {
-      return (Integer)this.getEntityData().get(TAKEOFF_TICKS);
+      return (Integer)(Object)this.getEntityData().get(TAKEOFF_TICKS);
    }
 
    @Override
@@ -161,7 +161,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public float getMaxFlightSpeed() {
-      return (Float)this.getEntityData().get(MAX_FLIGHT_SPEED);
+      return (Float)(Object)this.getEntityData().get(MAX_FLIGHT_SPEED);
    }
 
    @Override
@@ -171,7 +171,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public float getThrottleSpeed() {
-      return (Float)this.getEntityData().get(THROTTLE_SPEED);
+      return (Float)(Object)this.getEntityData().get(THROTTLE_SPEED);
    }
 
    @Override
@@ -302,7 +302,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
                this.stopFlight();
             }
 
-            if (this instanceof ServerPlayer serverPlayer && serverPlayer.isPassenger()) {
+            if ((Object)this instanceof ServerPlayer serverPlayer && serverPlayer.isPassenger()) {
                this.stopFlight();
             }
          }
@@ -318,7 +318,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
       this.setFlightThrottle(0.0F);
       this.prevFlightThrottle = 0.0F;
       this.setFlightAccelerating(false);
-      if (!this.level().isClientSide() && this instanceof ServerPlayer serverPlayer) {
+      if (!this.level().isClientSide() && (Object)this instanceof ServerPlayer serverPlayer) {
          serverPlayer.getAbilities().flying = false;
          serverPlayer.onUpdateAbilities();
       }

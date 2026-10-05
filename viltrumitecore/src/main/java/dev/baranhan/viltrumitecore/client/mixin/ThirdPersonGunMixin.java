@@ -66,7 +66,7 @@ public abstract class ThirdPersonGunMixin<T extends LivingEntity> extends Humano
             this.leftArm.xRot = TARGET_PITCH_LEFT + dynamicPitch + bodyPitch + currentRecoil;
             this.rightArm.yRot = TARGET_YAW + clampedYaw;
             this.leftArm.yRot = TARGET_YAW_LEFT + clampedYaw;
-            PlayerModel<T> model = (PlayerModel<T>)this;
+            PlayerModel<T> model = (PlayerModel<T>)(Object)this;
             model.rightSleeve.copyFrom(this.rightArm);
             model.leftSleeve.copyFrom(this.leftArm);
          }

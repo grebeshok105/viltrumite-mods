@@ -181,7 +181,7 @@ public abstract class ThunderclapModelMixin<T extends LivingEntity> extends Huma
                this.head.zRot = 0.0F;
                this.body.yRot = 0.0F;
                this.body.zRot = 0.0F;
-               PlayerModel<?> model = (PlayerModel<?>)this;
+               PlayerModel<?> model = (PlayerModel<?>)(Object)this;
                this.applyTCTransform(
                   this.head,
                   time,

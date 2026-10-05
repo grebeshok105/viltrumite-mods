@@ -53,7 +53,7 @@ public abstract class GameRendererMixin {
 
             if (this.postEffect != null) {
                FlightAnimManager.AnimState state = FlightAnimManager.getState(client.player.getUUID());
-               List<PostPass> passes = ((PostChainAccessor)this.postEffect).getPasses();
+               List<PostPass> passes = ((PostChainAccessor)(Object)this.postEffect).getPasses();
                float time = (float)(System.currentTimeMillis() % 1000000L) / 1000.0F;
                float rippleTime = Math.max(0.0F, state.rippleTime);
 

@@ -21,7 +21,7 @@ public abstract class CoreFlightHookMixin {
    )
    @Dynamic("ViltrumiteFlight mod\u00fcl\u00fc taraf\u0131ndan runtime'da eklenecek")
    private void overrideFlightCollision(CallbackInfo ci) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       if (player instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightThrottle() >= 0.6F) {
          ci.cancel();
       }

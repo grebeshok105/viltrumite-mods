@@ -46,7 +46,7 @@ public class AntiCheatBypassMixin {
    )
    private void bypassFlightRubberband(double x, double y, double z, float yaw, float pitch, Set<?> relativeArguments, CallbackInfo ci) {
       if (this.player != null) {
-         ViltrumiteCorePlayer corePlayer = (ViltrumiteCorePlayer)this.player;
+         ViltrumiteCorePlayer corePlayer = (ViltrumiteCorePlayer)(Object)this.player;
          if (corePlayer.isSuperSpeed() || corePlayer.isDashing()) {
             ci.cancel();
          }

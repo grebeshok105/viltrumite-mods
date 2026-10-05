@@ -211,7 +211,7 @@ public abstract class PunchModelMixin<T extends LivingEntity> extends HumanoidMo
                float time = (20.0F - ((float)punchTicks - partialTick)) / 20.0F;
                time = Mth.clamp(time, 0.0F, 1.0F);
                boolean sneaking = livingEntity.isCrouching();
-               PlayerModel<?> model = (PlayerModel<?>)this;
+               PlayerModel<?> model = (PlayerModel<?>)(Object)this;
                boolean isLeft = corePlayer.isLeftArmPunch();
                float m = isLeft ? -1.0F : 1.0F;
                float armBaseY = sneaking ? 5.2F : 2.0F;

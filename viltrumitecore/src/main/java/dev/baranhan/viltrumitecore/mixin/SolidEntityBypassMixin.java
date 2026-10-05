@@ -17,7 +17,7 @@ public abstract class SolidEntityBypassMixin {
       cancellable = true
    )
    private void disableSolidCollision(CallbackInfoReturnable<Boolean> cir) {
-      Entity me = (Entity)this;
+      Entity me = (Entity)(Object)this;
       if (me instanceof LivingEntity living && this.isGrabbed(living)) {
          cir.setReturnValue(false);
       }
@@ -29,7 +29,7 @@ public abstract class SolidEntityBypassMixin {
       cancellable = true
    )
    private void disablePushable(CallbackInfoReturnable<Boolean> cir) {
-      Entity me = (Entity)this;
+      Entity me = (Entity)(Object)this;
       if (me instanceof LivingEntity living && this.isGrabbed(living)) {
          cir.setReturnValue(false);
       }

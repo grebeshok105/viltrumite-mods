@@ -57,7 +57,7 @@ public class CapeHeatFeatureMixin {
                int glowingLight = 15728880;
                RenderType renderType = RenderType.energySwirl(WHITE_TEXTURE, time * 0.015F, time * 0.015F);
                VertexConsumer vertexConsumer = buffer.getBuffer(renderType);
-               RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer = (RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>)this;
+               RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer = (RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>)(Object)this;
                ModelPart cloakPart = ((PlayerModelAccessor)renderer.getParentModel()).getCloak();
                if (cloakPart != null) {
                   for (int i = 0; i < 3; i++) {

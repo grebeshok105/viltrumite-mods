@@ -24,7 +24,7 @@ public abstract class BlockDamageMixin {
       argsOnly = true
    )
    private float applyViltrumiteBlock(float amount, DamageSource source) {
-      Player player = (Player)this;
+      Player player = (Player)(Object)this;
       if (player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isBlocking() && amount > 0.0F) {
          Vec3 sourcePos = source.getSourcePosition();
          if (sourcePos != null) {

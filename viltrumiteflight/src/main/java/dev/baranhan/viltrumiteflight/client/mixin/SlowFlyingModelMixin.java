@@ -31,7 +31,7 @@ public abstract class SlowFlyingModelMixin<T extends LivingEntity> extends Human
    private void onSetupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
       boolean isLocalFirstPerson = entity == Minecraft.getInstance().player && Minecraft.getInstance().options.getCameraType().isFirstPerson();
       if (!isLocalFirstPerson || ShaderCompat.isShadowPass()) {
-         PlayerModel<?> playerModel = (PlayerModel<?>)this;
+         PlayerModel<?> playerModel = (PlayerModel<?>)(Object)this;
          FlightAnimManager.AnimState state = FlightAnimManager.getState(entity.getUUID());
          boolean isFlying = false;
          float throttle = 0.0F;

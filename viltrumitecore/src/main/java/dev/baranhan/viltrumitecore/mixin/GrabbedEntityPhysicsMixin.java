@@ -17,7 +17,7 @@ public abstract class GrabbedEntityPhysicsMixin {
       cancellable = true
    )
    private void onPushEntity(Entity entity, CallbackInfo ci) {
-      Entity var4 = (Entity)this;
+      Entity var4 = (Entity)(Object)this;
       if (var4 instanceof LivingEntity living && this.isGrabbed(living)) {
          ci.cancel();
       }
@@ -33,7 +33,7 @@ public abstract class GrabbedEntityPhysicsMixin {
       cancellable = true
    )
    private void onPushVector(double x, double y, double z, CallbackInfo ci) {
-      Entity var9 = (Entity)this;
+      Entity var9 = (Entity)(Object)this;
       if (var9 instanceof LivingEntity living && this.isGrabbed(living)) {
          ci.cancel();
       }

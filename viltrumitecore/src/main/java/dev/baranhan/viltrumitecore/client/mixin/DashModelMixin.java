@@ -107,7 +107,7 @@ public abstract class DashModelMixin<T extends LivingEntity> extends HumanoidMod
             float tickDelta = Minecraft.getInstance().getPartialTick();
             float progress = corePlayer.getDashProgress(tickDelta);
             if (!(progress <= 0.0F)) {
-               PlayerModel<?> model = (PlayerModel<?>)this;
+               PlayerModel<?> model = (PlayerModel<?>)(Object)this;
                boolean sneaking = livingEntity.isCrouching();
                float armBaseY = sneaking ? 5.2F : 2.0F;
                float bodyBaseY = sneaking ? 3.2F : 0.0F;

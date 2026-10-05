@@ -33,7 +33,7 @@ public abstract class AbstractClientPlayerMixin {
       cancellable = true
    )
    private void injectSkinTexture(CallbackInfoReturnable<ResourceLocation> cir) {
-      AbstractClientPlayer player = (AbstractClientPlayer)this;
+      AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
       if (player instanceof ViltrumiteCosmeticsPlayer cosmeticsPlayer) {
          String skinName = cosmeticsPlayer.getViltrumiteSkin();
          if (!skinName.equals("off") && CosmeticLoader.SKINS.containsKey(skinName)) {
@@ -48,7 +48,7 @@ public abstract class AbstractClientPlayerMixin {
       cancellable = true
    )
    private void injectModel(CallbackInfoReturnable<String> cir) {
-      AbstractClientPlayer player = (AbstractClientPlayer)this;
+      AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
       if (player instanceof ViltrumiteCosmeticsPlayer cosmeticsPlayer) {
          String skinName = cosmeticsPlayer.getViltrumiteSkin();
          if (!skinName.equals("off") && CosmeticLoader.SKINS.containsKey(skinName)) {
@@ -63,7 +63,7 @@ public abstract class AbstractClientPlayerMixin {
       cancellable = true
    )
    private void onGetCapeTexture(CallbackInfoReturnable<ResourceLocation> cir) {
-      AbstractClientPlayer player = (AbstractClientPlayer)this;
+      AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
       if (player instanceof ViltrumiteCosmeticsPlayer cosmeticsPlayer) {
          String capeName = cosmeticsPlayer.getViltrumiteCape();
          if (!capeName.equals("off") && CosmeticLoader.CAPES.containsKey(capeName)) {
@@ -82,7 +82,7 @@ public abstract class AbstractClientPlayerMixin {
       float vanillaFov;
       boolean var10000;
       label79: {
-         player = (AbstractClientPlayer)this;
+         player = (AbstractClientPlayer)(Object)this;
          vanillaFov = (Float)cir.getReturnValue();
          if (player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isSuperSpeed()) {
             var10000 = true;

@@ -63,7 +63,7 @@ public abstract class BlockModelMixin<T extends LivingEntity> extends HumanoidMo
                this.leftArm.y = Mth.lerp(weight, this.leftArm.y, targetLeftY);
                this.leftArm.z = Mth.lerp(weight, this.leftArm.z, targetLeftZ);
                this.head.xRot = Mth.lerp(weight, this.head.xRot, this.head.xRot + (float)Math.toRadians(15.0));
-               PlayerModel<T> model = (PlayerModel<T>)this;
+               PlayerModel<T> model = (PlayerModel<T>)(Object)this;
                model.hat.copyFrom(this.head);
                model.rightSleeve.copyFrom(this.rightArm);
                model.leftSleeve.copyFrom(this.leftArm);

@@ -17,7 +17,7 @@ public class PlayerRendererMixin {
       at = {@At("HEAD")}
    )
    private void fixRightArmFP(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, CallbackInfo ci) {
-      PlayerRenderer renderer = (PlayerRenderer)this;
+      PlayerRenderer renderer = (PlayerRenderer)(Object)this;
       PlayerModel<AbstractClientPlayer> model = (PlayerModel<AbstractClientPlayer>)renderer.getModel();
       model.rightArm.x = -5.0F;
       model.rightArm.y = 2.0F;
@@ -32,7 +32,7 @@ public class PlayerRendererMixin {
       at = {@At("HEAD")}
    )
    private void fixLeftArmFP(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, CallbackInfo ci) {
-      PlayerRenderer renderer = (PlayerRenderer)this;
+      PlayerRenderer renderer = (PlayerRenderer)(Object)this;
       PlayerModel<AbstractClientPlayer> model = (PlayerModel<AbstractClientPlayer>)renderer.getModel();
       model.leftArm.x = 5.0F;
       model.leftArm.y = 2.0F;

@@ -19,7 +19,7 @@ public abstract class LivingEntityGrabFailsafeMixin {
       at = {@At("TAIL")}
    )
    private void onTickFailsafe(CallbackInfo ci) {
-      LivingEntity entity = (LivingEntity)this;
+      LivingEntity entity = (LivingEntity)(Object)this;
       if (!entity.level().isClientSide() && entity.getTags().contains("ViltrumiteGrabbed")) {
          boolean isBeingHeld = false;
 

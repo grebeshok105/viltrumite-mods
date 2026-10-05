@@ -15,7 +15,7 @@ public class PlayerFeatureRendererMixin {
       at = {@At("TAIL")}
    )
    private void addCustomFeatures(Context ctx, boolean slim, CallbackInfo ci) {
-      PlayerRenderer renderer = (PlayerRenderer)this;
-      ((LivingEntityRendererAccessor)this).invokeAddFeature(new AtmosphericHeatFeatureRenderer(renderer));
+      PlayerRenderer renderer = (PlayerRenderer)(Object)this;
+      ((LivingEntityRendererAccessor)(Object)this).invokeAddFeature(new AtmosphericHeatFeatureRenderer(renderer));
    }
 }

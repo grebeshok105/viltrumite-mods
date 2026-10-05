@@ -22,7 +22,7 @@ public abstract class MowziesRepelBypassMixin {
       require = 0
    )
    private void stopMowzieRepel(float x, float y, float z, float radius, CallbackInfo ci) {
-      LivingEntity me = (LivingEntity)this;
+      LivingEntity me = (LivingEntity)(Object)this;
       if (me.level() != null) {
          for (Player player : me.level().players()) {
             if (player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.getGrabbedTarget() == me) {
