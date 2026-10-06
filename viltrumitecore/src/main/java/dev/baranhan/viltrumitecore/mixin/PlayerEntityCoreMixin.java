@@ -1001,9 +1001,11 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
                         LivingEntity living = (LivingEntity)entity;
                         if (entity != this.getGrabbedTarget()) {
                            living.hurt(player.damageSources().playerAttack(player), 5.0F + throttle * maxFlightSpeed);
-                           Vec3 pushDir = living.position().subtract(player.position()).normalize();
-                           living.setDeltaMovement(living.getDeltaMovement().add(pushDir.x * 2.0, 0.5, pushDir.z * 2.0));
-                           living.hasImpulse = true;
+                           if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(living, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+                              Vec3 pushDir = living.position().subtract(player.position()).normalize();
+                              living.setDeltaMovement(living.getDeltaMovement().add(pushDir.x * 2.0, 0.5, pushDir.z * 2.0));
+                              living.hasImpulse = true;
+                           }
                         }
                      }
                   }
@@ -1077,9 +1079,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
                       continue;
                    }
 
-                   if (target instanceof Player targetPlayer
-                      && !dev.baranhan.viltrumitecore.hero.HeroRegistry.get(targetPlayer)
-                         .allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.VILTRUMITE_GRAB)) {
+                   if (!dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.VILTRUMITE_GRAB)) {
                       continue;
                    }
 

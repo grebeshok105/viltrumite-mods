@@ -37,6 +37,16 @@ public interface HeroDefinition {
    /** May this target be placed under the given control kind right now. */
    boolean allowsExternalControl(LivingEntity target, ControlKind kind);
 
+   /** Multiplier on this hero's ordinary melee attack damage (heart bonus). */
+   default float meleeDamageFactor(Player player) {
+      return 1.0F;
+   }
+
+   /** Whether food exhaustion is currently suspended for this hero (Lion). */
+   default boolean preventsExhaustion(Player player) {
+      return false;
+   }
+
    /** May the hero start or continue this action right now. */
    boolean canAct(ServerPlayer player, HeroAction action);
 

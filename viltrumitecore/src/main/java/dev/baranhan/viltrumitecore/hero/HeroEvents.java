@@ -6,9 +6,11 @@ import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -65,8 +67,27 @@ public final class HeroEvents {
          for (ServerPlayer player : level.players()) {
             RegulusState state = RegulusHero.stateOf(player);
             if (state != null && state.carriers.contains(entity.getUUID())) {
-               dev.baranhan.viltrumitecore.hero.regulus.RegulusHearts.onCarrierGone(player, state, entity.getUUID());
+               dev.baranhan.viltrumitecore.hero.regulus.RegulusHearts.onCarrierDeath(player, state, entity.getUUID());
             }
+         }
+      }
+   }
+
+   /**
+    * A carrier that leaves the level without dying (unload, despawn, dimension
+    * change) drops the heart silently — no backlash (spec 5.3).
+    */
+   @SubscribeEvent
+   public static void onEntityLeaveLevel(EntityLeaveLevelEvent event) {
+      Entity entity = event.getEntity();
+      if (!(entity instanceof LivingEntity) || !(entity.level() instanceof ServerLevel level)) {
+         return;
+      }
+
+      for (ServerPlayer player : level.players()) {
+         RegulusState state = RegulusHero.stateOf(player);
+         if (state != null && state.carriers.contains(entity.getUUID())) {
+            dev.baranhan.viltrumitecore.hero.regulus.RegulusHearts.onCarrierLost(player, state, entity.getUUID());
          }
       }
    }

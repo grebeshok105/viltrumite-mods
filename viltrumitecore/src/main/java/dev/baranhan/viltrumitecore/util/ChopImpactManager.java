@@ -64,9 +64,11 @@ public class ChopImpactManager {
                   }
 
                   target.hurt(player.damageSources().playerAttack(player), baseDamage);
-                  Vec3 pushDir = new Vec3(toTarget.x, 0.0, toTarget.z).normalize().scale((double)knockback).add(0.0, 0.2, 0.0);
-                  target.setDeltaMovement(pushDir);
-                  target.hasImpulse = true;
+                  if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+                     Vec3 pushDir = new Vec3(toTarget.x, 0.0, toTarget.z).normalize().scale((double)knockback).add(0.0, 0.2, 0.0);
+                     target.setDeltaMovement(pushDir);
+                     target.hasImpulse = true;
+                  }
                   BLEEDING_ENTITIES.put(target, new ChopImpactManager.BleedData(baseDamage, 80, player));
                   Vec3 toAttacker = player.position().subtract(target.position()).normalize();
                   Vec3 hitPos = new Vec3(

@@ -102,26 +102,29 @@ public class PunchImpactManager {
                   }
                }
 
-               if (successfulBlock) {
-                  Vec3 blockKnockback = direction.scale(1.5).add(0.0, 0.2, 0.0);
-                  livingTarget.setDeltaMovement(blockKnockback);
-                  livingTarget.hasImpulse = true;
-                  if (livingTarget instanceof ServerPlayer serverTarget) {
-                     serverTarget.connection.send(new ClientboundSetEntityMotionPacket(serverTarget));
-                  }
-               } else {
-                  if (isTargetBlocking) {
-                     ((ViltrumiteCorePlayer)livingTarget).setBlocking(false);
-                  }
+               // Hero policy: an active Lion's Heart cannot be knocked back or launched.
+               if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(livingTarget, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+                  if (successfulBlock) {
+                     Vec3 blockKnockback = direction.scale(1.5).add(0.0, 0.2, 0.0);
+                     livingTarget.setDeltaMovement(blockKnockback);
+                     livingTarget.hasImpulse = true;
+                     if (livingTarget instanceof ServerPlayer serverTarget) {
+                        serverTarget.connection.send(new ClientboundSetEntityMotionPacket(serverTarget));
+                     }
+                  } else {
+                     if (isTargetBlocking) {
+                        ((ViltrumiteCorePlayer)livingTarget).setBlocking(false);
+                     }
 
-                  Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
-                  livingTarget.setDeltaMovement(launchVelocity);
-                  livingTarget.hasImpulse = true;
-                  if (livingTarget instanceof ViltrumiteFlightPlayer flightTarget) {
-                     flightTarget.stopFlight();
-                  }
+                     Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
+                     livingTarget.setDeltaMovement(launchVelocity);
+                     livingTarget.hasImpulse = true;
+                     if (livingTarget instanceof ViltrumiteFlightPlayer flightTarget) {
+                        flightTarget.stopFlight();
+                     }
 
-                  LAUNCHED_ENTITIES.put(livingTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+                     LAUNCHED_ENTITIES.put(livingTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+                  }
                }
             }
          }
@@ -133,14 +136,16 @@ public class PunchImpactManager {
          }
 
          grabbedTarget.hurt(player.damageSources().playerAttack(player), finalDamage);
-         Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
-         grabbedTarget.setDeltaMovement(launchVelocity);
-         grabbedTarget.hasImpulse = true;
-         if (grabbedTarget instanceof ViltrumiteFlightPlayer flightTarget) {
-            flightTarget.stopFlight();
-         }
+         if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(grabbedTarget, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+            Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
+            grabbedTarget.setDeltaMovement(launchVelocity);
+            grabbedTarget.hasImpulse = true;
+            if (grabbedTarget instanceof ViltrumiteFlightPlayer flightTarget) {
+               flightTarget.stopFlight();
+            }
 
-         LAUNCHED_ENTITIES.put(grabbedTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+            LAUNCHED_ENTITIES.put(grabbedTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+         }
       }
 
       int searchRad = (int)Math.ceil(9.0 * scale);

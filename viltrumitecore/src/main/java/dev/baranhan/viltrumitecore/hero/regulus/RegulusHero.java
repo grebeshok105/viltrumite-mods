@@ -99,6 +99,18 @@ public class RegulusHero implements HeroDefinition {
    }
 
    @Override
+   public float meleeDamageFactor(Player player) {
+      RegulusState state = stateOf(player);
+      return state == null ? 1.0F : RegulusRules.heartBonus(state.hearts());
+   }
+
+   @Override
+   public boolean preventsExhaustion(Player player) {
+      RegulusState state = stateOf(player);
+      return state != null && state.lionActive;
+   }
+
+   @Override
    public boolean canAct(ServerPlayer player, HeroAction action) {
       RegulusState state = ensureState(player);
       if (HeroDamage.isAnchored(player)) {
@@ -109,12 +121,10 @@ public class RegulusHero implements HeroDefinition {
          return true;
       }
 
-      if (action == HeroAction.LIONS_HEART && state.lionActive) {
-         return true;
-      }
-
-      if (action == HeroAction.RITUAL && state.lionActive) {
-         return true;
+      // While Lion's Heart runs, ability slots are greyed out: only the
+      // off-toggle and the Evangelium ritual remain legal (spec 6.2/16).
+      if (state.lionActive) {
+         return action == HeroAction.LIONS_HEART || action == HeroAction.RITUAL;
       }
 
       // A running action or an open Mania channel locks other actions.
@@ -257,7 +267,7 @@ public class RegulusHero implements HeroDefinition {
       }
 
       Mania.endChannel(player, state, dev.baranhan.viltrumitecore.hero.control.ReleaseReason.NORMAL_END);
-      LionsHeart.forceOff(player, state, false);
+      LionsHeart.forceOff(player, state);
       RegulusHearts.releaseAll(player, state, reason);
       GreedsEmbrace.cleanup(player, state, reason);
       Evangelium.cleanup(player, state, reason);

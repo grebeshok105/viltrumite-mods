@@ -40,6 +40,15 @@ public final class HeroRegistry {
    }
 
    /**
+    * Victim-side control policy for shared push/grab/freeze paths: non-hero
+    * targets always allow it; hero targets defer to their definition (an
+    * active Lion's Heart denies every kind, including IMPULSE).
+    */
+   public static boolean allowsExternalControl(net.minecraft.world.entity.LivingEntity target, dev.baranhan.viltrumitecore.hero.control.ControlKind kind) {
+      return !(target instanceof Player player) || get(player).allowsExternalControl(target, kind);
+   }
+
+   /**
     * Explicit hero transition: full lifecycle. No-op when the id is unchanged,
     * so selecting the current hero is never an exit/re-entry exploit.
     */

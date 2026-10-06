@@ -188,8 +188,7 @@ public final class ControlManager {
          this.domes.values().removeIf(dome -> dome.caster().equals(caster));
       }
 
-      this.frozenProjectiles.values().forEach(record -> record.casters.remove(caster));
-      this.frozenProjectiles.values().removeIf(record -> record.casters.isEmpty());
+      this.releaseCasterFromProjectiles(caster);
    }
 
    /** Target lifecycle: detach the record entirely (targets vanish on death). */
@@ -258,21 +257,32 @@ public final class ControlManager {
       projectile.setDeltaMovement(Vec3.ZERO);
    }
 
-   public void releaseProjectilesFor(UUID caster, Vec3 around, double radius, Vec3 direction) {
+   /**
+    * Drop one caster's ownership on every projectile it froze. When the last
+    * caster releases, the projectile keeps velocity zero and gets its original
+    * gravity back, so ordinary projectiles simply fall.
+    */
+   public void releaseProjectilesFor(UUID caster) {
+      this.releaseCasterFromProjectiles(caster);
+   }
+
+   private void releaseCasterFromProjectiles(UUID caster) {
       this.frozenProjectiles.values().removeIf(record -> {
          if (!record.casters.remove(caster)) {
             return false;
          }
 
-         Projectile projectile = record.projectile();
-         if (projectile != null && !projectile.isRemoved() && record.casters.isEmpty()) {
-            projectile.setNoGravity(record.savedNoGravity);
-            Vec3 impulse = direction.normalize().scale(RegulusRules.LION_RELEASE_IMPULSE);
-            projectile.setDeltaMovement(impulse.x, impulse.y, impulse.z);
-            return true;
+         if (!record.casters.isEmpty()) {
+            return false;
          }
 
-         return record.casters.isEmpty();
+         Projectile projectile = record.projectile();
+         if (projectile != null && !projectile.isRemoved()) {
+            projectile.setNoGravity(record.savedNoGravity);
+            projectile.setDeltaMovement(Vec3.ZERO);
+         }
+
+         return true;
       });
    }
 
@@ -292,6 +302,9 @@ public final class ControlManager {
       });
 
       this.domes.values().removeIf(dome -> now >= dome.expiresAt());
+
+      // A projectile that unloaded or was removed discards its freeze record.
+      this.frozenProjectiles.values().removeIf(record -> record.projectile() == null);
    }
 
    // --- internals -------------------------------------------------------------

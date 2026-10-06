@@ -9,6 +9,7 @@ public final class RegulusRules {
    public static final int HEART_SCAN_PERIOD = 20;
    public static final double HEART_SCAN_RADIUS = 20.0;
    public static final int WEAKNESS_TICKS_ON_HEART_DEATH = 60;
+   public static final String HEARTLESS_TAG = "heartless";
 
    public static final int LION_WINDUP_TICKS = 14;
    public static final int LION_BASE_WINDOW = 60;
@@ -17,6 +18,7 @@ public final class RegulusRules {
    public static final int LION_FORCED_COOLDOWN = 600;
    public static final float LION_FORCED_OFF_HP = 4.0F;
    public static final double LION_PROJECTILE_RADIUS = 4.0;
+   public static final double LION_REPULSE_RADIUS = 4.0;
    public static final double LION_RELEASE_IMPULSE = 1.5;
 
    public static final int DEBRIS_ANIM_TICKS = 44;
@@ -73,6 +75,11 @@ public final class RegulusRules {
       return Math.max(0, Math.min(MAX_HEARTS, hearts));
    }
 
+   /** Spec 5.1: a carrier is a vanilla living, non-player, non-Enemy, untagged. */
+   public static boolean carrierEligible(boolean vanillaNamespace, boolean player, boolean hostile, boolean heartless) {
+      return vanillaNamespace && !player && !hostile && !heartless;
+   }
+
    /** cd = ceil(base * (1 - 0.03 * H)), H sampled when the cooldown starts. */
    public static int cooldown(int base, int hearts) {
       int h = clampHearts(hearts);
@@ -95,6 +102,14 @@ public final class RegulusRules {
 
    public static float overheatDps(int overheatTicks) {
       return 1.5F + 0.5F * (float)(Math.max(0, overheatTicks) / 40);
+   }
+
+   public static boolean lionForcedOff(float health) {
+      return health <= LION_FORCED_OFF_HP;
+   }
+
+   public static int lionCooldownBase(boolean forced) {
+      return forced ? LION_FORCED_COOLDOWN : LION_MANUAL_COOLDOWN;
    }
 
    /** 7 -> 2 linear falloff between d=4 and d=16, flat 7 inside 4. */

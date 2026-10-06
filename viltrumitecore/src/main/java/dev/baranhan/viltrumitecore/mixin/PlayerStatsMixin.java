@@ -132,6 +132,11 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
    )
    private float reduceExhaustion(float exhaustion) {
       Player player = (Player)(Object)this;
+      // Hero contract: an active Lion's Heart spends no hunger (spec 6.2).
+      if (dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).preventsExhaustion(player)) {
+         return 0.0F;
+      }
+
       if (!((ViltrumiteCorePlayer)player).isViltrumite()) {
          return exhaustion;
       } else {

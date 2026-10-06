@@ -31,7 +31,8 @@ public final class RegulusState {
 
    // Hearts (carriers are owner-private; only the count is public).
    public final Set<UUID> carriers = new LinkedHashSet<>();
-   public int lastCarrierCount;
+   // Carriers the owner was last notified about; snapshot pushes dedupe on it.
+   public final Set<UUID> pushedCarriers = new LinkedHashSet<>();
    public long nextCarrierScan;
 
    // Lion's Heart.

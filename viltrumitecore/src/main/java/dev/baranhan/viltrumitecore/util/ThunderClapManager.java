@@ -66,9 +66,11 @@ public class ThunderClapManager {
 
                         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2));
                         target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 1));
-                        Vec3 pushDir = target.position().subtract(clap.origin).normalize();
-                        target.setDeltaMovement(pushDir.x * 2.5, 1.2, pushDir.z * 2.5);
-                        target.hasImpulse = true;
+                        if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+                           Vec3 pushDir = target.position().subtract(clap.origin).normalize();
+                           target.setDeltaMovement(pushDir.x * 2.5, 1.2, pushDir.z * 2.5);
+                           target.hasImpulse = true;
+                        }
                      }
                   }
                }
