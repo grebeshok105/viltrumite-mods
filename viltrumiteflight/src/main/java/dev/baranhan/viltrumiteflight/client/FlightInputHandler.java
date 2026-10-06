@@ -8,9 +8,11 @@ import dev.baranhan.viltrumiteflight.network.packet.FlightSpeedLockC2SPacket;
 import dev.baranhan.viltrumiteflight.network.packet.FlightToggleC2SPacket;
 import dev.baranhan.viltrumiteflight.network.packet.HoverInputC2SPacket;
 import dev.baranhan.viltrumiteflight.registry.ModSounds;
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
@@ -32,19 +34,44 @@ public class FlightInputHandler {
    private static float lastSideways = 0.0F;
    private static FlightWindSoundInstance windSound;
    private static boolean wasSneakPressed = false;
+   private static LocalPlayer inputPlayer;
+
+   private static void resetInputState(Minecraft client) {
+      wasJumpPressed = client.options.keyJump.isDown();
+      lastJumpTime = 0L;
+      wasAccelerating = false;
+      lastForward = 0.0F;
+      lastSideways = 0.0F;
+      wasSneakPressed = client.options.keyShift.isDown();
+      if (windSound != null) {
+         client.getSoundManager().stop(windSound);
+         windSound = null;
+      }
+   }
 
    @SubscribeEvent
    public static void onClientTick(ClientTickEvent event) {
       if (event.phase == Phase.END) {
          Minecraft client = Minecraft.getInstance();
+         if (inputPlayer != client.player) {
+            resetInputState(client);
+            inputPlayer = client.player;
+         }
+
          if (client.player != null) {
             ViltrumiteFlightPlayer omniPlayer = (ViltrumiteFlightPlayer)client.player;
             omniPlayer.setClientLocalPlayer(true);
+            if (!FlightPermissions.allowsModFlight(client.player)) {
+               FlightPermissions.resetModFlight(client.player);
+               resetInputState(client);
+               return;
+            }
+
             boolean isJumpPressed = client.options.keyJump.isDown();
             if (isJumpPressed && !wasJumpPressed) {
                long now = System.currentTimeMillis();
                if (now - lastJumpTime < 300L) {
-                  if (client.player.isCrouching() && omniPlayer.getFlightState() == FlightState.NONE && client.player.getAbilities().mayfly) {
+                  if (client.player.isCrouching() && omniPlayer.getFlightState() == FlightState.NONE) {
                      omniPlayer.setTakeoffTicks(5);
                   }
 
@@ -65,16 +92,24 @@ public class FlightInputHandler {
                }
             } else {
                wasAccelerating = false;
+               omniPlayer.setFlightAccelerating(false);
             }
 
-            float forward = client.player.input.up ? 1.0F : (client.player.input.down ? -1.0F : 0.0F);
-            float sideways = client.player.input.left ? 1.0F : (client.player.input.right ? -1.0F : 0.0F);
-            if (forward != lastForward || sideways != lastSideways) {
-               lastForward = forward;
-               lastSideways = sideways;
-               omniPlayer.setHoverForward(forward);
-               omniPlayer.setHoverSideways(sideways);
-               ModMessages.sendToServer(new HoverInputC2SPacket(forward, sideways));
+            if (omniPlayer.getFlightState() != FlightState.NONE) {
+               float forward = client.player.input.up ? 1.0F : (client.player.input.down ? -1.0F : 0.0F);
+               float sideways = client.player.input.left ? 1.0F : (client.player.input.right ? -1.0F : 0.0F);
+               if (forward != lastForward || sideways != lastSideways) {
+                  lastForward = forward;
+                  lastSideways = sideways;
+                  omniPlayer.setHoverForward(forward);
+                  omniPlayer.setHoverSideways(sideways);
+                  ModMessages.sendToServer(new HoverInputC2SPacket(forward, sideways));
+               }
+            } else {
+               lastForward = 0.0F;
+               lastSideways = 0.0F;
+               omniPlayer.setHoverForward(0.0F);
+               omniPlayer.setHoverSideways(0.0F);
             }
 
             if (ViltrumiteConfigClient.INSTANCE.enableWindLoopSound

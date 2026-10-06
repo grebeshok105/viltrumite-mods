@@ -3,6 +3,7 @@ package dev.baranhan.viltrumiteflight.mixin;
 import dev.baranhan.viltrumiteflight.config.ViltrumiteConfig;
 import dev.baranhan.viltrumiteflight.config.ViltrumiteConfigClient;
 import dev.baranhan.viltrumiteflight.registry.ModSounds;
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import net.minecraft.nbt.CompoundTag;
@@ -69,6 +70,12 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public void setFlightState(FlightState state) {
+      Player player = (Player)(Object)this;
+      if (state != FlightState.NONE && !FlightPermissions.allowsModFlight(player)) {
+         FlightPermissions.resetModFlight(player);
+         return;
+      }
+
       FlightState currentState = this.getFlightState();
       if (currentState != state && (state == FlightState.NONE || currentState == FlightState.NONE)) {
          this.setFlightThrottle(0.0F);
@@ -211,6 +218,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
       at = {@At("TAIL")}
    )
    private void onTick(CallbackInfo ci) {
+      if ((!this.level().isClientSide() || this.isClientLocalPlayer()) && !FlightPermissions.allowsModFlight((Player)(Object)this)) {
+         FlightPermissions.resetModFlight((Player)(Object)this);
+         return;
+      }
+
       if (this.getFlightState() == FlightState.NONE) {
          this.stopFlight();
       }
@@ -318,7 +330,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
       this.setFlightThrottle(0.0F);
       this.prevFlightThrottle = 0.0F;
       this.setFlightAccelerating(false);
-      if (!this.level().isClientSide() && (Object)this instanceof ServerPlayer serverPlayer) {
+      if (!this.level().isClientSide() && (Object)this instanceof ServerPlayer serverPlayer
+         && !serverPlayer.isCreative() && !serverPlayer.isSpectator() && !serverPlayer.getTags().contains("ViltrumiteGrabbed")
+         && serverPlayer.getAbilities().flying) {
          serverPlayer.getAbilities().flying = false;
          serverPlayer.onUpdateAbilities();
       }
@@ -327,8 +341,22 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
       this.prevClientLocalThrottle = 0.0F;
    }
 
+   @Override
+   @Unique
+   public void resetModFlight() {
+      ViltrumiteFlightPlayer.super.resetModFlight();
+      this.prevFlightThrottle = 0.0F;
+      this.clientLocalThrottle = 0.0F;
+      this.prevClientLocalThrottle = 0.0F;
+   }
+
    @Unique
    public void switchToHover() {
+      if (!FlightPermissions.allowsModFlight((Player)(Object)this)) {
+         FlightPermissions.resetModFlight((Player)(Object)this);
+         return;
+      }
+
       this.setFlightState(FlightState.HOVER);
       this.setSpeedLocked(false);
       this.setFlightThrottle(0.0F);
@@ -340,6 +368,11 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
    @Override
    public void handleFlightCollision() {
+      if (!FlightPermissions.allowsModFlight((Player)(Object)this)) {
+         FlightPermissions.resetModFlight((Player)(Object)this);
+         return;
+      }
+
       this.switchToHover();
    }
 
@@ -348,6 +381,10 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
       at = {@At("HEAD")}
    )
    private void onTickHead(CallbackInfo ci) {
+      if ((!this.level().isClientSide() || this.isClientLocalPlayer()) && !FlightPermissions.allowsModFlight((Player)(Object)this)) {
+         FlightPermissions.resetModFlight((Player)(Object)this);
+      }
+
       if (this.level().isClientSide()) {
          this.prevFlightThrottle = this.getFlightThrottle();
          this.prevClientLocalThrottle = this.clientLocalThrottle;
@@ -378,6 +415,10 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
 
       if (nbt.contains("OmnimanFlightThrottle")) {
          this.setFlightThrottle(nbt.getFloat("OmnimanFlightThrottle"));
+      }
+
+      if (!FlightPermissions.allowsModFlight((Player)(Object)this)) {
+         FlightPermissions.resetModFlight((Player)(Object)this);
       }
    }
 }

@@ -1,5 +1,7 @@
 package dev.baranhan.viltrumiteflight.network.packet;
 
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
+import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -21,8 +23,15 @@ public class FlightSpeedLockC2SPacket {
       context.enqueueWork(() -> {
          ServerPlayer player = context.getSender();
          if (player != null) {
+            if (!FlightPermissions.allowsModFlight(player)) {
+               FlightPermissions.resetModFlight(player);
+               return;
+            }
+
             ViltrumiteFlightPlayer vPlayer = (ViltrumiteFlightPlayer)player;
-            vPlayer.setSpeedLocked(!vPlayer.isSpeedLocked());
+            if (vPlayer.getFlightState() != FlightState.NONE && vPlayer.getFlightThrottle() > 0.2F) {
+               vPlayer.setSpeedLocked(!vPlayer.isSpeedLocked());
+            }
          }
       });
       return true;
