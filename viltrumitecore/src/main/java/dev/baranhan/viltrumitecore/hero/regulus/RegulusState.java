@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.hero.regulus;
 
+import dev.baranhan.viltrumitecore.hero.CleanupReason;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -118,5 +119,48 @@ public final class RegulusState {
       this.eventFired = false;
       this.actionPoint = null;
       this.actionTargetId = null;
+   }
+
+   /**
+    * Pure half of lifecycle cleanup: every transient combat field returns to
+    * its fresh-state default. Ability cleanups handle the Minecraft side
+    * (modifiers, control ownership, channel ends) before this runs; only a
+    * hero change clears the cast lock — on death/disconnect this object is
+    * discarded with the entity anyway. Cooldowns survive: they are duration
+    * bookkeeping, not transient combat state.
+    */
+   public void resetTransient(CleanupReason reason) {
+      if (reason == CleanupReason.HERO_CHANGE) {
+         this.clearAction();
+      }
+
+      this.carriers.clear();
+      this.pushedCarriers.clear();
+      this.nextCarrierScan = 0L;
+
+      this.lionActive = false;
+      this.lionWindowMax = 0;
+      this.lionElapsed = 0;
+      this.overheatTicks = 0;
+      this.lionStartTick = 0L;
+      this.lionWindowFloorHearts = -1;
+
+      this.attackerId = null;
+      this.attackerTick = Long.MIN_VALUE;
+      this.attackerLastPos = null;
+
+      this.ritualTicks = -1;
+      this.madnessTicksLeft = 0;
+      this.ritualStartPos = null;
+
+      this.channelTargetId = null;
+      this.channelTicks = 0;
+
+      this.jumpHeld = false;
+      this.jumpCharge = 0;
+      this.wasOnGround = true;
+      this.lastFallDistance = 0.0F;
+
+      this.lastSeenHealth = -1.0F;
    }
 }

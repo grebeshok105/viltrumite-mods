@@ -2,8 +2,10 @@ package dev.baranhan.viltrumitecore.hero;
 
 import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import dev.baranhan.viltrumitecore.hero.control.HeroControlSync;
+import dev.baranhan.viltrumitecore.hero.regulus.Evangelium;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusHero;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusState;
+import dev.baranhan.viltrumitecore.item.ViltrumiteItems;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -15,6 +17,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -113,6 +116,14 @@ public final class HeroEvents {
       }
    }
 
+   /** The bound Evangelium never drops on death. */
+   @SubscribeEvent
+   public static void onLivingDrops(LivingDropsEvent event) {
+      if (event.getEntity() instanceof Player) {
+         event.getDrops().removeIf(drop -> drop.getItem().getItem() == ViltrumiteItems.EVANGELIUM.get());
+      }
+   }
+
    @SubscribeEvent
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
@@ -133,6 +144,10 @@ public final class HeroEvents {
    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
+         // The bound Evangelium returns on respawn when it is missing (spec 11.2).
+         if (player instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.REGULUS) {
+            Evangelium.grant(player);
+         }
       }
    }
 

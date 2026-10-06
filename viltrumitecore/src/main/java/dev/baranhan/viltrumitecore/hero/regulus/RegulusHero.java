@@ -118,18 +118,37 @@ public class RegulusHero implements HeroDefinition {
          return false;
       }
 
+      return actionPermitted(action, state.lionActive, state.busy(), state.channelTargetId != null, state.ritualTicks >= 0, state.madnessTicksLeft > 0);
+   }
+
+   /**
+    * §6.2/§10-11/§16 input policy — pure so JUnit covers the whole matrix.
+    * Jump always passes; Lion leaves only the off-toggle and the ritual; a
+    * busy cast, an open channel or a running ritual locks every slot; the
+    * Counter is a madness-only slot and the ritual cannot re-enter mid-madness.
+    */
+   static boolean actionPermitted(HeroAction action, boolean lionActive, boolean busy, boolean channelOpen, boolean ritualActive, boolean madnessActive) {
       if (action == HeroAction.JUMP) {
          return true;
       }
 
-      // While Lion's Heart runs, ability slots are greyed out: only the
-      // off-toggle and the Evangelium ritual remain legal (spec 6.2/16).
-      if (state.lionActive) {
+      if (lionActive) {
          return action == HeroAction.LIONS_HEART || action == HeroAction.RITUAL;
       }
 
-      // A running action or an open Mania channel locks other actions.
-      return !state.busy() && state.channelTargetId == null && state.ritualTicks < 0;
+      if (busy || channelOpen || ritualActive) {
+         return false;
+      }
+
+      if (action == HeroAction.COUNTER) {
+         return madnessActive;
+      }
+
+      if (action == HeroAction.RITUAL) {
+         return !madnessActive;
+      }
+
+      return true;
    }
 
    @Override
@@ -255,7 +274,7 @@ public class RegulusHero implements HeroDefinition {
          return;
       }
 
-      if (state.ritualTicks >= 0 && (lost >= RegulusRules.RITUAL_INTERRUPT_DAMAGE || !state.lionActive)) {
+      if (state.ritualTicks >= 0 && RegulusRules.ritualDamageInterrupts(lost, state.lionActive)) {
          Evangelium.interrupt(player, state);
          return;
       }
@@ -284,13 +303,10 @@ public class RegulusHero implements HeroDefinition {
       RegulusHearts.releaseAll(player, state, reason);
       GreedsEmbrace.cleanup(player, state, reason);
       Evangelium.cleanup(player, state, reason);
-      RegulusPassives.removeMadness(player);
-      state.madnessTicksLeft = 0;
-      state.ritualTicks = -1;
+      state.resetTransient(reason);
 
       if (reason == CleanupReason.HERO_CHANGE) {
          RegulusPassives.remove(player);
-         state.clearAction();
       }
    }
 

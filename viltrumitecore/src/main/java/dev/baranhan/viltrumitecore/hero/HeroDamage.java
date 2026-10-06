@@ -57,7 +57,9 @@ public final class HeroDamage {
 
       try {
          // Record a real living attacker once, including hits that get blocked.
-         if (kind == DamageKind.EXTERNAL && source.getEntity() instanceof LivingEntity attacker && target instanceof ServerPlayer player) {
+         // Self damage and non-living sources never arm the Counter.
+         LivingEntity attacker = source.getEntity() instanceof LivingEntity living ? living : null;
+         if (capturesAttacker(kind, attacker != null, attacker == target) && target instanceof ServerPlayer player) {
             RegulusState state = RegulusHero.stateOf(player);
             if (state != null) {
                state.attackerId = attacker.getUUID();
@@ -66,26 +68,51 @@ public final class HeroDamage {
             }
          }
 
+         boolean anchored = false;
+         ControlManager manager = null;
          if (target.level() instanceof ServerLevel serverLevel) {
-            ControlManager manager = ControlManager.get(serverLevel);
-            if (kind != DamageKind.DEFERRED_RELEASE && manager.isAnchored(target)) {
-               manager.queueDamage(target, source, payableAmount(target, source, amount));
-               return DamageResult.QUEUED;
-            }
+            manager = ControlManager.get(serverLevel);
+            anchored = manager.isAnchored(target);
          }
 
-         // Lion's Heart blocks every external hit outright (it is not Resistance).
-         if (kind == DamageKind.EXTERNAL && target instanceof ServerPlayer player) {
-            RegulusState state = RegulusHero.stateOf(player);
-            if (state != null && state.lionActive) {
-               return DamageResult.BLOCKED;
-            }
+         RegulusState state = target instanceof ServerPlayer player ? RegulusHero.stateOf(player) : null;
+         DamageResult result = decide(kind, true, anchored, state != null && state.lionActive, amount);
+         if (result == DamageResult.QUEUED && manager != null) {
+            manager.queueDamage(target, source, payableAmount(target, source, amount));
          }
 
-         return DamageResult.PASS;
+         return result;
       } finally {
          routing.remove(target.getUUID());
       }
+   }
+
+   /** Routing order: dead/empty hits pass, control queues (except payouts), Lion blocks external only. */
+   static DamageResult decide(DamageKind kind, boolean alive, boolean anchored, boolean lionActive, float amount) {
+      if (!alive || amount <= 0.0F) {
+         return DamageResult.PASS;
+      }
+
+      if (kind != DamageKind.DEFERRED_RELEASE && anchored) {
+         return DamageResult.QUEUED;
+      }
+
+      // Lion's Heart blocks every external hit outright (it is not Resistance).
+      if (kind == DamageKind.EXTERNAL && lionActive) {
+         return DamageResult.BLOCKED;
+      }
+
+      return DamageResult.PASS;
+   }
+
+   /** The Counter arms on external living-attacker hits only — never internal or self damage. */
+   static boolean capturesAttacker(DamageKind kind, boolean livingAttacker, boolean selfHit) {
+      return kind == DamageKind.EXTERNAL && livingAttacker && !selfHit;
+   }
+
+   /** One-per-session hero totem: Regulus only, never on void/kill damage. */
+   static boolean totemEligible(boolean isRegulus, boolean bypassesInvulnerability, boolean totemConsumed) {
+      return isRegulus && !bypassesInvulnerability && !totemConsumed;
    }
 
    /**
@@ -128,8 +155,10 @@ public final class HeroDamage {
          return;
       }
 
-      if (player.level() instanceof ServerLevel serverLevel && ControlManager.get(serverLevel).isAnchored(player)) {
-         ControlManager.get(serverLevel).queueDamage(player, player.damageSources().generic(), amount);
+      ControlManager manager = player.level() instanceof ServerLevel serverLevel ? ControlManager.get(serverLevel) : null;
+      boolean anchored = manager != null && manager.isAnchored(player);
+      if (decide(DamageKind.INTERNAL, player.isAlive(), anchored, false, amount) == DamageResult.QUEUED && manager != null) {
+         manager.queueDamage(player, player.damageSources().generic(), amount);
          return;
       }
 
@@ -165,18 +194,14 @@ public final class HeroDamage {
     * damage, blood price). Consumes the one-per-session hero totem exactly once.
     */
    public static boolean tryHeroTotem(ServerPlayer player, DamageSource source) {
-      if (!(player instanceof HeroPlayer heroPlayer) || heroPlayer.getHeroId() != HeroId.REGULUS) {
-         return false;
-      }
-
-      if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+      HeroPlayer heroPlayer = player instanceof HeroPlayer hp ? hp : null;
+      boolean isRegulus = heroPlayer != null && heroPlayer.getHeroId() == HeroId.REGULUS;
+      boolean consumed = isRegulus && heroPlayer.getHeroSession().totemConsumed();
+      if (!totemEligible(isRegulus, source.is(DamageTypeTags.BYPASSES_INVULNERABILITY), consumed)) {
          return false;
       }
 
       HeroSession session = heroPlayer.getHeroSession();
-      if (session.totemConsumed()) {
-         return false;
-      }
 
       // Mark consumed before restoring health so a nested lethal hit cannot
       // double-dip the revival.
