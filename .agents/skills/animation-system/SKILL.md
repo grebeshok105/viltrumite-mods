@@ -11,7 +11,7 @@ The code is the source of truth. If this file and the code disagree, trust the c
 ## 1. Hard rules
 
 1. Do not break current visual effects. Every existing animation, VFX and shader must look the same after your change. Check in `./gradlew runClient`.
-2. Use ONLY the systems in this file. Do not add PlayerAnimator, Emotecraft, GeckoLib animation, Veil, a new shader pipeline or any second animation engine. GeckoLib is `compileOnly` for one grab mixin only.
+2. Use ONLY the systems in this file. Do not add EMF, PlayerAnimator, Emotecraft, GeckoLib animation, Veil, Photon, a new shader pipeline or any second animation engine. GeckoLib is `compileOnly` for one grab mixin only.
 3. Every hero and every active ability MUST have animations: a third-person body pose, a first-person pose, and a visual effect. A hero without animations is not done.
 4. Extend the existing classes and patterns. Do not copy a system to make a "better" one.
 5. If a new effect needs a capability the system does not have, stop and ask the user before you add it.

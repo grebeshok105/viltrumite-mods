@@ -5,7 +5,7 @@ Forge multi-project for Minecraft 1.20.1 (Forge 47.3.0, Java 17, Mojang official
 - `viltrumitecore/`: mod id `viltrumitecore`, display name ViltrumiteForge, package `dev.baranhan.viltrumitecore`. It holds abilities, combat, grab, race, world events, ability animations and VFX. It depends on `viltrumiteflight`.
 - `viltrumiteflight/`: mod id `viltrumiteflight`, package `dev.baranhan.viltrumiteflight`. It holds flight physics, flight animations and flight VFX.
 
-The exact versions are in `gradle.properties` and the `build.gradle` files. If a document disagrees with the current code, the code wins.
+The exact versions are in `gradle.properties` and the `build.gradle` files. If a document disagrees with the current code about the implementation, the code wins (see §6).
 
 ## 1. What we are building
 
@@ -18,6 +18,10 @@ The source code came from decompilation of the original JARs. It is working hist
 `grebeshok105/Codex-Superheroes` (Fabric 1.21.1) is dropped. Use it only as a source of ideas and process. Do not copy its code or Fabric APIs into this repository.
 
 Each change must make the whole project stronger. Reuse a healthy shared mechanism, extend it, or replace it on purpose. Do not add a disconnected island to avoid legacy code.
+
+### 1.1 PvP only: hard rule
+
+The mod is PvP only (player versus player). There is no PvE, no survival progression and no mob or boss balance target. Make all balance, numbers, crowd control, damage, cooldowns and design decisions for fights between players. Mobs may exist only as tools or props of an ability. Never tune an ability against mobs.
 
 ## 2. Repository map
 
@@ -43,7 +47,7 @@ The current visuals are the identity of the mod. You must not break these rules 
    - the animation core in `viltrumitecore/client/anim/` (`AnimCache`, `AnimationController`, `Animation`, `AnimationParser`, `KeyframeStack`, `Easing`, `BakedGeoModel`, `GeoBone`, `AnimRenderer`);
    - the player model mixins (`PunchModelMixin`, `ChopModelMixin`, `DashModelMixin`, `GrabModelMixin`, `BarrageModelMixin`, `ThunderclapModelMixin`, `SuperSpeedModelMixin`, and in flight `PlayerModelMixin`, `SlowFlyingModelMixin`);
    - the effects in `client/render/vfx/`, `client/render/animation/`, the particles and the post shaders.
-3. Do not add another animation or VFX system. This includes PlayerAnimator, Emotecraft, GeckoLib animation, Veil, and any second keyframe engine or pose framework. GeckoLib is only a `compileOnly` compat dependency for one render mixin. Do not use it for new animations.
+3. Do not add another animation or VFX system. This includes EMF (Entity Model Features), PlayerAnimator, Emotecraft, GeckoLib animation, Veil, Photon, any other external animation or VFX library, and any second keyframe engine or pose framework. A hero or ability that is not animated with the current in-repo systems, or that uses another system, is rejected. GeckoLib is only a `compileOnly` compat dependency for one render mixin. Do not use it for new animations.
 4. A hero without animations is not acceptable. A hero or ability is not done until each ability has its own animation and its own visual feedback in the current style.
 5. Keep the current visual effects. Do not remove, replace, simplify or restyle an existing effect unless the user asks. A refactor must give the same visual result.
 6. If the existing system cannot show a needed animation, extend the existing system in its current packages. Update the skill in the same task. Do not build a side system.
@@ -53,6 +57,8 @@ The current visuals are the identity of the mod. You must not break these rules 
 
 The user writes the **design spec**: what and why — behavior, feel, constraints, edge cases, interactions, acceptance criteria.
 
+Design specs live in `docs/design/`. Implementation plans live in `docs/plans/`.
+
 The agent owns how. Before a non-trivial implementation, an implementation plan must exist. If it is missing, the agent studies the repo, the skills, the memory bank and the code, and writes the plan. Small, obvious fixes need no plan. A plan never changes the user's design decisions silently.
 
 Do not reopen settled design decisions without a reason.
@@ -61,29 +67,41 @@ When the user asks to invent something large with no spec (a hero, a system, a m
 
 ## 5. Autonomy
 
-Work end to end: understand the goal → read the memory bank and skills → study the code and git history → write the plan if needed → implement → build → verify in game when runtime changes → fix findings → self-review → ship.
+Work end to end: understand the goal → read the required documents (§6) and skills → study the code and git history → write the plan for non-trivial work (§4) → implement → build → verify in game when runtime changes → fix findings → self-review → ship.
 
 Resolve every question that code, git, skills, the memory bank, the original JARs or docs can answer. Do not ask the user for routine confirmations or status checks. Escalate only real design or product forks.
 
 ## 6. Memory bank
 
-`.memory-bank/` is the persistent project memory for AI agents. The main file is `.memory-bank/project.md`. Topic files are `.memory-bank/<topic>.md`.
+`.memory-bank/` holds durable project knowledge and reasoning for AI agents. The index is `.memory-bank/project.md`. Topic files are `.memory-bank/<topic>.md`.
 
-- Before work: read `project.md`. Then read only the topic files for your task.
-- Store only knowledge that is expensive, ambiguous or impossible to recover from the code:
-  - discovered system behavior;
-  - architecture relations;
-  - decompile artifacts and their known fixes;
-  - important invariants;
-  - project-specific implementation details;
-  - decisions and their reasons;
-  - behavior confirmed against the original JARs.
-- Do not store facts that the code shows directly.
-- Do not use the memory bank as a task log, changelog, scratchpad or dump of session notes.
-- After work: update the memory bank only when the task produced durable knowledge for future agents.
-- Write short, factual entries that are easy to scan. Write one fact per bullet. Mark facts that are not verified as `unverified`.
-- Sources of truth: the code for implementation; the original JARs for original runtime behavior; `AGENTS.md` for workflow and repository rules.
-- If an entry conflicts with the current code or verified JAR behavior, update or remove the entry in the same task.
+Before substantial work, read:
+1. `AGENTS.md`;
+2. `.memory-bank/project.md` and the topic files for the current task;
+3. the design spec (`docs/design/`) and plan (`docs/plans/`) for the task, if they exist.
+
+Source-of-truth hierarchy:
+- Original JAR and runtime behavior: truth for intended behavior.
+- Current repository and tests: truth for the current implementation.
+- `AGENTS.md`: truth for development workflow and agent rules.
+- `.memory-bank/`: durable project knowledge and reasoning. It never overrides the three sources above.
+
+Store only knowledge that is important, stable, and expensive to reconstruct from the code:
+- architecture and C4-level structure, integration boundaries;
+- infrastructure and environment details;
+- constraints and invariants;
+- design decisions and their reasons;
+- non-obvious implementation decisions and project-specific workflows;
+- decompile artifacts and their known fixes;
+- behavior confirmed against the original JARs that the code does not show.
+
+Rules:
+- Keep the memory bank small: 3–5 files. Add a file only for a new durable topic.
+- The memory bank is not a changelog, session log, task tracker, scratchpad or code documentation dump.
+- Do not store facts that the repository shows directly.
+- Write one short fact per bullet. Mark facts that are not verified as `unverified`.
+- When a task produces durable knowledge that a fresh agent will need, update the correct file in the same task.
+- If an entry is stale or conflicts with the repository or verified runtime behavior, update or remove it in the same task.
 
 ## 7. Architecture quality
 
@@ -162,4 +180,4 @@ Each mod has its own version in the gradle files (inherited: core 1.10.3, flight
 
 Write `AGENTS.md`, skills and the memory bank in simplified technical English (ASD-STE100 principles): short sentences, active voice, one term for one concept, explicit rules, no vague words. Strict compliance is not required. Update a document in the same task that made it stale. Do not create a new markdown file if an existing one is the right place.
 
-Authority when sources disagree: current code (implementation) and original JARs (original runtime behavior) → `AGENTS.md` → skills → memory bank → other docs.
+Authority when sources disagree: use the hierarchy in §6. Skills rank below `AGENTS.md` and above the memory bank. Other docs rank last.
