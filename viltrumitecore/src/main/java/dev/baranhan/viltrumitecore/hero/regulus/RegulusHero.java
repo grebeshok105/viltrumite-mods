@@ -8,6 +8,7 @@ import dev.baranhan.viltrumitecore.hero.HeroId;
 import dev.baranhan.viltrumitecore.hero.HeroPlayer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.control.ControlManager;
+import dev.baranhan.viltrumitecore.hero.control.ReleaseReason;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -135,7 +136,8 @@ public class RegulusHero implements HeroDefinition {
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       RegulusState state = ensureState(player);
       if (action == HeroAction.JUMP) {
-         state.jumpHeld = pressed;
+         // An anchored (frozen/stasis) Regulus can never charge a jump.
+         state.jumpHeld = pressed && !HeroDamage.isAnchored(player);
          return;
       }
 
@@ -174,8 +176,15 @@ public class RegulusHero implements HeroDefinition {
    private void tryRelease(ServerPlayer player, RegulusState state, HeroAction action) {
       // Releases address the server's active cast, even if the client swapped
       // pages or the slot contents changed mid-press.
-      if (action == HeroAction.MANIA && state.channelTargetId != null) {
-         Mania.endChannel(player, state, dev.baranhan.viltrumitecore.hero.control.ReleaseReason.NORMAL_END);
+      if (action != HeroAction.MANIA) {
+         return;
+      }
+
+      if (state.channelTargetId != null) {
+         Mania.endChannel(player, state, ReleaseReason.NORMAL_END);
+      } else if (ACTION_MANIA.equals(state.actionId) && !state.eventFired) {
+         // Releasing during the windup cancels the cast for free (spec 8.1).
+         state.clearAction();
       }
    }
 
@@ -266,7 +275,9 @@ public class RegulusHero implements HeroDefinition {
          ControlManager.get(level).cleanupCaster(player.getUUID(), reason);
       }
 
-      Mania.endChannel(player, state, dev.baranhan.viltrumitecore.hero.control.ReleaseReason.NORMAL_END);
+      // Cleanup reasons map 1:1 onto release reasons so a death or disconnect
+      // never freezes the victim (spec 8.2: only a normal end freezes).
+      Mania.endChannel(player, state, ControlManager.cleanupReleaseReason(reason));
       LionsHeart.forceOff(player, state);
       RegulusHearts.releaseAll(player, state, reason);
       GreedsEmbrace.cleanup(player, state, reason);

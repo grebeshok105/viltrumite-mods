@@ -3,13 +3,17 @@ package dev.baranhan.viltrumitecore.hero.control;
 import dev.baranhan.viltrumitecore.hero.CleanupReason;
 import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -32,6 +36,8 @@ public final class ControlManager {
    private final Map<UUID, ControlRecord> controls = new HashMap<>();
    private final Map<UUID, DomeRecord> domes = new HashMap<>();
    private final Map<UUID, ProjectileFreezeRecord> frozenProjectiles = new HashMap<>();
+   // Structural mutations set this; the level tick flushes one full snapshot.
+   private boolean dirty;
 
    private ControlManager() {
    }
@@ -105,35 +111,52 @@ public final class ControlManager {
 
    /**
     * Acquire a control on a target. Fails fast when the target already carries
-    * the same kind or when the target's hero policy refuses the kind.
+    * a control, when the legacy viltrumite grab owns it, or when the target's
+    * hero policy refuses the kind.
     */
    public boolean tryAcquire(LivingEntity target, UUID caster, UUID effectId, ControlKind kind) {
-      if (!this.isAllowedOnTarget(target, kind)) {
-         return false;
-      }
+      return this.tryAcquire(target, caster, effectId, kind, -1L);
+   }
 
-      ControlRecord existing = this.controls.get(target.getUUID());
-      if (existing != null) {
-         return false;
-      }
-
-      // Precedence: a legacy viltrumite grab on the target rejects FREEZE/STASIS
-      // outright; PULL does not (it ends the channel first — see Mania).
-      if ((kind == ControlKind.FREEZE || kind == ControlKind.STASIS) && target.getTags().contains("ViltrumiteGrabbed")) {
+   /** Same as {@link #tryAcquire} plus an absolute game-time expiry. */
+   public boolean tryAcquire(LivingEntity target, UUID caster, UUID effectId, ControlKind kind, long expiresAt) {
+      if (!mayAcquire(kind, this.controls.containsKey(target.getUUID()), target.getTags().contains("ViltrumiteGrabbed"), this.isAllowedOnTarget(target, kind))) {
          return false;
       }
 
       ControlRecord record = new ControlRecord(target, caster, effectId, kind);
+      record.expiresAt = expiresAt;
       this.controls.put(target.getUUID(), record);
       record.anchor(target);
+      this.dirty = true;
       return true;
    }
 
    /**
+    * Precedence predicate (pure, unit-tested): an existing control or a grabbed
+    * target rejects every new acquire; a hero may also refuse the kind. PULL
+    * still permits a later grab latch as counterplay — that is a release path
+    * (HANDOFF_TO_GRAB), not an acquire rule.
+    */
+   static boolean mayAcquire(ControlKind kind, boolean alreadyControlled, boolean grabbedTag, boolean heroAllowed) {
+      if (!heroAllowed || alreadyControlled) {
+         return false;
+      }
+
+      return !grabbedTag;
+   }
+
+   /**
     * Atomic transition: keep the ownership record (saved values stay stored)
-    * while switching the applied kind, e.g. PULL -> FREEZE.
+    * while switching the applied kind, e.g. PULL -> FREEZE. Anchoring kinds
+    * re-anchor at the target's current position, not the acquire position.
     */
    public boolean transition(UUID targetId, UUID effectId, ControlKind next) {
+      return this.transition(targetId, effectId, next, -1L);
+   }
+
+   /** Same as {@link #transition} plus an absolute game-time expiry. */
+   public boolean transition(UUID targetId, UUID effectId, ControlKind next, long expiresAt) {
       ControlRecord record = this.controls.get(targetId);
       if (record == null || !record.effectId.equals(effectId)) {
          return false;
@@ -141,54 +164,92 @@ public final class ControlManager {
 
       record.unapply();
       record.kind = next;
+      record.expiresAt = expiresAt;
       ServerLevel level = this.firstLevel();
-      LivingEntity target = record.targetId == null ? null : find(level, record.targetId);
+      LivingEntity target = find(level, record.targetId);
       if (target != null) {
+         if (next == ControlKind.FREEZE || next == ControlKind.STASIS) {
+            record.anchor = target.position();
+         }
+
          record.apply(target);
       }
 
+      this.dirty = true;
       return true;
    }
 
    /** One release order: remove ownership first, then restore, then damage once. */
    public void release(UUID targetId, UUID effectId, ReleaseReason reason) {
       ControlRecord record = this.controls.remove(targetId);
-      if (record == null || !record.effectId.equals(effectId)) {
-         if (record != null) {
-            this.controls.put(targetId, record);
-         }
-
+      if (record == null) {
          return;
       }
 
+      if (!record.effectId.equals(effectId)) {
+         this.controls.put(targetId, record);
+         return;
+      }
+
+      this.dirty = true;
       ServerLevel level = this.firstLevel();
       LivingEntity target = find(level, record.targetId);
-      if (target != null) {
-         record.restore(target);
-         if (record.queuedDamage > 0.0F) {
-            HeroDamage.applyCleanDamage(target, record.lastDamageSource == null ? target.damageSources().generic() : record.lastDamageSource, record.queuedDamage);
-         }
+      if (target == null) {
+         return;
+      }
+
+      record.restore(target);
+      // Clamp against the CURRENT max health, in case it changed mid-control.
+      float cap = record.kind == ControlKind.STASIS
+         ? RegulusRules.domeDeferredCap(target.getMaxHealth())
+         : RegulusRules.freezeDeferredCap(target.getMaxHealth());
+      float payable = Math.min(record.queuedDamage, cap);
+      if (payable > 0.0F) {
+         HeroDamage.applyCleanDamage(target, record.lastDamageSource == null ? target.damageSources().generic() : record.lastDamageSource, payable);
       }
    }
 
    /**
     * Caster lifecycle: DEATH/DISCONNECT end channels and freezes and PULLs; a
     * HERO_CHANGE also removes the caster's domes. Dome records are world-owned
-    * and survive a dead caster.
+    * and survive a dead caster — so do the STASIS records the dome owns (spec
+    * 9.2/16: a caster death keeps the dome and its captured targets).
     */
    public void cleanupCaster(UUID caster, CleanupReason reason) {
       for (Map.Entry<UUID, ControlRecord> entry : new HashMap<>(this.controls).entrySet()) {
          ControlRecord record = entry.getValue();
-         if (record.caster.equals(caster)) {
-            this.release(entry.getKey(), record.effectId, reason == CleanupReason.HERO_CHANGE ? ReleaseReason.HERO_CHANGE : ReleaseReason.CASTER_DISCONNECT);
+         if (!record.caster.equals(caster)) {
+            continue;
          }
+
+         if (!releaseOnCasterCleanup(record.kind, this.domes.containsKey(record.effectId), reason)) {
+            continue;
+         }
+
+         this.release(entry.getKey(), record.effectId, cleanupReleaseReason(reason));
       }
 
       if (reason != CleanupReason.DEATH) {
-         this.domes.values().removeIf(dome -> dome.caster().equals(caster));
+         if (this.domes.values().removeIf(dome -> dome.caster().equals(caster))) {
+            this.dirty = true;
+         }
       }
 
       this.releaseCasterFromProjectiles(caster);
+   }
+
+   /** Pure predicate: dome-owned STASIS is the only control a death keeps. */
+   static boolean releaseOnCasterCleanup(ControlKind kind, boolean domeLinked, CleanupReason reason) {
+      return !(reason == CleanupReason.DEATH && kind == ControlKind.STASIS && domeLinked);
+   }
+
+   /** Maps a caster cleanup to the release reason victims see (no freeze). */
+   public static ReleaseReason cleanupReleaseReason(CleanupReason reason) {
+      return switch (reason) {
+         case DEATH -> ReleaseReason.CASTER_DEATH;
+         case HERO_CHANGE -> ReleaseReason.HERO_CHANGE;
+         case DISCONNECT -> ReleaseReason.CASTER_DISCONNECT;
+      };
    }
 
    /** Target lifecycle: detach the record entirely (targets vanish on death). */
@@ -211,7 +272,7 @@ public final class ControlManager {
       float cap = record.kind == ControlKind.STASIS
          ? RegulusRules.domeDeferredCap(target.getMaxHealth())
          : RegulusRules.freezeDeferredCap(target.getMaxHealth());
-      record.queuedDamage = Math.min(cap, record.queuedDamage + amount);
+      record.queuedDamage = RegulusRules.deferredAccumulate(record.queuedDamage, amount, cap);
       record.lastDamageSource = source;
       return true;
    }
@@ -225,6 +286,18 @@ public final class ControlManager {
 
    public void addDome(DomeRecord dome) {
       this.domes.put(dome.id(), dome);
+      this.dirty = true;
+   }
+
+   /** One live dome per caster (spec 9.2), enforced on the world index. */
+   public boolean hasDomeFrom(UUID caster) {
+      for (DomeRecord dome : this.domes.values()) {
+         if (dome.caster().equals(caster)) {
+            return true;
+         }
+      }
+
+      return false;
    }
 
    @Nullable
@@ -290,21 +363,88 @@ public final class ControlManager {
 
    public void tick(ServerLevel level) {
       long now = level.getGameTime();
-      this.controls.values().removeIf(record -> {
+      List<ControlRecord> expired = null;
+      for (java.util.Iterator<ControlRecord> it = this.controls.values().iterator(); it.hasNext();) {
+         ControlRecord record = it.next();
          LivingEntity target = find(level, record.targetId);
          if (target == null || !target.isAlive()) {
-            // targets vanish on death: detach, no release semantics
-            return true;
+            // Targets vanish on death/despawn: detach and discard the queue.
+            it.remove();
+            this.dirty = true;
+            continue;
+         }
+
+         if (record.expiresAt >= 0L && now >= record.expiresAt) {
+            if (expired == null) {
+               expired = new ArrayList<>();
+            }
+
+            expired.add(record);
+            continue;
          }
 
          record.apply(target);
-         return false;
-      });
+      }
 
-      this.domes.values().removeIf(dome -> now >= dome.expiresAt());
+      if (expired != null) {
+         for (ControlRecord record : expired) {
+            this.release(record.targetId, record.effectId, ReleaseReason.EXPIRED);
+         }
+      }
+
+      this.domes.values().removeIf(dome -> {
+         if (now < dome.expiresAt()) {
+            return false;
+         }
+
+         this.expireDome(level, dome);
+         return true;
+      });
 
       // A projectile that unloaded or was removed discards its freeze record.
       this.frozenProjectiles.values().removeIf(record -> record.projectile() == null);
+
+      if (this.dirty) {
+         this.dirty = false;
+         HeroControlSync.broadcast(level);
+      }
+   }
+
+   /**
+    * Dome close: every captured target releases its control (the queued damage
+    * lands once per target) and then gets an impulse away from the center.
+    */
+   private void expireDome(ServerLevel level, DomeRecord dome) {
+      for (UUID targetId : dome.captured()) {
+         this.release(targetId, dome.id(), ReleaseReason.EXPIRED);
+      }
+
+      for (UUID targetId : dome.captured()) {
+         Entity entity = level.getEntity(targetId);
+         if (!(entity instanceof LivingEntity target) || !target.isAlive()) {
+            continue;
+         }
+
+         Vec3 away = target.position().subtract(dome.center());
+         Vec3 push = new Vec3(away.x, 0.0, away.z);
+         if (push.lengthSqr() < 1.0E-4) {
+            push = new Vec3(1.0, 0.0, 0.0);
+         }
+
+         push = push.normalize().scale(RegulusRules.EMBRACE_RELEASE_IMPULSE);
+         target.setDeltaMovement(target.getDeltaMovement().add(push.x, 0.3, push.z));
+         target.hasImpulse = true;
+         if (target instanceof ServerPlayer sp) {
+            sp.connection.send(new ClientboundSetEntityMotionPacket(sp));
+         }
+      }
+
+      this.dirty = true;
+   }
+
+   /** Internal view for the world-control snapshot sync (same-package use). */
+   Collection<ControlRecord> records() {
+      return this.controls.values();
    }
 
    // --- internals -------------------------------------------------------------
@@ -351,6 +491,8 @@ public final class ControlManager {
       boolean savedNoAi;
       float queuedDamage;
       DamageSource lastDamageSource;
+      // Absolute game time when the control ends on its own; -1 = no expiry.
+      long expiresAt = -1L;
 
       ControlRecord(LivingEntity target, UUID caster, UUID effectId, ControlKind kind) {
          this.targetId = target.getUUID();
