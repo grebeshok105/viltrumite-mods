@@ -4,8 +4,8 @@
 
 | Папка | Мод | Версия | Что это |
 |---|---|---|---|
-| `viltrumitecore/` | ViltrumiteForge (`viltrumitecore`) | 1.10.3 | основной мод: способности, анимации, VFX, предметы, мир-ивенты |
-| `viltrumiteflight/` | ViltrumiteFlight (`viltrumiteflight`) | 1.6.7 | полёт и его визуал; **core требует этот мод** (`viltrumiteflight >= 1.6.6`) |
+| `viltrumitecore/` | ViltrumiteForge (`viltrumitecore`) | 1.11.0 | основной мод: способности, анимации, VFX, предметы, мир-ивенты |
+| `viltrumiteflight/` | ViltrumiteFlight (`viltrumiteflight`) | 1.7.0 | полёт и его визуал; **core требует этот мод** (`viltrumiteflight >= 1.6.6`) |
 
 Minecraft 1.20.1, Forge 47.x, Java 17, маппинги `official` (Mojang).
 
