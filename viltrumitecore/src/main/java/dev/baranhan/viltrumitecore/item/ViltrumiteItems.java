@@ -16,6 +16,7 @@ public class ViltrumiteItems {
    public static final RegistryObject<Item> VILTRUMITE_BLOOD_SAMPLE = ITEMS.register("viltrumite_blood_sample", () -> new Item(new Properties().stacksTo(16)));
    public static final RegistryObject<Item> HUMAN_BLOOD_SAMPLE = ITEMS.register("human_blood_sample", () -> new Item(new Properties().stacksTo(16)));
    public static final RegistryObject<Item> SCOURGE_CULTURE = ITEMS.register("scourge_culture", () -> new Item(new Properties().stacksTo(16)));
+   public static final RegistryObject<Item> EVANGELIUM = ITEMS.register("evangelium", () -> new EvangeliumItem(new Properties().stacksTo(1)));
 
    public static void register(IEventBus eventBus) {
       ITEMS.register(eventBus);

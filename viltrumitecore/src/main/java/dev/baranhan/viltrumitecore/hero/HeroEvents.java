@@ -1,8 +1,10 @@
 package dev.baranhan.viltrumitecore.hero;
 
+import dev.baranhan.viltrumitecore.hero.regulus.Evangelium;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusHero;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusState;
 import dev.baranhan.viltrumitecore.hero.control.ControlManager;
+import dev.baranhan.viltrumitecore.item.ViltrumiteItems;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -89,6 +92,22 @@ public final class HeroEvents {
          if (state != null && state.carriers.contains(entity.getUUID())) {
             dev.baranhan.viltrumitecore.hero.regulus.RegulusHearts.onCarrierLost(player, state, entity.getUUID());
          }
+      }
+   }
+
+   /** The bound Evangelium returns on respawn when it is missing (spec 11.2). */
+   @SubscribeEvent
+   public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && player instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.REGULUS) {
+         Evangelium.grant(player);
+      }
+   }
+
+   /** The bound Evangelium never drops on death. */
+   @SubscribeEvent
+   public static void onLivingDrops(LivingDropsEvent event) {
+      if (event.getEntity() instanceof Player) {
+         event.getDrops().removeIf(drop -> drop.getItem().getItem() == ViltrumiteItems.EVANGELIUM.get());
       }
    }
 

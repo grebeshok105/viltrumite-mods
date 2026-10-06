@@ -263,7 +263,7 @@ public class RegulusHero implements HeroDefinition {
          return;
       }
 
-      if (state.ritualTicks >= 0 && (lost >= RegulusRules.RITUAL_INTERRUPT_DAMAGE || !state.lionActive)) {
+      if (state.ritualTicks >= 0 && RegulusRules.ritualDamageInterrupts(lost, state.lionActive)) {
          Evangelium.interrupt(player, state);
          return;
       }
