@@ -55,6 +55,17 @@ dependencies {
     compileOnly files(project(':viltrumiteflight').sourceSets.main.output)
     // optional integration: only needed to compile, not bundled
     compileOnly fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+    testImplementation sourceSets.main.output
+    testImplementation files(configurations.minecraft)
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+    }
 }
 
 processResources {

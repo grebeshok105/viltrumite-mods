@@ -6,6 +6,7 @@ import dev.baranhan.viltrumitecore.command.CoreCommands;
 import dev.baranhan.viltrumitecore.config.ViltrumiteCoreConfig;
 import dev.baranhan.viltrumitecore.effect.ViltrumiteEffects;
 import dev.baranhan.viltrumitecore.entity.ViltrumiteEntities;
+import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.item.ViltrumiteCreativeTabs;
 import dev.baranhan.viltrumitecore.item.ViltrumiteItems;
 import dev.baranhan.viltrumitecore.network.CoreMessages;
@@ -59,6 +60,7 @@ public class ViltrumiteCore {
       event.enqueueWork(() -> {
          CoreMessages.register();
          ViltrumiteAbilities.registerAll();
+         HeroRegistry.registerDefaults();
       });
    }
 

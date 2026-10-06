@@ -14,6 +14,8 @@ public interface ViltrumiteCorePlayer {
 
    boolean isDashing();
 
+   void setDashing(boolean var1);
+
    void startDash();
 
    float getDashProgress(float var1);

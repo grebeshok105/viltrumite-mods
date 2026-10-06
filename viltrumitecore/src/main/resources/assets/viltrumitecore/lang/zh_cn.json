@@ -151,5 +151,18 @@
   "event.viltrumitecore.trio.warn": "维星小队将在 %s 后抵达……",
   "event.viltrumitecore.trio.start": "卢坎、维多与图拉已经抵达。",
   "event.viltrumitecore.trio.remaining": "还剩 %s 名维特鲁姆人。",
-  "event.viltrumitecore.trio.end": "维星小队已被全灭。"
+  "event.viltrumitecore.trio.end": "维星小队已被全灭。",
+  "gui.viltrumitecore.race_selection.become_regulus": "成为雷古勒斯",
+  "ability.viltrumitecore.lions_heart.name": "<gold>狮之心",
+  "ability.viltrumitecore.lions_heart.desc": "<grey>冷却: <lime>5秒 / 30秒\n<grey>类型: <yellow>开关\n\n<grey>化身坚不可摧的狮子。心脏跳动期间你免疫\n<grey>伤害与控制,并冻结附近的弹射物。\n\n<red>过热会燃烧自己的生命。\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.name": "<gold>碎石踢",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>冷却: <lime>20秒\n<grey>类型: <yellow>施放\n\n<grey>在35°锥形范围内踢出9道碎石射线,每道最多\n<grey>击穿3个方块。\n\n<blue>Regulus",
+  "ability.viltrumitecore.mania.name": "<gold>狂热",
+  "ability.viltrumitecore.mania.desc": "<grey>冷却: <lime>25秒\n<grey>类型: <yellow>引导\n\n<grey>将目标拉向自己最多6秒,随后将其冻结在原地。\n\n<blue>Regulus",
+  "ability.viltrumitecore.greeds_embrace.name": "<gold>贪婪之拥",
+  "ability.viltrumitecore.greeds_embrace.desc": "<grey>冷却: <lime>35秒\n<grey>类型: <yellow>施放\n\n<grey>召唤一个将受害者禁锢4秒的穹顶,他们的伤害\n<grey>会在穹顶解除时返还。\n\n<blue>Regulus",
+  "ability.viltrumitecore.counter.name": "<gold>反击",
+  "ability.viltrumitecore.counter.desc": "<grey>冷却: <lime>40秒\n<grey>类型: <yellow>施放\n\n<grey>回应最后一个攻击者:将其举起,闪现到身后\n<grey>砸入弹坑。\n\n<blue>Regulus",
+  "item.viltrumitecore.evangelium": "福音书",
+  "message.viltrumitecore.counter.no_target": "无人回应。"
 }

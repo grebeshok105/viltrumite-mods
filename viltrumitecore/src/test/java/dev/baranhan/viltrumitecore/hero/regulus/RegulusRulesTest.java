@@ -1,0 +1,103 @@
+package dev.baranhan.viltrumitecore.hero.regulus;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
+class RegulusRulesTest {
+
+   @Test
+   void cooldownFormulaHitsExactEndpoints() {
+      // cd = ceil(base * (1 - 0.03 * H)); H=0 -> base, H=12 -> base * 0.64
+      assertEquals(400, RegulusRules.cooldown(400, 0));
+      assertEquals(100, RegulusRules.cooldown(100, 0));
+      assertEquals(256, RegulusRules.cooldown(400, 12));   // 400 * 0.64 = 256
+      assertEquals(1152, RegulusRules.cooldown(1800, 12)); // 1800 * 0.64 = 1152
+      assertEquals(64, RegulusRules.cooldown(100, 12));    // 100 * 0.64 = 64
+      assertEquals(1, RegulusRules.cooldown(1, 5));        // ceil(0.85) = 1
+   }
+
+   @Test
+   void cooldownClampsOutOfRangeHearts() {
+      assertEquals(RegulusRules.cooldown(500, 0), RegulusRules.cooldown(500, -3));
+      assertEquals(RegulusRules.cooldown(500, 12), RegulusRules.cooldown(500, 99));
+   }
+
+   @Test
+   void lionWindowScalesWithHearts() {
+      assertEquals(60, RegulusRules.lionWindow(0));
+      assertEquals(540, RegulusRules.lionWindow(12)); // 60 + 480
+   }
+
+   @Test
+   void lionWindowShrinksButNeverGrows() {
+      int window = RegulusRules.lionWindow(10);
+      int shrunk = RegulusRules.shrinkLionWindow(window, 10, 6);
+      assertEquals(window - 40 * 4, shrunk);
+      // gaining hearts mid-window does not extend it
+      assertEquals(window, RegulusRules.shrinkLionWindow(window, 10, 12));
+      // never below zero
+      assertEquals(0, RegulusRules.shrinkLionWindow(30, 12, 0));
+   }
+
+   @Test
+   void heartBonusIsTwoPercentPerHeart() {
+      assertEquals(1.0F, RegulusRules.heartBonus(0), 1.0E-6);
+      assertEquals(1.24F, RegulusRules.heartBonus(12), 1.0E-6);
+   }
+
+   @Test
+   void debrisDamageFallsLinearlyFromSevenToTwo() {
+      assertEquals(7.0F, RegulusRules.debrisDamage(4.0, 0), 1.0E-6);
+      assertEquals(7.0F, RegulusRules.debrisDamage(1.0, 0), 1.0E-6);
+      assertEquals(2.0F, RegulusRules.debrisDamage(16.0, 0), 1.0E-6);
+      assertEquals(4.5F, RegulusRules.debrisDamage(10.0, 0), 1.0E-6); // midpoint
+      // hearts scale once
+      assertEquals(4.5F * 1.24F, RegulusRules.debrisDamage(10.0, 12), 1.0E-5);
+   }
+
+   @Test
+   void counterDamageCapsAtFortyFiveAndScales() {
+      // min(45, 15 + 0.15 * maxHP) * (1 + 0.02H)
+      assertEquals(30.0F, RegulusRules.counterDamage(100.0F, 0), 1.0E-6);
+      assertEquals(45.0F, RegulusRules.counterDamage(400.0F, 0), 1.0E-6);
+      assertEquals(45.0F * 1.24F, RegulusRules.counterDamage(400.0F, 12), 1.0E-5);
+   }
+
+   @Test
+   void overheatDpsStepsUpEveryFortyTicks() {
+      assertEquals(1.5F, RegulusRules.overheatDps(0), 1.0E-6);
+      assertEquals(1.5F, RegulusRules.overheatDps(39), 1.0E-6);
+      assertEquals(2.0F, RegulusRules.overheatDps(40), 1.0E-6);
+      assertEquals(3.0F, RegulusRules.overheatDps(120), 1.0E-6);
+   }
+
+   @Test
+   void deferredCapsMatchSpec() {
+      assertEquals(8.0F, RegulusRules.freezeDeferredCap(20.0F), 1.0E-6);
+      assertEquals(7.0F, RegulusRules.domeDeferredCap(20.0F), 1.0E-6);
+   }
+
+   @Test
+   void heartBacklashIsTenPercentMaxHealth() {
+      assertEquals(2.0F, RegulusRules.heartBacklash(20.0F), 1.0E-6);
+   }
+
+   @Test
+   void jumpVelocityReachesTenBlocksAtFullCharge() {
+      float full = RegulusRules.jumpVelocity(RegulusRules.JUMP_CHARGE_TICKS);
+      float partial = RegulusRules.jumpVelocity(RegulusRules.JUMP_CHARGE_TICKS / 2);
+      assertTrue(partial > 0.0F && partial < full);
+      // h ~= v^2 / (2*g), g=0.08: v >= 1.26 -> ~10 blocks
+      assertTrue(full >= 1.26F && full <= 1.40F, "full charge should give ~10 blocks: " + full);
+      assertEquals(full, RegulusRules.jumpVelocity(RegulusRules.JUMP_CHARGE_TICKS * 4), 1.0E-6);
+   }
+
+   @Test
+   void attackerRecordExpiresAfterTwoHundredFortyTicks() {
+      assertTrue(RegulusRules.attackerValid(1000, 1000 + 240));
+      assertTrue(RegulusRules.attackerValid(1000, 1000 + 241 - 1));
+      assertTrue(!RegulusRules.attackerValid(1000, 1000 + 241));
+   }
+}

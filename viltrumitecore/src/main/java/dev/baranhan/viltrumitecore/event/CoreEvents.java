@@ -45,17 +45,12 @@ public class CoreEvents {
    @SubscribeEvent
    public static void onPlayerClone(Clone event) {
       if (event.getOriginal() instanceof ServerPlayer oldPlayer && event.getEntity() instanceof ServerPlayer newPlayer) {
+         // Hero identity, session and all 18 ability slots are restored by
+         // HeroEvents.onPlayerClone (canonical owner) — keep only chosen-race,
+         // cosmetics and flight tuning here.
          ViltrumiteCorePlayer oldCore = (ViltrumiteCorePlayer)oldPlayer;
          ViltrumiteCorePlayer newCore = (ViltrumiteCorePlayer)newPlayer;
-         newCore.setViltrumite(oldCore.isViltrumite());
          newCore.setChosenRace(oldCore.hasChosenRace());
-         ViltrumiteAbilityUser oldAbilities = (ViltrumiteAbilityUser)oldPlayer;
-         ViltrumiteAbilityUser newAbilities = (ViltrumiteAbilityUser)newPlayer;
-
-         for (int i = 0; i < 6; i++) {
-            newAbilities.setAbilityInSlot(i, oldAbilities.getAbilityInSlot(i));
-         }
-
          ViltrumiteCosmeticsPlayer oldCosmetics = (ViltrumiteCosmeticsPlayer)oldPlayer;
          ViltrumiteCosmeticsPlayer newCosmetics = (ViltrumiteCosmeticsPlayer)newPlayer;
          newCosmetics.setViltrumiteSkin(oldCosmetics.getViltrumiteSkin());

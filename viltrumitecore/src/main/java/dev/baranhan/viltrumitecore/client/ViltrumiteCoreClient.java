@@ -47,6 +47,8 @@ public class ViltrumiteCoreClient {
    public static Vec3 prevHandPos = null;
    public static Vec3 currentHandPos = null;
    public static CameraType preGrabPerspective = null;
+   public static boolean[] regulusKeyDown = new boolean[5];
+   public static boolean regulusJumpDown = false;
 
    @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
@@ -230,9 +232,32 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.abilityMenuKey.consumeClick()) {
-                  if (corePlayer.isViltrumite() && client.screen == null) {
+                  if (dev.baranhan.viltrumitecore.hero.HeroRegistry.get(client.player).hasAbilityPanel(client.player) && client.screen == null) {
                      client.setScreen(new ViltrumiteAbilityScreen());
                   }
+               }
+            }
+
+            if (client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+               && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
+               String[] regulusAbilities = dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.slotIds();
+               for (int i = 0; i < regulusAbilities.length; i++) {
+                  dev.baranhan.viltrumitecore.hero.HeroAction action = dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.actionFor(regulusAbilities[i]);
+                  if (action == null) {
+                     continue;
+                  }
+
+                  boolean down = AbilityInputManager.isAbilityKeyDown(client.player, regulusAbilities[i]);
+                  if (down != ViltrumiteCoreClient.regulusKeyDown[i]) {
+                     ViltrumiteCoreClient.regulusKeyDown[i] = down;
+                     CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(action, down));
+                  }
+               }
+
+               boolean jumpDown = client.options.keyJump.isDown();
+               if (jumpDown != ViltrumiteCoreClient.regulusJumpDown) {
+                  ViltrumiteCoreClient.regulusJumpDown = jumpDown;
+                  CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(dev.baranhan.viltrumitecore.hero.HeroAction.JUMP, jumpDown));
                }
             }
 

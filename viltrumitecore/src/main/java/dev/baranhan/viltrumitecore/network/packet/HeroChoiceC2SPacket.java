@@ -1,0 +1,48 @@
+package dev.baranhan.viltrumitecore.network.packet;
+
+import dev.baranhan.viltrumitecore.hero.HeroId;
+import dev.baranhan.viltrumitecore.hero.HeroRegistry;
+import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
+import java.util.function.Supplier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
+
+/** Third-race selection. Appended packet: carries the stable hero id string. */
+public class HeroChoiceC2SPacket {
+   private final String heroId;
+
+   public HeroChoiceC2SPacket(String heroId) {
+      this.heroId = heroId;
+   }
+
+   public HeroChoiceC2SPacket(FriendlyByteBuf buffer) {
+      this.heroId = buffer.readUtf(32);
+   }
+
+   public void toBytes(FriendlyByteBuf buffer) {
+      buffer.writeUtf(this.heroId);
+   }
+
+   public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+      NetworkEvent.Context context = contextSupplier.get();
+      context.enqueueWork(() -> {
+         ServerPlayer player = context.getSender();
+         if (player == null) {
+            return;
+         }
+
+         HeroId id = HeroId.fromKey(this.heroId);
+         if (id == null) {
+            return;
+         }
+
+         if (player instanceof ViltrumiteCorePlayer corePlayer) {
+            corePlayer.setChosenRace(true);
+         }
+
+         HeroRegistry.changeHero(player, id);
+      });
+      context.setPacketHandled(true);
+   }
+}

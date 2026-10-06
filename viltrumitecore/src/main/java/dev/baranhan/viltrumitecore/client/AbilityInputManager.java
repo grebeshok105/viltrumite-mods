@@ -47,7 +47,8 @@ public class AbilityInputManager {
 
    public static void tick(Minecraft client) {
       while (abilitySwapKey.consumeClick()) {
-         if (client.player instanceof ViltrumiteCorePlayer corePlayer && !corePlayer.isViltrumite()) {
+         Player player = client.player;
+         if (player == null || !dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).allowsAbilityPages(player)) {
             return;
          }
 

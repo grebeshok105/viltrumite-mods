@@ -238,6 +238,31 @@ public class ViltrumiteAbilities {
             }
          )
       );
+      registerRegulusAbility("regulus:lions_heart", "lions_heart", 0);
+      registerRegulusAbility("regulus:debris_kick", "debris_kick", 1);
+      registerRegulusAbility("regulus:mania", "mania", 2);
+      registerRegulusAbility("regulus:greeds_embrace", "greeds_embrace", 3);
+      registerRegulusAbility("regulus:counter", "counter", 4);
+   }
+
+   private static void registerRegulusAbility(String id, String name, int cooldownIndex) {
+      register(
+         new ViltrumiteAbility(
+            id,
+            new ResourceLocation("viltrumitecore", "textures/gui/ability/regulus/" + name + ".png"),
+            "ability.viltrumitecore." + name + ".name",
+            "ability.viltrumitecore." + name + ".desc",
+            0,
+            player -> {
+               if (player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer) {
+                  int[] cooldowns = heroPlayer.getHeroSnapshot().cooldowns();
+                  return cooldownIndex < cooldowns.length && cooldowns[cooldownIndex] > 0;
+               }
+
+               return false;
+            }
+         )
+      );
    }
 
    private static void register(ViltrumiteAbility ability) {
