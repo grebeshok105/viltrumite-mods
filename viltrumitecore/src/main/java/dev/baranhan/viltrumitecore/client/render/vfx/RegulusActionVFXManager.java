@@ -86,10 +86,11 @@ public class RegulusActionVFXManager {
          PREV.clear();
          LAST_DOMES.clear();
          lastLocalHearts = -1;
+         RegulusClientFx.reset();
          return;
       }
 
-      RegulusClientFx.tickClient(client);
+      RegulusClientFx.tickClient();
 
       for (Player player : level.players()) {
          if (!(player instanceof HeroPlayer heroPlayer)) {

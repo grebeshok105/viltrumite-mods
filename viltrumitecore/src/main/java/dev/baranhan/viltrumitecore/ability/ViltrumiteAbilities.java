@@ -262,9 +262,11 @@ public class ViltrumiteAbilities {
 
    /**
     * Panel grey-out mirrors RegulusHero.actionPermitted for the five ability
-    * slots: while Lion's Heart runs only the heart itself stays lit, during
-    * madness only Counter does, and Counter additionally needs madness. Slots
-    * are grey while another cast is busy or the ritual is channeling.
+    * slots: while Lion's Heart runs only the heart toggle and the ritual stay
+    * lit, a busy cast, an open Mania channel or a running ritual greys every
+    * slot, Counter exists only inside madness and the ritual cannot re-enter
+    * mid-madness. Resolved effects — the freeze, a standing dome and madness
+    * itself — occupy no slot (spec 1.2.5/13.2).
     */
    private static boolean regulusSlotGrey(Player player, int cooldownIndex, HeroAction action) {
       if (!(player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer)) {
@@ -281,24 +283,19 @@ public class ViltrumiteAbilities {
          return true;
       }
 
-      HeroAction active = HeroAction.byId(snapshot.actionId());
-      if (snapshot.ritualTicks() >= 0) {
+      if (snapshot.lionActive()) {
+         return action != HeroAction.LIONS_HEART && action != HeroAction.RITUAL;
+      }
+
+      if (snapshot.actionBusy() || snapshot.controlTargetId() >= 0 || snapshot.ritualTicks() >= 0) {
          return true;
       }
 
-      if (active != null && active != action && active != HeroAction.RITUAL) {
-         return true;
+      if (action == HeroAction.COUNTER) {
+         return !snapshot.madness();
       }
 
-      if (snapshot.lionActive() && action != HeroAction.LIONS_HEART) {
-         return true;
-      }
-
-      if (snapshot.madness() && action != HeroAction.COUNTER) {
-         return true;
-      }
-
-      return action == HeroAction.COUNTER && !snapshot.madness();
+      return action == HeroAction.RITUAL && snapshot.madness();
    }
 
    private static void register(ViltrumiteAbility ability) {

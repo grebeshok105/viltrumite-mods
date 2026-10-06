@@ -93,7 +93,7 @@ class HeroIdentityTest {
    @Test
    void publicSnapshotRoundTripsThroughSyncedString() {
       HeroPublicSnapshot snapshot = new HeroPublicSnapshot(
-         HeroId.REGULUS, 1, 7, 44, 3, true, 240, 260, false, false, 0, 0, -1, new int[]{100, 0, 0, 0, 0, 0}
+         HeroId.REGULUS, 1, 7, 44, 3, true, 240, 260, false, false, 0, 0, -1, new int[]{100, 0, 0, 0, 0, 0}, true
       );
       String encoded = snapshot.encode();
       HeroPublicSnapshot decoded = HeroPublicSnapshot.decode(encoded);
@@ -107,6 +107,7 @@ class HeroIdentityTest {
       assertEquals(260, decoded.lionWindowMax());
       assertFalse(decoded.madness());
       assertEquals(100, decoded.cooldowns()[0]);
+      assertTrue(decoded.actionBusy());
    }
 
    @Test

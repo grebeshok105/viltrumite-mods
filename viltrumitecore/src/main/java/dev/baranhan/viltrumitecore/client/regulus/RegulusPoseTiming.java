@@ -54,16 +54,6 @@ public final class RegulusPoseTiming {
       };
    }
 
-   /** Progress through the cast window, clamped to [0,1]. */
-   public static float actionProgress(HeroAction action, int elapsed, float partialTick, int length) {
-      if (length <= 0) {
-         return 0.0F;
-      }
-
-      float progress = ((float)elapsed + partialTick) / (float)length;
-      return Math.max(0.0F, Math.min(1.0F, progress));
-   }
-
    /** True once the event tick has passed (effect already applied). */
    public static boolean eventPassed(HeroAction action, int elapsed, float partialTick) {
       Timing timing = timing(action);

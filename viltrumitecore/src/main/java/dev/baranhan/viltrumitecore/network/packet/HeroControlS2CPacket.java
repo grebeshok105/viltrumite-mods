@@ -90,7 +90,7 @@ public class HeroControlS2CPacket {
 
    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
       NetworkEvent.Context context = contextSupplier.get();
-      context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientHeroData.setControlSnapshot(this.dimension, this.domes, this.controls)));
+      context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientHeroData.setControlSnapshot(this.domes, this.controls)));
       context.setPacketHandled(true);
    }
 

@@ -63,15 +63,6 @@ class RegulusPoseTimingTest {
    }
 
    @Test
-   void progressUsesActionElapsedWithPartialTick() {
-      // progress = elapsed+partial over length, clamped to [0,1].
-      assertEquals(0.0F, RegulusPoseTiming.actionProgress(HeroAction.DEBRIS_KICK, 0, 0.0F, 44), 1.0E-6);
-      assertEquals(0.25F, RegulusPoseTiming.actionProgress(HeroAction.DEBRIS_KICK, 11, 0.0F, 44), 1.0E-6);
-      assertEquals(1.0F, RegulusPoseTiming.actionProgress(HeroAction.DEBRIS_KICK, 44, 0.5F, 44), 1.0E-6);
-      assertEquals(1.0F, RegulusPoseTiming.actionProgress(HeroAction.DEBRIS_KICK, 60, 0.0F, 44), 1.0E-6);
-   }
-
-   @Test
    void eventPassedFlipsAtEventTick() {
       assertFalse(RegulusPoseTiming.eventPassed(HeroAction.LIONS_HEART, 13, 0.9F));
       assertTrue(RegulusPoseTiming.eventPassed(HeroAction.LIONS_HEART, 14, 0.0F));

@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 
 /**
  * Owner-private hero data mirrored on the client (heart carrier ids for the
@@ -15,7 +13,6 @@ import net.minecraft.world.level.Level;
  */
 public final class ClientHeroData {
    private static int[] carrierEntityIds = new int[0];
-   private static ResourceKey<Level> controlDimension;
    private static Map<UUID, HeroControlS2CPacket.DomeInfo> domes = Map.of();
    private static Map<UUID, HeroControlS2CPacket.ControlInfo> controls = Map.of();
 
@@ -34,9 +31,8 @@ public final class ClientHeroData {
       return carrierEntityIds.length;
    }
 
-   /** Replaces the whole control view for the given dimension (full snapshot). */
-   public static void setControlSnapshot(ResourceKey<Level> dimension, List<HeroControlS2CPacket.DomeInfo> domeList, List<HeroControlS2CPacket.ControlInfo> controlList) {
-      controlDimension = dimension;
+   /** Replaces the whole control view (full snapshot for the current dimension). */
+   public static void setControlSnapshot(List<HeroControlS2CPacket.DomeInfo> domeList, List<HeroControlS2CPacket.ControlInfo> controlList) {
       Map<UUID, HeroControlS2CPacket.DomeInfo> domeMap = new java.util.HashMap<>();
       for (HeroControlS2CPacket.DomeInfo dome : domeList) {
          domeMap.put(dome.id(), dome);

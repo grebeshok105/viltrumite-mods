@@ -1,12 +1,10 @@
 package dev.baranhan.viltrumitecore.client.render.vfx;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 /**
@@ -16,17 +14,6 @@ import org.joml.Vector3f;
  */
 public final class RegulusPixelVfx {
    private RegulusPixelVfx() {
-   }
-
-   /** Camera-space billboard pixel — the exact drawPaintPixel shape. */
-   public static void paintPixel(Matrix4f matrix, BufferBuilder buffer, float gridX, float gridY, float scale, int r, int g, int b, int alpha) {
-      float cx = gridX * scale;
-      float cy = gridY * scale;
-      float half = scale * 0.5F;
-      buffer.vertex(matrix, cx - half, cy - half, 0.0F).color(r, g, b, alpha).endVertex();
-      buffer.vertex(matrix, cx + half, cy - half, 0.0F).color(r, g, b, alpha).endVertex();
-      buffer.vertex(matrix, cx + half, cy + half, 0.0F).color(r, g, b, alpha).endVertex();
-      buffer.vertex(matrix, cx - half, cy + half, 0.0F).color(r, g, b, alpha).endVertex();
    }
 
    /** Billboard pixel at a world position, facing the camera via its basis. */
@@ -130,16 +117,6 @@ public final class RegulusPixelVfx {
       billboardPixel(buffer, cameraPos, camera, pos.subtract(size, 0.0, 0.0), size * 0.5F, r, g, b, alpha / 2);
       billboardPixel(buffer, cameraPos, camera, pos.add(0.0, size, 0.0), size * 0.5F, r, g, b, alpha / 2);
       billboardPixel(buffer, cameraPos, camera, pos.subtract(0.0, size, 0.0), size * 0.5F, r, g, b, alpha / 2);
-   }
-
-   /** Convenience: camera-space matrix the existing ring effects use. */
-   public static Matrix4f cameraSpaceMatrix(Camera camera, Vec3 worldPos, float yawDeg) {
-      com.mojang.blaze3d.vertex.PoseStack matrices = new com.mojang.blaze3d.vertex.PoseStack();
-      matrices.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-      matrices.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
-      matrices.translate(worldPos.x - camera.getPosition().x, worldPos.y - camera.getPosition().y, worldPos.z - camera.getPosition().z);
-      matrices.mulPose(Axis.YP.rotationDegrees(-yawDeg));
-      return matrices.last().pose();
    }
 
    /** Expanding ground ring with square-root ease-out, alpha fading to zero. */

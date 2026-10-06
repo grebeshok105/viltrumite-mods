@@ -320,7 +320,7 @@ public class RegulusHero implements HeroDefinition {
    public HeroPublicSnapshot snapshot(Player player) {
       RegulusState state = stateOf(player);
       if (state == null) {
-         return new HeroPublicSnapshot(HeroId.REGULUS, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1, new int[6]);
+         return new HeroPublicSnapshot(HeroId.REGULUS, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1, new int[6], false);
       }
 
       int[] cooldowns = new int[6];
@@ -353,7 +353,8 @@ public class RegulusHero implements HeroDefinition {
          state.madnessTicksLeft,
          state.ritualTicks,
          controlTargetId,
-         cooldowns
+         cooldowns,
+         state.busy()
       );
    }
 

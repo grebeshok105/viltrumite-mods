@@ -21,11 +21,12 @@ public record HeroPublicSnapshot(
    int madnessTicksLeft,
    int ritualTicks,
    int controlTargetId,
-   int[] cooldowns
+   int[] cooldowns,
+   boolean actionBusy
 ) {
    public static final int COOLDOWN_COUNT = 6;
    public static final HeroPublicSnapshot EMPTY = new HeroPublicSnapshot(
-      HeroId.HUMAN, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1, new int[COOLDOWN_COUNT]
+      HeroId.HUMAN, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1, new int[COOLDOWN_COUNT], false
    );
 
    public String encode() {
@@ -48,6 +49,7 @@ public record HeroPublicSnapshot(
          builder.append(';').append(i < this.cooldowns.length ? this.cooldowns[i] : 0);
       }
 
+      builder.append(';').append(this.actionBusy ? 1 : 0);
       return builder.toString();
    }
 
@@ -84,7 +86,8 @@ public record HeroPublicSnapshot(
             Integer.parseInt(parts[10]),
             Integer.parseInt(parts[11]),
             Integer.parseInt(parts[12]),
-            cooldowns
+            cooldowns,
+            parts.length > 19 && "1".equals(parts[19])
          );
       } catch (NumberFormatException exception) {
          return EMPTY;
@@ -111,7 +114,8 @@ public record HeroPublicSnapshot(
             && this.madnessTicksLeft == snapshot.madnessTicksLeft
             && this.ritualTicks == snapshot.ritualTicks
             && this.controlTargetId == snapshot.controlTargetId
-            && Arrays.equals(this.cooldowns, snapshot.cooldowns);
+            && Arrays.equals(this.cooldowns, snapshot.cooldowns)
+            && this.actionBusy == snapshot.actionBusy;
       }
    }
 
@@ -131,6 +135,7 @@ public record HeroPublicSnapshot(
       result = 31 * result + this.ritualTicks;
       result = 31 * result + this.controlTargetId;
       result = 31 * result + Arrays.hashCode(this.cooldowns);
+      result = 31 * result + Boolean.hashCode(this.actionBusy);
       return result;
    }
 }

@@ -1,7 +1,5 @@
 package dev.baranhan.viltrumitecore.client.regulus;
 
-import net.minecraft.client.Minecraft;
-
 /**
  * Small shared decaying state for Regulus screen FX. The VFX tick detector
  * writes the edges (heart burned, debris cone hit); GameRendererDashMixin and
@@ -20,12 +18,8 @@ public final class RegulusClientFx {
    private RegulusClientFx() {
    }
 
-   public static void tickClient(Minecraft client) {
-      if (client.level == null) {
-         reset();
-         return;
-      }
-
+   /** Per-tick decay of the screen-FX counters; the caller runs reset() on unload. */
+   public static void tickClient() {
       if (heartFlashTicks > 0) {
          heartFlashTicks--;
       }

@@ -176,6 +176,7 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
    /** Lion windup: right hand pressed to the chest, fist clench at the event tick. */
    @Unique
    private void applyLionWindup(float elapsed) {
+      RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(HeroAction.LIONS_HEART);
       this.poseKeyed(
          this.rightArm,
          elapsed,
@@ -183,13 +184,13 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
             {0.0F, 0.0F, 0.0F, 0.0F},
             {7.0F, -62.0F, -34.0F, 8.0F},
             {12.0F, -74.0F, -38.0F, 12.0F},
-            {14.0F, -72.0F, -36.0F, 30.0F},
-            {15.0F, -70.0F, -35.0F, 18.0F}
+            {(float)timing.eventTick(), -72.0F, -36.0F, 30.0F},
+            {(float)timing.length(), -70.0F, -35.0F, 18.0F}
          }
       );
-      this.poseKeyed(this.leftArm, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, -18.0F, 10.0F, -8.0F}, {15.0F, -14.0F, 8.0F, -6.0F}});
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -9.0F, 0.0F, 0.0F}, {15.0F, -9.0F, 0.0F, 0.0F}});
-      this.poseKeyed(this.body, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -5.0F, 0.0F, 0.0F}, {15.0F, -5.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.leftArm, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, -18.0F, 10.0F, -8.0F}, {(float)timing.length(), -14.0F, 8.0F, -6.0F}});
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -9.0F, 0.0F, 0.0F}, {(float)timing.length(), -9.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.body, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -5.0F, 0.0F, 0.0F}, {(float)timing.length(), -5.0F, 0.0F, 0.0F}});
    }
 
    /** "King stands" — calm held pose while Lion's Heart is active. */
@@ -220,43 +221,48 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
       this.poseBlend(this.body, weight, 6.0F, 0.0F, 0.0F);
    }
 
-   /** Debris kick: leg winds up 0-11t, slams the ground at the 14t event. */
+   /** Debris kick: leg winds up to the rise tick, slams the ground at the event. */
    @Unique
    private void applyDebrisKick(float elapsed) {
+      RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(HeroAction.DEBRIS_KICK);
+      float riseTick = (float)RegulusPoseTiming.DEBRIS_RISE_TICK;
+      float eventTick = (float)timing.eventTick();
+      float endTick = (float)timing.length();
       this.poseKeyed(
          this.rightLeg,
          elapsed,
          new float[][]{
             {0.0F, 0.0F, 0.0F, 0.0F},
             {8.0F, 35.0F, 0.0F, -8.0F},
-            {11.0F, 55.0F, 0.0F, -10.0F},
-            {14.0F, -72.0F, 0.0F, 5.0F},
+            {riseTick, 55.0F, 0.0F, -10.0F},
+            {eventTick, -72.0F, 0.0F, 5.0F},
             {20.0F, -60.0F, 0.0F, 4.0F},
-            {44.0F, 0.0F, 0.0F, 0.0F}
+            {endTick, 0.0F, 0.0F, 0.0F}
          }
       );
-      this.poseKeyed(this.leftLeg, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {14.0F, 14.0F, 0.0F, -4.0F}, {44.0F, 0.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.leftLeg, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {eventTick, 14.0F, 0.0F, -4.0F}, {endTick, 0.0F, 0.0F, 0.0F}});
       this.poseKeyed(
          this.body,
          elapsed,
-         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, -6.0F, 0.0F, 0.0F}, {14.0F, 22.0F, 0.0F, 0.0F}, {20.0F, 18.0F, 0.0F, 0.0F}, {44.0F, 0.0F, 0.0F, 0.0F}}
+         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, -6.0F, 0.0F, 0.0F}, {eventTick, 22.0F, 0.0F, 0.0F}, {20.0F, 18.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}}
       );
       this.poseKeyed(
          this.rightArm,
          elapsed,
-         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, 30.0F, 0.0F, -15.0F}, {14.0F, -55.0F, 0.0F, -10.0F}, {44.0F, 0.0F, 0.0F, 0.0F}}
+         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, 30.0F, 0.0F, -15.0F}, {eventTick, -55.0F, 0.0F, -10.0F}, {endTick, 0.0F, 0.0F, 0.0F}}
       );
       this.poseKeyed(
          this.leftArm,
          elapsed,
-         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, 30.0F, 0.0F, 15.0F}, {14.0F, -55.0F, 0.0F, 10.0F}, {44.0F, 0.0F, 0.0F, 0.0F}}
+         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, 30.0F, 0.0F, 15.0F}, {eventTick, -55.0F, 0.0F, 10.0F}, {endTick, 0.0F, 0.0F, 0.0F}}
       );
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {11.0F, -8.0F, 0.0F, 0.0F}, {14.0F, 12.0F, 0.0F, 0.0F}, {44.0F, 0.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {riseTick, -8.0F, 0.0F, 0.0F}, {eventTick, 12.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}});
    }
 
    /** Mania windup: arm extends forward; the palm clenches at the event tick. */
    @Unique
    private void applyManiaExtend(float elapsed) {
+      RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(HeroAction.MANIA);
       this.poseKeyed(
          this.rightArm,
          elapsed,
@@ -264,51 +270,59 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
             {0.0F, 0.0F, 0.0F, 0.0F},
             {8.0F, -48.0F, -10.0F, 0.0F},
             {17.0F, -88.0F, -5.0F, 0.0F},
-            {19.0F, -88.0F, -5.0F, 22.0F},
-            {20.0F, -85.0F, -8.0F, 14.0F}
+            {(float)timing.eventTick(), -88.0F, -5.0F, 22.0F},
+            {(float)timing.length(), -85.0F, -8.0F, 14.0F}
          }
       );
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {12.0F, 6.0F, 0.0F, 0.0F}, {20.0F, 6.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {12.0F, 6.0F, 0.0F, 0.0F}, {(float)timing.length(), 6.0F, 0.0F, 0.0F}});
    }
 
    /** Embrace: arm raises to the point, opens at the event, lowers by recover. */
    @Unique
    private void applyEmbraceRaise(float elapsed) {
+      RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(HeroAction.GREEDS_EMBRACE);
+      float lockTick = (float)RegulusPoseTiming.EMBRACE_LOCK_TICK;
+      float eventTick = (float)timing.eventTick();
+      float endTick = (float)timing.length();
       this.poseKeyed(
          this.rightArm,
          elapsed,
          new float[][]{
             {0.0F, 0.0F, 0.0F, 0.0F},
-            {13.0F, -168.0F, -5.0F, 8.0F},
-            {18.0F, -168.0F, -5.0F, 24.0F},
+            {lockTick, -168.0F, -5.0F, 8.0F},
+            {eventTick, -168.0F, -5.0F, 24.0F},
             {30.0F, -42.0F, 0.0F, 5.0F},
-            {33.0F, 0.0F, 0.0F, 0.0F}
+            {endTick, 0.0F, 0.0F, 0.0F}
          }
       );
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {13.0F, -14.0F, 0.0F, 0.0F}, {30.0F, -4.0F, 0.0F, 0.0F}, {33.0F, 0.0F, 0.0F, 0.0F}});
-      this.poseKeyed(this.body, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {13.0F, -8.0F, 0.0F, 0.0F}, {30.0F, 2.0F, 0.0F, 0.0F}, {33.0F, 0.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {lockTick, -14.0F, 0.0F, 0.0F}, {30.0F, -4.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.body, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {lockTick, -8.0F, 0.0F, 0.0F}, {30.0F, 2.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}});
    }
 
-   /** Counter: lifted sky-high 0-20t, then the top-down slam at the 27t event. */
+   /** Counter: lifted sky-high through the lift ticks, then the top-down slam at the event. */
    @Unique
    private void applyCounterSlam(float elapsed) {
+      RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(HeroAction.COUNTER);
+      float liftTick = (float)RegulusPoseTiming.COUNTER_LIFT_TICKS;
+      float eventTick = (float)timing.eventTick();
+      float endTick = (float)timing.length();
       float[][] armKeys = {
          {0.0F, 0.0F, 0.0F, 0.0F},
          {6.0F, -40.0F, 0.0F, 0.0F},
-         {20.0F, -150.0F, 0.0F, 0.0F},
+         {liftTick, -150.0F, 0.0F, 0.0F},
          {24.0F, -152.0F, 0.0F, 0.0F},
-         {27.0F, 42.0F, 0.0F, 0.0F},
-         {28.0F, 30.0F, 0.0F, 0.0F}
+         {eventTick, 42.0F, 0.0F, 0.0F},
+         {endTick, 30.0F, 0.0F, 0.0F}
       };
       this.poseKeyed(this.rightArm, elapsed, mirrorZ(armKeys, -1.0F));
       this.poseKeyed(this.leftArm, elapsed, mirrorZ(armKeys, 1.0F));
       this.poseKeyed(
          this.body,
          elapsed,
-         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {20.0F, -10.0F, 0.0F, 0.0F}, {24.0F, -10.0F, 0.0F, 0.0F}, {27.0F, 30.0F, 0.0F, 0.0F}, {28.0F, 24.0F, 0.0F, 0.0F}}
+         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {liftTick, -10.0F, 0.0F, 0.0F}, {24.0F, -10.0F, 0.0F, 0.0F}, {eventTick, 30.0F, 0.0F, 0.0F}, {endTick, 24.0F, 0.0F, 0.0F}}
       );
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {20.0F, -12.0F, 0.0F, 0.0F}, {27.0F, 15.0F, 0.0F, 0.0F}, {28.0F, 12.0F, 0.0F, 0.0F}});
-      float[][] legKeys = {{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -14.0F, 0.0F, 0.0F}, {27.0F, -18.0F, 0.0F, 0.0F}, {28.0F, -14.0F, 0.0F, 0.0F}};
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {liftTick, -12.0F, 0.0F, 0.0F}, {eventTick, 15.0F, 0.0F, 0.0F}, {endTick, 12.0F, 0.0F, 0.0F}});
+      float[][] legKeys = {{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -14.0F, 0.0F, 0.0F}, {eventTick, -18.0F, 0.0F, 0.0F}, {endTick, -14.0F, 0.0F, 0.0F}};
       this.poseKeyed(this.rightLeg, elapsed, legKeys);
       this.poseKeyed(this.leftLeg, elapsed, legKeys);
    }
