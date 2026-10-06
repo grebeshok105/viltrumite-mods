@@ -1,6 +1,7 @@
 package dev.baranhan.viltrumitecore.client;
 
 import dev.baranhan.viltrumitecore.client.gui.ViltrumiteAbilityScreen;
+import dev.baranhan.viltrumitecore.client.regulus.RegulusClient;
 import dev.baranhan.viltrumitecore.config.ViltrumiteCameraConfig;
 import dev.baranhan.viltrumitecore.config.ViltrumiteClientConfig;
 import dev.baranhan.viltrumitecore.config.ViltrumitePostProcessingConfig;
@@ -50,6 +51,7 @@ public class ViltrumiteCoreClient {
    @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
       event.enqueueWork(() -> {
+         RegulusClient.registerSkins();
          CosmeticLoader.init();
          ViltrumiteCameraConfig.load();
          ViltrumitePostProcessingConfig.load();

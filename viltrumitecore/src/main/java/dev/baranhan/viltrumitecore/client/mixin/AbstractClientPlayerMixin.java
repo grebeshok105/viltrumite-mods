@@ -1,6 +1,8 @@
 package dev.baranhan.viltrumitecore.client.mixin;
 
 import dev.baranhan.viltrumitecore.client.CosmeticLoader;
+import dev.baranhan.viltrumitecore.client.hero.HeroSkins;
+import dev.baranhan.viltrumitecore.client.hero.ResolvedHeroSkin;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCosmeticsPlayer;
 import dev.baranhan.viltrumiteflight.util.FlightState;
@@ -34,6 +36,16 @@ public abstract class AbstractClientPlayerMixin {
    )
    private void injectSkinTexture(CallbackInfoReturnable<ResourceLocation> cir) {
       AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
+      ResolvedHeroSkin heroSkin = HeroSkins.resolve(player).orElse(null);
+      if (heroSkin != null) {
+         if (!heroSkin.suppressOverride()) {
+            cir.setReturnValue(heroSkin.skin());
+            return;
+         }
+         if (heroSkin.suppressCosmetics()) {
+            return;
+         }
+      }
       if (player instanceof ViltrumiteCosmeticsPlayer cosmeticsPlayer) {
          String skinName = cosmeticsPlayer.getViltrumiteSkin();
          if (!skinName.equals("off") && CosmeticLoader.SKINS.containsKey(skinName)) {
@@ -49,6 +61,16 @@ public abstract class AbstractClientPlayerMixin {
    )
    private void injectModel(CallbackInfoReturnable<String> cir) {
       AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
+      ResolvedHeroSkin heroSkin = HeroSkins.resolve(player).orElse(null);
+      if (heroSkin != null) {
+         if (!heroSkin.suppressOverride()) {
+            cir.setReturnValue(heroSkin.modelName());
+            return;
+         }
+         if (heroSkin.suppressCosmetics()) {
+            return;
+         }
+      }
       if (player instanceof ViltrumiteCosmeticsPlayer cosmeticsPlayer) {
          String skinName = cosmeticsPlayer.getViltrumiteSkin();
          if (!skinName.equals("off") && CosmeticLoader.SKINS.containsKey(skinName)) {
@@ -64,6 +86,16 @@ public abstract class AbstractClientPlayerMixin {
    )
    private void onGetCapeTexture(CallbackInfoReturnable<ResourceLocation> cir) {
       AbstractClientPlayer player = (AbstractClientPlayer)(Object)this;
+      ResolvedHeroSkin heroSkin = HeroSkins.resolve(player).orElse(null);
+      if (heroSkin != null) {
+         if (heroSkin.suppressCape()) {
+            cir.setReturnValue(null);
+            return;
+         }
+         if (heroSkin.suppressCosmetics()) {
+            return;
+         }
+      }
       if (player instanceof ViltrumiteCosmeticsPlayer cosmeticsPlayer) {
          String capeName = cosmeticsPlayer.getViltrumiteCape();
          if (!capeName.equals("off") && CosmeticLoader.CAPES.containsKey(capeName)) {
