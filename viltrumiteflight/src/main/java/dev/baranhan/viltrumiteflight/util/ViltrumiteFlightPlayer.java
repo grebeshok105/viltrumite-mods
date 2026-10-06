@@ -37,6 +37,17 @@ public interface ViltrumiteFlightPlayer {
 
    void stopFlight();
 
+   default void resetModFlight() {
+      this.setFlightState(FlightState.NONE);
+      this.setFlightThrottle(0.0F);
+      this.setFlightAccelerating(false);
+      this.setHoverForward(0.0F);
+      this.setHoverSideways(0.0F);
+      this.setSpeedLocked(false);
+      this.setFlightTicks(0);
+      this.setTakeoffTicks(0);
+   }
+
    void handleFlightCollision();
 
    int getFlightTicks();
