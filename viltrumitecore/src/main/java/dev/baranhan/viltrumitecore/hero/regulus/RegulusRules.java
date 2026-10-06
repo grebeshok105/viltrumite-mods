@@ -47,6 +47,8 @@ public final class RegulusRules {
 
    public static final int COUNTER_LIFT_TICKS = 20;
    public static final int COUNTER_SLAM_TICKS = 7;
+   public static final double COUNTER_LIFT_VELOCITY = 0.3;
+   public static final double COUNTER_BEHIND_DISTANCE = 1.5;
    public static final int COUNTER_ATTACKER_WINDOW = 240;
    public static final double COUNTER_RANGE = 40.0;
    public static final int COUNTER_CRATER_DEPTH = 8;
@@ -150,5 +152,10 @@ public final class RegulusRules {
 
    public static boolean attackerValid(long attackerTick, long nowTick) {
       return nowTick - attackerTick <= COUNTER_ATTACKER_WINDOW;
+   }
+
+   /** §11.1/§16: outside Lion a single lost hit of >=4 HP interrupts; inside Lion only movement/release cancel. */
+   public static boolean ritualDamageInterrupts(float lostHealth, boolean lionActive) {
+      return !lionActive && lostHealth >= RITUAL_INTERRUPT_DAMAGE;
    }
 }

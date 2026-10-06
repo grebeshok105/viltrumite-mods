@@ -123,7 +123,7 @@ public class PunchImpactManager {
                         flightTarget.stopFlight();
                      }
 
-                     LAUNCHED_ENTITIES.put(livingTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+                     LAUNCHED_ENTITIES.put(livingTarget, new PunchImpactManager.MeteorData(launchVelocity, 30, player.getUUID()));
                   }
                }
             }
@@ -144,7 +144,7 @@ public class PunchImpactManager {
                flightTarget.stopFlight();
             }
 
-            LAUNCHED_ENTITIES.put(grabbedTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+            LAUNCHED_ENTITIES.put(grabbedTarget, new PunchImpactManager.MeteorData(launchVelocity, 30, player.getUUID()));
          }
       }
 
@@ -258,7 +258,10 @@ public class PunchImpactManager {
                if (hitUnbreakable || (double)blocksBroken > dynamicThreshold) {
                   float explosionPower = (float)Math.max(3.0, speed);
                   world.explode(entity, entity.getX(), entity.getY(), entity.getZ(), explosionPower, ExplosionInteraction.BLOCK);
-                  entity.hurt(world.damageSources().flyIntoWall(), (float)speed * 10.0F);
+                  // Keep the fly_into_wall type but name the launcher as the
+                  // cause so a hero target can arm its Counter on the hit.
+                  Entity launcher = data.attackerId != null ? world.getEntity(data.attackerId) : null;
+                  entity.hurt(new net.minecraft.world.damagesource.DamageSource(world.damageSources().flyIntoWall().typeHolder(), null, launcher), (float)speed * 10.0F);
                   it.remove();
                } else if (blocksBroken > 0) {
                   double brakeForce = 0.85;
@@ -286,10 +289,14 @@ public class PunchImpactManager {
    public static class MeteorData {
       public Vec3 velocity;
       public int ticksLeft;
+      // The launcher: credit for the eventual wall hit (Counter attribution).
+      @javax.annotation.Nullable
+      public final java.util.UUID attackerId;
 
-      public MeteorData(Vec3 velocity, int ticksLeft) {
+      public MeteorData(Vec3 velocity, int ticksLeft, @javax.annotation.Nullable java.util.UUID attackerId) {
          this.velocity = velocity;
          this.ticksLeft = ticksLeft;
+         this.attackerId = attackerId;
       }
    }
 }

@@ -58,7 +58,7 @@ public final class HeroRegistry {
       }
 
       HeroId current = heroPlayer.getHeroId();
-      if (current == id) {
+      if (!isRealTransition(current, id)) {
          return;
       }
 
@@ -96,11 +96,21 @@ public final class HeroRegistry {
       HeroId previous = heroPlayer.getHeroId();
       heroPlayer.viltrumitecore$setHeroSession(session);
 
-      if (previous != session.heroId()) {
+      if (shouldResetState(previous, session.heroId())) {
          heroPlayer.viltrumitecore$setHeroState(null);
       }
 
       FlightPermissions.resetModFlight(player);
+   }
+
+   /** Selecting the hero already worn is never an exit/re-entry exploit. */
+   public static boolean isRealTransition(HeroId current, HeroId next) {
+      return current != next;
+   }
+
+   /** Restore keeps the loaded state only when the identity did not change. */
+   public static boolean shouldResetState(HeroId previous, HeroId restored) {
+      return previous != restored;
    }
 
    /** Compose and publish the public snapshot when it changed. */

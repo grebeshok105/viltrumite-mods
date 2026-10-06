@@ -1169,7 +1169,9 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
                if (brokenBlockCount > 0) {
                   float grindDamage = (float)brokenBlockCount * 1.0F;
-                  currentTarget.hurt(player.damageSources().flyIntoWall(), grindDamage);
+                  // Same fly_into_wall type, but the grabber is the cause so a
+                  // hero victim can arm its Counter on the grind.
+                  currentTarget.hurt(new net.minecraft.world.damagesource.DamageSource(player.damageSources().flyIntoWall().typeHolder(), null, player), grindDamage);
                   if (!currentTarget.isAlive()) {
                      this.releaseTarget();
                   }
