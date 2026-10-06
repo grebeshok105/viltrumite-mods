@@ -9,24 +9,59 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 class RegulusHeartsTest {
 
    @Test
    void carrierEligibilityMatchesSpec() {
-      // Spec 5.1: vanilla namespace, non-player, non-Enemy, no heartless tag.
-      assertTrue(RegulusRules.carrierEligible(true, false, false, false));
+      // Spec 5.1: vanilla namespace, real creature, non-player, non-Enemy, no heartless tag.
+      assertTrue(RegulusRules.carrierEligible(true, false, false, false, true));
       // Modded-namespace entities are not carriers.
-      assertFalse(RegulusRules.carrierEligible(false, false, false, false));
+      assertFalse(RegulusRules.carrierEligible(false, false, false, false, true));
       // Players are never carriers.
-      assertFalse(RegulusRules.carrierEligible(true, true, false, false));
+      assertFalse(RegulusRules.carrierEligible(true, true, false, false, true));
       // Hostile entities (Enemy marker) are never carriers.
-      assertFalse(RegulusRules.carrierEligible(true, false, true, false));
+      assertFalse(RegulusRules.carrierEligible(true, false, true, false, true));
       // The heartless tag opts an entity out.
-      assertFalse(RegulusRules.carrierEligible(true, false, false, true));
+      assertFalse(RegulusRules.carrierEligible(true, false, false, true, true));
       // Every disqualifier alone is enough.
-      assertFalse(RegulusRules.carrierEligible(false, true, true, true));
+      assertFalse(RegulusRules.carrierEligible(false, true, true, true, false));
+   }
+
+   @Test
+   void decorationEntitiesAreNotCarriers() {
+      // Armor stands satisfy the literal spec bullets but are not "живое
+      // существо": they would grant free permanent hearts. The creature flag
+      // (Mob at the call site) excludes them.
+      assertFalse(RegulusRules.carrierEligible(true, false, false, false, false));
+   }
+
+   @Test
+   void carrierStatusSplitsDeathFromGone() {
+      assertEquals(RegulusHearts.CarrierStatus.GONE, RegulusHearts.carrierStatus(false, false));
+      assertEquals(RegulusHearts.CarrierStatus.BOUND, RegulusHearts.carrierStatus(true, true));
+      assertEquals(RegulusHearts.CarrierStatus.DEAD, RegulusHearts.carrierStatus(true, false));
+   }
+
+   @Test
+   void carrierLevelBindingSurvivesRescanAndClearsOnDrop() {
+      RegulusState state = new RegulusState();
+      UUID carrier = UUID.randomUUID();
+      ResourceLocation overworld = new ResourceLocation("minecraft", "overworld");
+      ResourceLocation nether = new ResourceLocation("minecraft", "nether");
+
+      // The dimension at bind time wins: a re-scan elsewhere never rebinds the
+      // heart to the owner's new dimension.
+      RegulusHearts.bindCarrierLevels(state, List.of(carrier), overworld);
+      RegulusHearts.bindCarrierLevels(state, List.of(carrier), nether);
+      assertEquals(overworld, state.carrierLevels.get(carrier));
+
+      // Losing the heart clears its level binding too.
+      state.carriers.add(carrier);
+      RegulusHearts.dropCarrier(state, carrier);
+      assertFalse(state.carrierLevels.containsKey(carrier));
    }
 
    @Test

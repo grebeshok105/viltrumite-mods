@@ -1,11 +1,13 @@
 package dev.baranhan.viltrumitecore.hero.regulus;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -31,6 +33,10 @@ public final class RegulusState {
 
    // Hearts (carriers are owner-private; only the count is public).
    public final Set<UUID> carriers = new LinkedHashSet<>();
+   // The dimension each carrier was bound in: the heart lives there, so death
+   // checks resolve the carrier in its own level even when the owner is
+   // elsewhere (spec 5.3 — a death always burns, an unload drops silently).
+   public final Map<UUID, ResourceLocation> carrierLevels = new LinkedHashMap<>();
    // Carriers the owner was last notified about; snapshot pushes dedupe on it.
    public final Set<UUID> pushedCarriers = new LinkedHashSet<>();
    public long nextCarrierScan;

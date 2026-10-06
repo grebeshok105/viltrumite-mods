@@ -75,9 +75,26 @@ public final class RegulusRules {
       return Math.max(0, Math.min(MAX_HEARTS, hearts));
    }
 
-   /** Spec 5.1: a carrier is a vanilla living, non-player, non-Enemy, untagged. */
-   public static boolean carrierEligible(boolean vanillaNamespace, boolean player, boolean hostile, boolean heartless) {
-      return vanillaNamespace && !player && !hostile && !heartless;
+   /**
+    * Spec 5.1: a carrier is a vanilla living, non-player, non-Enemy, untagged
+    * real creature (Mob). Decoration entities like armor stands are not
+    * "живое существо" — otherwise they grant free permanent hearts.
+    */
+   public static boolean carrierEligible(boolean vanillaNamespace, boolean player, boolean hostile, boolean heartless, boolean creature) {
+      return vanillaNamespace && creature && !player && !hostile && !heartless;
+   }
+
+   /** Spec 6.4: the release impulse pushes opponents only, never allies or own carriers. */
+   public static boolean repulseTarget(boolean opponent, boolean allied, boolean ownCarrier) {
+      return opponent && !allied && !ownCarrier;
+   }
+
+   /**
+    * A new cast needs its slot equipped and off cooldown; the Lion off-toggle
+    * is not a new cast and always passes (spec 6.4 "повторное нажатие").
+    */
+   public static boolean mayStartAbility(boolean equippedOnActivePage, boolean onCooldown, boolean lionOffToggle) {
+      return lionOffToggle || (equippedOnActivePage && !onCooldown);
    }
 
    /** cd = ceil(base * (1 - 0.03 * H)), H sampled when the cooldown starts. */

@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -28,6 +29,14 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class ControlManager {
    private static final Map<ServerLevel, ControlManager> INSTANCES = new WeakHashMap<>();
+
+   /**
+    * Projectiles whose freeze record was dropped while they were unreachable
+    * (unloaded chunk or another level). The saved noGravity value is applied
+    * the next time the projectile joins any level, so it can never hang
+    * mid-air with noGravity baked into NBT.
+    */
+   private static final Map<UUID, Boolean> PENDING_GRAVITY_RESTORE = new ConcurrentHashMap<>();
 
    private final Map<UUID, ControlRecord> controls = new HashMap<>();
    private final Map<UUID, DomeRecord> domes = new HashMap<>();
@@ -174,9 +183,17 @@ public final class ControlManager {
    /**
     * Caster lifecycle: DEATH/DISCONNECT end channels and freezes and PULLs; a
     * HERO_CHANGE also removes the caster's domes. Dome records are world-owned
-    * and survive a dead caster.
+    * and survive a dead caster. Caster-owned records can sit in another
+    * level's manager (frozen projectiles stay behind on a dimension change),
+    * so the cleanup sweeps every instance.
     */
    public void cleanupCaster(UUID caster, CleanupReason reason) {
+      for (ControlManager manager : INSTANCES.values()) {
+         manager.cleanupCasterHere(caster, reason);
+      }
+   }
+
+   private void cleanupCasterHere(UUID caster, CleanupReason reason) {
       for (Map.Entry<UUID, ControlRecord> entry : new HashMap<>(this.controls).entrySet()) {
          ControlRecord record = entry.getValue();
          if (record.caster.equals(caster)) {
@@ -258,12 +275,15 @@ public final class ControlManager {
    }
 
    /**
-    * Drop one caster's ownership on every projectile it froze. When the last
-    * caster releases, the projectile keeps velocity zero and gets its original
-    * gravity back, so ordinary projectiles simply fall.
+    * Drop one caster's ownership on every projectile it froze, in every level.
+    * When the last caster releases, the projectile keeps velocity zero and
+    * gets its original gravity back, so ordinary projectiles simply fall; if
+    * the projectile is unreachable the restore is deferred to its next join.
     */
-   public void releaseProjectilesFor(UUID caster) {
-      this.releaseCasterFromProjectiles(caster);
+   public static void releaseProjectilesFor(UUID caster) {
+      for (ControlManager manager : INSTANCES.values()) {
+         manager.releaseCasterFromProjectiles(caster);
+      }
    }
 
    private void releaseCasterFromProjectiles(UUID caster) {
@@ -276,14 +296,22 @@ public final class ControlManager {
             return false;
          }
 
-         Projectile projectile = record.projectile();
-         if (projectile != null && !projectile.isRemoved()) {
-            projectile.setNoGravity(record.savedNoGravity);
-            projectile.setDeltaMovement(Vec3.ZERO);
-         }
-
+         record.restoreOrDefer();
          return true;
       });
+   }
+
+   /**
+    * Entity join hook: a frozen projectile that rejoins any level after its
+    * record was dropped while unreachable gets its saved gravity back.
+    */
+   public static void onEntityJoinLevel(Entity entity) {
+      if (entity instanceof Projectile) {
+         Boolean savedNoGravity = PENDING_GRAVITY_RESTORE.remove(entity.getUUID());
+         if (savedNoGravity != null) {
+            entity.setNoGravity(savedNoGravity);
+         }
+      }
    }
 
    // --- tick -----------------------------------------------------------------
@@ -303,11 +331,31 @@ public final class ControlManager {
 
       this.domes.values().removeIf(dome -> now >= dome.expiresAt());
 
-      // A projectile that unloaded or was removed discards its freeze record.
-      this.frozenProjectiles.values().removeIf(record -> record.projectile() == null);
+      // A projectile in an unloaded chunk keeps its record: it still exists
+      // and re-resolves on reload. Only a loaded-but-missing entity (removed
+      // or moved to another level) drops the record, with the gravity restore
+      // deferred so it cannot hang mid-air with noGravity in NBT.
+      this.frozenProjectiles.values().removeIf(record -> {
+         if (!shouldDropFreezeRecord(record.projectile() != null, record.isLoaded())) {
+            return false;
+         }
+
+         record.deferRestore();
+         return true;
+      });
    }
 
    // --- internals -------------------------------------------------------------
+
+   /**
+    * Drop only a record whose projectile is provably gone: resolved entities
+    * keep their record, and an unloaded chunk means the projectile still
+    * exists and re-resolves on reload. On drop the gravity restore is
+    * deferred to the next entity join.
+    */
+   static boolean shouldDropFreezeRecord(boolean projectileResolved, boolean chunkLoaded) {
+      return !projectileResolved && chunkLoaded;
+   }
 
    private boolean isAllowedOnTarget(LivingEntity target, ControlKind kind) {
       if (target instanceof ServerPlayer player && player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer) {
@@ -404,19 +452,43 @@ public final class ControlManager {
    static final class ProjectileFreezeRecord {
       private final UUID projectileId;
       private final ServerLevel level;
+      private final BlockPos position;
       final Set<UUID> casters = ConcurrentHashMap.newKeySet();
       boolean savedNoGravity;
 
       ProjectileFreezeRecord(Projectile projectile) {
          this.projectileId = projectile.getUUID();
          this.level = (ServerLevel)projectile.level();
-         this.savedNoGravity = projectile.isNoGravity();
+         this.position = projectile.blockPosition();
+         // A restore deferred while this projectile was unreachable carries
+         // the original flag; re-saving the current value (true while frozen)
+         // would freeze its gravity forever.
+         Boolean pending = PENDING_GRAVITY_RESTORE.remove(this.projectileId);
+         this.savedNoGravity = pending != null ? pending : projectile.isNoGravity();
       }
 
       @Nullable
       Projectile projectile() {
          Entity entity = this.level.getEntity(this.projectileId);
          return entity instanceof Projectile p ? p : null;
+      }
+
+      boolean isLoaded() {
+         return this.level.hasChunkAt(this.position);
+      }
+
+      void restoreOrDefer() {
+         Projectile projectile = this.projectile();
+         if (projectile != null && !projectile.isRemoved()) {
+            projectile.setNoGravity(this.savedNoGravity);
+            projectile.setDeltaMovement(Vec3.ZERO);
+         } else if (projectile == null) {
+            this.deferRestore();
+         }
+      }
+
+      void deferRestore() {
+         PENDING_GRAVITY_RESTORE.put(this.projectileId, this.savedNoGravity);
       }
    }
 }

@@ -4,12 +4,14 @@ import dev.baranhan.viltrumitecore.hero.regulus.RegulusHero;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusState;
 import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -63,8 +65,11 @@ public final class HeroEvents {
       }
 
       // A dead carrier costs its Regulus a heart (backlash handled inside).
-      if (entity.level() instanceof ServerLevel level) {
-         for (ServerPlayer player : level.players()) {
+      // The owner may be in a different dimension than the dying carrier, so
+      // scan every online player — spec 5.3 burns the heart regardless.
+      MinecraftServer server = entity.getServer();
+      if (server != null) {
+         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             RegulusState state = RegulusHero.stateOf(player);
             if (state != null && state.carriers.contains(entity.getUUID())) {
                dev.baranhan.viltrumitecore.hero.regulus.RegulusHearts.onCarrierDeath(player, state, entity.getUUID());
@@ -75,20 +80,35 @@ public final class HeroEvents {
 
    /**
     * A carrier that leaves the level without dying (unload, despawn, dimension
-    * change) drops the heart silently — no backlash (spec 5.3).
+    * change) drops the heart silently — no backlash (spec 5.3). Owners in
+    * other dimensions are included: the carrier-level prune would read the
+    * same departure as "gone" on its next scan either way.
     */
    @SubscribeEvent
    public static void onEntityLeaveLevel(EntityLeaveLevelEvent event) {
       Entity entity = event.getEntity();
-      if (!(entity instanceof LivingEntity) || !(entity.level() instanceof ServerLevel level)) {
+      if (!(entity instanceof LivingEntity)) {
          return;
       }
 
-      for (ServerPlayer player : level.players()) {
+      MinecraftServer server = entity.getServer();
+      if (server == null) {
+         return;
+      }
+
+      for (ServerPlayer player : server.getPlayerList().getPlayers()) {
          RegulusState state = RegulusHero.stateOf(player);
          if (state != null && state.carriers.contains(entity.getUUID())) {
             dev.baranhan.viltrumitecore.hero.regulus.RegulusHearts.onCarrierLost(player, state, entity.getUUID());
          }
+      }
+   }
+
+   /** A frozen projectile rejoining a level after its record dropped gets its saved gravity back. */
+   @SubscribeEvent
+   public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+      if (!event.getLevel().isClientSide()) {
+         ControlManager.onEntityJoinLevel(event.getEntity());
       }
    }
 

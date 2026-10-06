@@ -12,6 +12,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -108,7 +110,7 @@ public final class LionsHeart {
       endLionState(state);
       state.startCooldown(RegulusAbilities.LIONS_HEART, RegulusRules.lionCooldownBase(forced));
       releaseFrozenProjectiles(player);
-      repulseOpponents(player);
+      repulseOpponents(player, state);
    }
 
    /**
@@ -170,20 +172,18 @@ public final class LionsHeart {
    }
 
    private static void releaseFrozenProjectiles(ServerPlayer player) {
-      if (player.level() instanceof ServerLevel level) {
-         ControlManager.get(level).releaseProjectilesFor(player.getUUID());
-      }
+      ControlManager.releaseProjectilesFor(player.getUUID());
    }
 
    /** On switch-off a ~1.5 impulse pushes the nearest opponents away (spec 6.4). */
-   private static void repulseOpponents(ServerPlayer player) {
+   private static void repulseOpponents(ServerPlayer player, RegulusState state) {
       if (!(player.level() instanceof ServerLevel level)) {
          return;
       }
 
       Vec3 center = player.position();
       AABB area = player.getBoundingBox().inflate(RegulusRules.LION_REPULSE_RADIUS);
-      for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area, entity -> entity != player)) {
+      for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area, entity -> isOpponent(player, entity, state))) {
          Vec3 away = entity.position().subtract(center);
          Vec3 push = new Vec3(away.x, 0.0, away.z);
          if (push.lengthSqr() < 1.0E-4) {
@@ -198,5 +198,21 @@ public final class LionsHeart {
             targetPlayer.connection.send(new ClientboundSetEntityMotionPacket(targetPlayer));
          }
       }
+   }
+
+   /**
+    * Opponents only (spec 6.4 "ближайших противников"): enemy players and
+    * hostile mobs — never the caster's allies, pets, or own heart carriers.
+    */
+   private static boolean isOpponent(ServerPlayer player, LivingEntity entity, RegulusState state) {
+      if (entity == player) {
+         return false;
+      }
+
+      return RegulusRules.repulseTarget(
+         entity instanceof Player || entity instanceof Enemy,
+         player.isAlliedTo(entity),
+         state.carriers.contains(entity.getUUID())
+      );
    }
 }

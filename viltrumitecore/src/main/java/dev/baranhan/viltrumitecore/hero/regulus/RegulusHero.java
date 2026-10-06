@@ -152,11 +152,13 @@ public class RegulusHero implements HeroDefinition {
       }
 
       String abilityId = RegulusAbilities.abilityFor(action);
-      if (abilityId == null || !isEquippedOnActivePage(player, abilityId)) {
-         return;
-      }
-
-      if (state.cooldownOf(abilityId) > 0 && !(action == HeroAction.LIONS_HEART && state.lionActive)) {
+      // The Lion off-toggle is not a new cast: it reaches the running state
+      // even when the slot was re-equipped or the page changed mid-run, so the
+      // player can always turn Lion off with a second press (spec 6.4).
+      boolean lionOffToggle = action == HeroAction.LIONS_HEART && state.lionActive;
+      boolean equipped = abilityId != null && isEquippedOnActivePage(player, abilityId);
+      boolean onCooldown = abilityId != null && state.cooldownOf(abilityId) > 0;
+      if (abilityId == null || !RegulusRules.mayStartAbility(equipped, onCooldown, lionOffToggle)) {
          return;
       }
 

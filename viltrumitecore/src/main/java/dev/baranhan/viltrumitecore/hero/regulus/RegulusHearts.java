@@ -9,13 +9,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -32,7 +36,27 @@ public final class RegulusHearts {
    private RegulusHearts() {
    }
 
-   /** Spec 5.1: vanilla living, non-player, non-Enemy, no `heartless` tag. */
+   /** How a bound carrier reads when looked up in its own dimension (spec 5.3). */
+   enum CarrierStatus {
+      BOUND,
+      DEAD,
+      GONE
+   }
+
+   /** Resolved in its level: bound if alive, dead if not; unresolved is gone (unloaded/despawned). */
+   static CarrierStatus carrierStatus(boolean entityFound, boolean entityAlive) {
+      if (!entityFound) {
+         return CarrierStatus.GONE;
+      }
+
+      return entityAlive ? CarrierStatus.BOUND : CarrierStatus.DEAD;
+   }
+
+   /**
+    * Spec 5.1: vanilla living, non-player, non-Enemy, no `heartless` tag — and
+    * a real creature (Mob). Decoration LivingEntity types like armor stands
+    * are not "живое существо" and would grant free permanent hearts.
+    */
    public static boolean isValidCarrier(LivingEntity entity, Player owner) {
       if (!entity.isAlive() || entity == owner) {
          return false;
@@ -44,7 +68,8 @@ public final class RegulusHearts {
          vanilla,
          entity instanceof Player,
          entity instanceof Enemy,
-         entity.getTags().contains(RegulusRules.HEARTLESS_TAG)
+         entity.getTags().contains(RegulusRules.HEARTLESS_TAG),
+         entity instanceof Mob
       );
    }
 
@@ -66,7 +91,30 @@ public final class RegulusHearts {
 
    /** Drop one heart by carrier id; false when it was never bound (idempotent). */
    public static boolean dropCarrier(RegulusState state, UUID carrierId) {
+      state.carrierLevels.remove(carrierId);
       return state.carriers.remove(carrierId);
+   }
+
+   /** Record the dimension each new carrier was bound in; an existing binding wins. */
+   static void bindCarrierLevels(RegulusState state, Collection<UUID> candidates, ResourceLocation levelId) {
+      for (UUID candidate : candidates) {
+         state.carrierLevels.putIfAbsent(candidate, levelId);
+      }
+   }
+
+   /**
+    * The level a carrier was bound in — the heart lives there, not wherever
+    * the owner currently stands, so a cross-dimension death still burns.
+    */
+   private static ServerLevel carrierLevelOf(ServerPlayer player, RegulusState state, UUID carrierId) {
+      ResourceLocation levelId = state.carrierLevels.get(carrierId);
+      MinecraftServer server = player.getServer();
+      if (levelId == null || server == null) {
+         return player.serverLevel();
+      }
+
+      ServerLevel carrierLevel = server.getLevel(ResourceKey.create(Registries.DIMENSION, levelId));
+      return carrierLevel != null ? carrierLevel : player.serverLevel();
    }
 
    public static void tick(ServerPlayer player, RegulusState state) {
@@ -74,7 +122,7 @@ public final class RegulusHearts {
       long now = level.getGameTime();
       if (now >= state.nextCarrierScan) {
          state.nextCarrierScan = now + RegulusRules.HEART_SCAN_PERIOD;
-         pruneGoneCarriers(player, state, level);
+         pruneGoneCarriers(player, state);
          scanForCarriers(player, state, level);
       }
 
@@ -85,15 +133,16 @@ public final class RegulusHearts {
     * A bound carrier that left the level dropped its heart silently (spec 5.3);
     * one that died while still tracked burns it (death semantics).
     */
-   private static void pruneGoneCarriers(ServerPlayer player, RegulusState state, ServerLevel level) {
+   private static void pruneGoneCarriers(ServerPlayer player, RegulusState state) {
       List<UUID> gone = new ArrayList<>();
       List<UUID> dead = new ArrayList<>();
       for (UUID carrierId : state.carriers) {
-         Entity carrier = level.getEntity(carrierId);
-         if (carrier == null) {
-            gone.add(carrierId);
-         } else if (!carrier.isAlive()) {
-            dead.add(carrierId);
+         Entity carrier = carrierLevelOf(player, state, carrierId).getEntity(carrierId);
+         switch (carrierStatus(carrier != null, carrier != null && carrier.isAlive())) {
+            case GONE -> gone.add(carrierId);
+            case DEAD -> dead.add(carrierId);
+            default -> {
+            }
          }
       }
 
@@ -120,6 +169,7 @@ public final class RegulusHearts {
          }
       }
 
+      bindCarrierLevels(state, candidates, level.dimension().location());
       addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS);
    }
 
@@ -130,10 +180,9 @@ public final class RegulusHearts {
 
       state.pushedCarriers.clear();
       state.pushedCarriers.addAll(state.carriers);
-      ServerLevel level = player.serverLevel();
       List<Integer> ids = new ArrayList<>(state.carriers.size());
       for (UUID carrierId : state.carriers) {
-         Entity carrier = level.getEntity(carrierId);
+         Entity carrier = carrierLevelOf(player, state, carrierId).getEntity(carrierId);
          if (carrier != null) {
             ids.add(carrier.getId());
          }
@@ -168,6 +217,7 @@ public final class RegulusHearts {
    /** Owner death/race change/disconnect: all hearts vanish without backlash. */
    public static void releaseAll(ServerPlayer player, RegulusState state, CleanupReason reason) {
       state.carriers.clear();
+      state.carrierLevels.clear();
       state.pushedCarriers.clear();
       HeroRegistry.pushOwnerSnapshot(player, HeroOwnerSnapshot.EMPTY);
    }

@@ -100,4 +100,26 @@ class RegulusRulesTest {
       assertTrue(RegulusRules.attackerValid(1000, 1000 + 241 - 1));
       assertTrue(!RegulusRules.attackerValid(1000, 1000 + 241));
    }
+
+   @Test
+   void repulsePushesOpponentsOnly() {
+      assertTrue(RegulusRules.repulseTarget(true, false, false));
+      // Allies (scoreboard team) are never opponents for the impulse.
+      assertTrue(!RegulusRules.repulseTarget(true, true, false));
+      // Own heart carriers are never pushed.
+      assertTrue(!RegulusRules.repulseTarget(true, false, true));
+      // Non-opponents (animals, decoration entities) are never pushed.
+      assertTrue(!RegulusRules.repulseTarget(false, false, false));
+   }
+
+   @Test
+   void lionOffToggleIgnoresEquipAndCooldown() {
+      // A second press while Lion runs reaches the toggle even with the slot
+      // unequipped and a cooldown set (spec 6.4).
+      assertTrue(RegulusRules.mayStartAbility(false, true, true));
+      assertTrue(RegulusRules.mayStartAbility(true, false, false));
+      // New casts still need the slot equipped and off cooldown.
+      assertTrue(!RegulusRules.mayStartAbility(false, false, false));
+      assertTrue(!RegulusRules.mayStartAbility(true, true, false));
+   }
 }
