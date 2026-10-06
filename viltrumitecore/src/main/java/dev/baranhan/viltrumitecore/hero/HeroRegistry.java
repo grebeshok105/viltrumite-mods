@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.hero;
 
+import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusHero;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
@@ -7,6 +8,7 @@ import dev.baranhan.viltrumiteflight.util.FlightPermissions;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
@@ -20,6 +22,20 @@ public final class HeroRegistry {
       register(new HumanHero());
       register(new ViltrumiteHero());
       register(new RegulusHero());
+      installFlightPolicy();
+   }
+
+   /**
+    * Core adapter for mod flight (plan flight-policy contract): the hero's own
+    * capability AND vanilla mayfly AND no world-control deny — an anchored or
+    * dome-captured player loses mod flight until the control releases.
+    */
+   public static void installFlightPolicy() {
+      FlightPermissions.setPolicy(player ->
+         get(player).allowsFlight(player)
+            && player.getAbilities().mayfly
+            && (!(player.level() instanceof ServerLevel level) || !ControlManager.get(level).preventsFlight(player))
+      );
    }
 
    public static void register(HeroDefinition definition) {

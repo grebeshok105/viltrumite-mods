@@ -260,16 +260,22 @@ public class RegulusHero implements HeroDefinition {
       }
    }
 
-   /** Actual HP loss interrupts pre-event casts; blocked/queued hits never reach here. */
+   /**
+    * Actual EXTERNAL HP loss interrupts pre-event casts; self-inflicted
+    * internal drains (blood price, backlash, overheat) and blocked/queued hits
+    * never count as interrupting hits (spec 7.1/10.4/11.1).
+    */
    private void tickDamageBookkeeping(ServerPlayer player, RegulusState state) {
       float health = player.getHealth();
       if (state.lastSeenHealth < 0.0F) {
          state.lastSeenHealth = health;
+         state.internalDamage = 0.0F;
          return;
       }
 
-      float lost = state.lastSeenHealth - health;
+      float lost = RegulusRules.externalHealthLoss(state.lastSeenHealth, health, state.internalDamage);
       state.lastSeenHealth = health;
+      state.internalDamage = 0.0F;
       if (lost <= 0.0F) {
          return;
       }

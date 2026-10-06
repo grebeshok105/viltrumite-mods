@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -50,6 +52,20 @@ class DebrisKickTest {
 
       // Spec 7.2: point blank a target may take all nine rays = 63.
       assertEquals(63.0F, RegulusRules.DEBRIS_RAYS * RegulusRules.debrisDamage(0.0, 0), 1.0E-5);
+   }
+
+   @Test
+   void pointBlankEyeInsideTheTargetBoxStillHits() {
+      // Spec 7.2 showcases the melee-hug 63 damage; AABB.clip returns empty when
+      // the eye is already inside the box, so containment must hit at distance 0.
+      AABB box = new AABB(0.0, 60.0, 0.0, 1.0, 62.0, 1.0);
+      Vec3 inside = new Vec3(0.5, 61.0, 0.5);
+      assertEquals(0.0, DebrisKick.rayDistance(inside, new Vec3(0.5, 61.0, 17.0), box));
+
+      // A normal box entry keeps its distance; a miss reports MAX_VALUE.
+      AABB farBox = new AABB(9.0, 60.0, 0.0, 10.0, 62.0, 1.0);
+      assertEquals(8.5, DebrisKick.rayDistance(new Vec3(0.5, 61.0, 0.5), new Vec3(16.5, 61.0, 0.5), farBox), 1.0E-9);
+      assertEquals(Double.MAX_VALUE, DebrisKick.rayDistance(new Vec3(0.5, 70.0, 0.5), new Vec3(16.5, 70.0, 0.5), box));
    }
 
    @Test

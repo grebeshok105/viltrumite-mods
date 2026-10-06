@@ -73,6 +73,10 @@ public final class RegulusState {
 
    // Damage bookkeeping for interruption rules.
    public float lastSeenHealth = -1.0F;
+   // Hero-internal damage applied since the last bookkeeping read (blood price,
+   // heart backlash, overheat). The read subtracts it from the observed loss so
+   // self-inflicted drains never count as an interrupting hit (spec 7.1/10/11).
+   public float internalDamage;
 
    /**
     * Action lock: busy while a cast runs before its event; once the event has
@@ -162,5 +166,6 @@ public final class RegulusState {
       this.lastFallDistance = 0.0F;
 
       this.lastSeenHealth = -1.0F;
+      this.internalDamage = 0.0F;
    }
 }

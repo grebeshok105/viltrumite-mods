@@ -29,6 +29,13 @@ public final class RegulusPassives {
    };
    private static final int[] AMBIENT_AMPLIFIER = {0, 1, 1, 1, 0};
 
+   // Spec 11.2 madness set: Speed III / Strength III / Jump III / Regen I /
+   // Resistance I, granted only for the madness duration.
+   private static final MobEffect[] MADNESS_EFFECTS = {
+      MobEffects.MOVEMENT_SPEED, MobEffects.DAMAGE_BOOST, MobEffects.JUMP, MobEffects.REGENERATION, MobEffects.DAMAGE_RESISTANCE
+   };
+   private static final int[] MADNESS_AMPLIFIER = {2, 2, 2, 0, 0};
+
    private RegulusPassives() {
    }
 
@@ -50,18 +57,27 @@ public final class RegulusPassives {
    public static void applyMadness(Player player) {
       addModifier(player, Attributes.ARMOR, MADNESS_ARMOR_MODIFIER_ID, "Regulus madness armor", 10.0, Operation.ADDITION);
       addModifier(player, Attributes.MAX_HEALTH, MADNESS_HEALTH_MODIFIER_ID, "Regulus madness vitality", 0.2, Operation.MULTIPLY_TOTAL);
-      addModifier(player, Attributes.ATTACK_DAMAGE, MADNESS_ATTACK_MODIFIER_ID, "Regulus madness strength", 0.4, Operation.MULTIPLY_TOTAL);
-      player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 2100, 2, true, false, true));
-      player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 2100, 2, true, false, true));
-      player.addEffect(new MobEffectInstance(MobEffects.JUMP, 2100, 2, true, false, true));
-      player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 2100, 0, true, false, true));
-      player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 2100, 0, true, false, true));
+      // Flat +0.4 attack (spec 11.2, Codex canon) — not a multiplier.
+      addModifier(player, Attributes.ATTACK_DAMAGE, MADNESS_ATTACK_MODIFIER_ID, "Regulus madness strength", 0.4, Operation.ADDITION);
+      for (int i = 0; i < MADNESS_EFFECTS.length; i++) {
+         player.addEffect(new MobEffectInstance(MADNESS_EFFECTS[i], 2100, MADNESS_AMPLIFIER[i], true, false, true));
+      }
    }
 
    public static void removeMadness(Player player) {
       removeModifier(player, Attributes.ARMOR, MADNESS_ARMOR_MODIFIER_ID);
       removeModifier(player, Attributes.MAX_HEALTH, MADNESS_HEALTH_MODIFIER_ID);
       removeModifier(player, Attributes.ATTACK_DAMAGE, MADNESS_ATTACK_MODIFIER_ID);
+
+      // The madness effect instances end with the bonuses — ambient-only so an
+      // externally applied effect is never stripped. The base ambient set is
+      // re-applied by refreshAmbient on the next tick.
+      for (MobEffect effect : MADNESS_EFFECTS) {
+         MobEffectInstance instance = player.getEffect(effect);
+         if (instance != null && instance.isAmbient()) {
+            player.removeEffect(effect);
+         }
+      }
    }
 
    /** Remove only this hero's own modifiers and ambient effect instances. */

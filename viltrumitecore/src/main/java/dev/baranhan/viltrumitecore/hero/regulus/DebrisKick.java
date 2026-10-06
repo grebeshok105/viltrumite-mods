@@ -20,6 +20,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -82,6 +84,8 @@ public final class DebrisKick {
 
    private static void fire(ServerPlayer player, RegulusState state) {
       state.eventFired = true;
+      // Slowness I is scoped to the windup: it ends exactly at the strike (spec 7.1).
+      player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
       state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
       if (!(player.level() instanceof ServerLevel level)) {
          return;
@@ -108,14 +112,13 @@ public final class DebrisKick {
       AABB sweep = new AABB(origin, far).inflate(1.0);
       LivingEntity hit = null;
       double hitDist = RegulusRules.DEBRIS_RANGE;
-      for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, sweep, e -> e != player && e.isAlive())) {
-         Optional<Vec3> entry = target.getBoundingBox().inflate(RAY_HITBOX_INFLATE).clip(origin, far);
-         if (entry.isPresent()) {
-            double d = entry.get().distanceTo(origin);
-            if (d < hitDist) {
-               hitDist = d;
-               hit = target;
-            }
+      // Only real creatures stop a ray: decoration entities (armor stands) are
+      // not «живое существо» targets — the same Mob/Player rule hearts use (spec 5.1).
+      for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, sweep, e -> e != player && e.isAlive() && (e instanceof Mob || e instanceof Player))) {
+         double d = rayDistance(origin, far, target.getBoundingBox().inflate(RAY_HITBOX_INFLATE));
+         if (d < hitDist) {
+            hitDist = d;
+            hit = target;
          }
       }
 
@@ -137,6 +140,20 @@ public final class DebrisKick {
       if (hit != null && traversal == cells.length) {
          applyHit(player, hit, hitDist, hearts);
       }
+   }
+
+   /**
+    * Distance from the ray origin to the box, or MAX_VALUE on a miss. An eye
+    * already inside the box hits at distance 0 — AABB.clip returns empty there
+    * and the point-blank strike (spec 7.2) would silently do no damage.
+    */
+   static double rayDistance(Vec3 origin, Vec3 far, AABB box) {
+      if (box.contains(origin)) {
+         return 0.0;
+      }
+
+      Optional<Vec3> entry = box.clip(origin, far);
+      return entry.map(point -> point.distanceTo(origin)).orElse(Double.MAX_VALUE);
    }
 
    /**

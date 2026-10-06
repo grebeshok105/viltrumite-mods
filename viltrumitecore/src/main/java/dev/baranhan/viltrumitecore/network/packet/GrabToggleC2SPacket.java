@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.network.packet;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -27,7 +28,7 @@ public class GrabToggleC2SPacket {
                corePlayer.releaseTarget();
             } else if (corePlayer.isTryingToGrab()) {
                corePlayer.setTryingToGrab(false);
-            } else {
+            } else if (!HeroDamage.isAnchored(context.getSender())) {
                corePlayer.setTryingToGrab(true);
             }
          }

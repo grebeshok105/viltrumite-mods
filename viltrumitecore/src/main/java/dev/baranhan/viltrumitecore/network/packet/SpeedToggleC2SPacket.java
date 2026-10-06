@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.network.packet;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
@@ -32,6 +33,11 @@ public class SpeedToggleC2SPacket {
             }
 
             boolean newState = !corePlayer.isSuperSpeed();
+            // Anchored victims cannot engage super speed; disengaging stays allowed.
+            if (newState && HeroDamage.isAnchored(player)) {
+               return;
+            }
+
             corePlayer.setSuperSpeed(newState);
          }
       });

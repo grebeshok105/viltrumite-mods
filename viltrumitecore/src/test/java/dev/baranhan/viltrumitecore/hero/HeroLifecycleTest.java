@@ -90,6 +90,7 @@ class HeroLifecycleTest {
       state.jumpCharge = 40;
       state.lastFallDistance = 12.5F;
       state.lastSeenHealth = 17.0F;
+      state.internalDamage = 3.0F;
       return state;
    }
 
@@ -116,5 +117,6 @@ class HeroLifecycleTest {
       assertTrue(state.wasOnGround);
       assertEquals(0.0F, state.lastFallDistance);
       assertEquals(-1.0F, state.lastSeenHealth);
+      assertEquals(0.0F, state.internalDamage);
    }
 }

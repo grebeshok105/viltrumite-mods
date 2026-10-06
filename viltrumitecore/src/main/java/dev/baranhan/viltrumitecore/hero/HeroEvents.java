@@ -13,13 +13,18 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
+import net.minecraftforge.event.entity.player.ArrowLooseEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
@@ -108,12 +113,87 @@ public final class HeroEvents {
       }
    }
 
+   /**
+    * Anchored victims (FREEZE/STASIS) cannot attack, use items or spawn
+    * projectiles — spec 8.3/9.2 denies their own actions outright; PULL keeps
+    * them (isAnchored covers only the anchoring kinds).
+    */
+   private static boolean anchored(Entity entity) {
+      return entity instanceof LivingEntity living && HeroDamage.isAnchored(living);
+   }
+
+   @SubscribeEvent
+   public static void onAttackEntity(AttackEntityEvent event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onArrowLoose(ArrowLooseEvent event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onItemUseStart(LivingEntityUseItemEvent.Start event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
+      if (anchored(event.getEntity())) {
+         event.setCanceled(true);
+      }
+   }
+
    /** A frozen projectile rejoining a level after its record dropped gets its saved gravity back. */
    @SubscribeEvent
    public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
-      if (!event.getLevel().isClientSide()) {
-         ControlManager.onEntityJoinLevel(event.getEntity());
+      if (event.getLevel().isClientSide()) {
+         return;
       }
+
+      // Projectiles released while the owner is anchored never spawn — the
+      // last deny layer for crossbow/trident throws past the item-use gates.
+      Entity entity = event.getEntity();
+      if (entity instanceof Projectile projectile && projectile.getOwner() instanceof LivingEntity owner && HeroDamage.isAnchored(owner)) {
+         event.setCanceled(true);
+         return;
+      }
+
+      ControlManager.onEntityJoinLevel(entity);
    }
 
    /** The bound Evangelium never drops on death. */

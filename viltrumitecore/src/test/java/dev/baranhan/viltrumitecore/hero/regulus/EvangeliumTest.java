@@ -49,6 +49,9 @@ class EvangeliumTest {
 
       state.channelTargetId = UUID.randomUUID();
       assertFalse(Evangelium.canBegin(state), "an open Mania channel blocks the ritual");
+      state.channelTargetId = null;
+
+      assertFalse(Evangelium.canBegin(state, true), "an anchored Regulus cannot ritual (spec 8.2)");
    }
 
    @Test

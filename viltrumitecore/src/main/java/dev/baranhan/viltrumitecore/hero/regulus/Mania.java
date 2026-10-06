@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
@@ -33,9 +34,14 @@ public final class Mania {
    private Mania() {
    }
 
-   /** Windup only: the target is chosen at the 19-tick event, never earlier. */
+   /**
+    * Windup only: the target is chosen at the 19-tick event, never earlier.
+    * The lock runs one tick past the event — tickActionLock sweeps the action
+    * at elapsed >= length before Mania.tick, so length must exceed the event
+    * tick (same convention as Lion/Debris/Embrace/Counter).
+    */
    public static void start(ServerPlayer player, RegulusState state) {
-      state.beginAction(RegulusHero.ACTION_MANIA, RegulusRules.MANIA_WINDUP_TICKS, RegulusRules.MANIA_WINDUP_TICKS, RegulusRules.MANIA_WINDUP_TICKS);
+      state.beginAction(RegulusHero.ACTION_MANIA, RegulusRules.MANIA_WINDUP_TICKS + 1, RegulusRules.MANIA_WINDUP_TICKS, RegulusRules.MANIA_WINDUP_TICKS);
    }
 
    public static void tick(ServerPlayer player, RegulusState state) {
@@ -100,21 +106,24 @@ public final class Mania {
       double bestDistance = Double.MAX_VALUE;
       for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, path, e -> e != player && e.isAlive() && eligible(e, manager))) {
          AABB box = entity.getBoundingBox().inflate(0.4);
-         java.util.Optional<Vec3> hit = box.clip(eye, end);
-         if (hit.isPresent()) {
-            double distance = eye.distanceToSqr(hit.get());
-            if (distance < bestDistance) {
-               bestDistance = distance;
-               best = entity;
-            }
+         double distance = DebrisKick.rayDistance(eye, end, box);
+         if (distance < bestDistance) {
+            bestDistance = distance;
+            best = entity;
          }
       }
 
       return best;
    }
 
-   /** Selection gate: no stacking controls, no grabbed or control-immune targets. */
+   /** Selection gate: real creatures only, no stacking controls, no grabbed or control-immune targets. */
    static boolean eligible(LivingEntity target, ControlManager manager) {
+      // Decoration entities (armor stands) are not «живое существо» targets — the
+      // same Mob/Player rule hearts use (spec 5.1).
+      if (!(target instanceof Mob) && !(target instanceof Player)) {
+         return false;
+      }
+
       if (target.getTags().contains("ViltrumiteGrabbed") || manager.isControlled(target)) {
          return false;
       }
@@ -211,10 +220,13 @@ public final class Mania {
       state.channelTargetId = null;
       state.channelEffectId = null;
       state.channelTicks = 0;
-      clearCasterDebuffs(player);
       if (targetId == null) {
          return;
       }
+
+      // Only a real channel-end strips the caster debuff — a cleanup with no
+      // open channel must not clear an unrelated Slowness (spec 8.2).
+      clearCasterDebuffs(player);
 
       if (player.level() instanceof ServerLevel level) {
          ControlManager manager = ControlManager.get(level);

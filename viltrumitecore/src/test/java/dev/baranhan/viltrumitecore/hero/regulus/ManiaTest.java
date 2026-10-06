@@ -28,6 +28,25 @@ class ManiaTest {
    }
 
    @Test
+   void grabEventSurvivesTheActionLockSweep() {
+      // Regression: RegulusHero.tickActionLock runs before Mania.tick in the
+      // same tick. If the action length equals the windup tick the lock clears
+      // the cast at elapsed == windup and the grab event can never observe it.
+      RegulusState state = new RegulusState();
+      Mania.start(null, state);   // start() only writes the action lock; player is unused
+
+      for (int i = 0; i < RegulusRules.MANIA_WINDUP_TICKS; i++) {
+         // Production ordering: actionElapsed++ then the length sweep.
+         state.actionElapsed++;
+         if (state.actionElapsed >= state.actionLength) {
+            state.clearAction();
+         }
+      }
+
+      assertTrue(Mania.shouldGrab(state), "the 19t grab event must still see a live action after the lock sweep");
+   }
+
+   @Test
    void grabRequiresTheManiaAction() {
       RegulusState state = new RegulusState();
       state.actionElapsed = RegulusRules.MANIA_WINDUP_TICKS;

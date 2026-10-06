@@ -42,6 +42,23 @@ class RegulusRulesTest {
    }
 
    @Test
+   void internalDamageIsNotAnInterruptingLoss() {
+      // Blood price (0.6 HP per 20t of madness), heart backlash and overheat are
+      // self-inflicted internal drains: they lower HP but must never read as an
+      // interrupting hit for casts or the ritual (spec 7.1/10.4/11.1).
+      assertEquals(0.0F, RegulusRules.externalHealthLoss(20.0F, 19.5F, 0.5F));
+      assertEquals(0.0F, RegulusRules.externalHealthLoss(20.0F, 19.4F, 0.6F), 1.0E-6);
+      // A real hit alongside the drain still counts for its own share.
+      assertEquals(5.0F, RegulusRules.externalHealthLoss(20.0F, 14.4F, 0.6F), 1.0E-6);
+      // No loss at all, healing or garbage input never produces an interrupt.
+      assertEquals(0.0F, RegulusRules.externalHealthLoss(20.0F, 20.0F, 0.0F));
+      assertEquals(0.0F, RegulusRules.externalHealthLoss(20.0F, 21.0F, 0.0F));
+      assertEquals(0.0F, RegulusRules.externalHealthLoss(20.0F, 19.0F, 5.0F));
+      // External loss without any internal damage passes through untouched.
+      assertEquals(3.5F, RegulusRules.externalHealthLoss(20.0F, 16.5F, 0.0F), 1.0E-6);
+   }
+
+   @Test
    void heartBonusIsTwoPercentPerHeart() {
       assertEquals(1.0F, RegulusRules.heartBonus(0), 1.0E-6);
       assertEquals(1.24F, RegulusRules.heartBonus(12), 1.0E-6);

@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.network.packet;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -26,6 +27,11 @@ public class BarrageStateC2SPacket {
       context.enqueueWork(() -> {
          ServerPlayer player = context.getSender();
          if (player != null && player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isViltrumite()) {
+            // Starting a barrage while anchored is denied; stopping one stays allowed.
+            if (this.isBarraging && HeroDamage.isAnchored(player)) {
+               return;
+            }
+
             corePlayer.setBarraging(this.isBarraging);
          }
       });

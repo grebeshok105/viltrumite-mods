@@ -242,4 +242,13 @@ public final class RegulusRules {
    public static boolean ritualDamageInterrupts(float lostHealth, boolean lionActive) {
       return !lionActive && lostHealth >= RITUAL_INTERRUPT_DAMAGE;
    }
+
+   /**
+    * HP lost to EXTERNAL causes only: hero-internal drains (blood price, heart
+    * backlash, overheat) recorded since the last read are subtracted so
+    * self-inflicted damage never passes as an interrupting hit (spec 7.1/10/11).
+    */
+   public static float externalHealthLoss(float previousHealth, float currentHealth, float internalDamage) {
+      return Math.max(0.0F, previousHealth - currentHealth - Math.max(0.0F, internalDamage));
+   }
 }

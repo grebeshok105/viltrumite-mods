@@ -162,6 +162,14 @@ public final class HeroDamage {
          return;
       }
 
+      // Internal drains are self-inflicted: Regulus's health-delta bookkeeping
+      // subtracts this share so it never reads as an interrupting hit (spec
+      // 7.1/10.4/11.1). Queued damage is not recorded — it applies as a payout.
+      RegulusState state = RegulusHero.stateOf(player);
+      if (state != null) {
+         state.internalDamage += amount;
+      }
+
       applyCleanDamage(player, player.damageSources().generic(), amount);
    }
 

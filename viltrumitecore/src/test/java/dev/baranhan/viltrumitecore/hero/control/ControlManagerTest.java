@@ -70,6 +70,19 @@ class ControlManagerTest {
       }
    }
 
+   // --- anchored targets -----------------------------------------------------
+
+   @Test
+   void anchorKindsStripTheVictimsActions() {
+      // Spec 8.3/9.2: FREEZE and STASIS pin the target AND deny its own attacks,
+      // items and abilities; PULL never does (spec 8.2), nor do the policy kinds.
+      assertTrue(ControlManager.deniesActions(ControlKind.FREEZE));
+      assertTrue(ControlManager.deniesActions(ControlKind.STASIS));
+      assertFalse(ControlManager.deniesActions(ControlKind.PULL), "a pulled victim keeps its own actions");
+      assertFalse(ControlManager.deniesActions(ControlKind.IMPULSE));
+      assertFalse(ControlManager.deniesActions(ControlKind.VILTRUMITE_GRAB));
+   }
+
    // --- caster cleanup ------------------------------------------------------
 
    @Test

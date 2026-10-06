@@ -3,6 +3,8 @@ package dev.baranhan.viltrumitecore.hero.control;
 import dev.baranhan.viltrumitecore.hero.CleanupReason;
 import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
+import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
+import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec3;
 
@@ -64,7 +67,16 @@ public final class ControlManager {
       }
 
       ControlRecord record = this.controls.get(target.getUUID());
-      return record != null && (record.kind == ControlKind.FREEZE || record.kind == ControlKind.STASIS);
+      return record != null && deniesActions(record.kind);
+   }
+
+   /**
+    * Anchoring kinds strip the victim's own attacks, item use, flight and
+    * abilities outright (spec 8.3/9.2); PULL leaves them and the policy-only
+    * kinds never anchor.
+    */
+   public static boolean deniesActions(ControlKind kind) {
+      return kind == ControlKind.FREEZE || kind == ControlKind.STASIS;
    }
 
    /** Any world-owned control, including the non-anchoring PULL. */
@@ -177,7 +189,7 @@ public final class ControlManager {
       ServerLevel level = this.firstLevel();
       LivingEntity target = find(level, record.targetId);
       if (target != null) {
-         if (next == ControlKind.FREEZE || next == ControlKind.STASIS) {
+         if (deniesActions(next)) {
             record.anchor = target.position();
          }
 
@@ -558,10 +570,27 @@ public final class ControlManager {
       }
 
       void apply(LivingEntity target) {
-         if (this.kind == ControlKind.FREEZE || this.kind == ControlKind.STASIS) {
+         if (deniesActions(this.kind)) {
             target.setNoGravity(true);
             if (target instanceof Mob mob) {
                mob.setNoAi(true);
+            }
+
+            // An anchored victim cannot act (spec 8.3/9.2): a held item
+            // channel ends on the anchor tick, flight state drops, and any
+            // armed ability toggles unwind.
+            if (target instanceof Player player && player.isUsingItem()) {
+               player.stopUsingItem();
+            }
+
+            if (target instanceof ViltrumiteFlightPlayer flightPlayer) {
+               flightPlayer.stopFlight();
+            }
+
+            if (target instanceof ViltrumiteCorePlayer corePlayer) {
+               corePlayer.setBarraging(false);
+               corePlayer.setBlocking(false);
+               corePlayer.setTryingToGrab(false);
             }
 
             target.setDeltaMovement(Vec3.ZERO);
@@ -584,7 +613,7 @@ public final class ControlManager {
             mob.setNoAi(this.savedNoAi);
          }
 
-         if (this.kind == ControlKind.FREEZE || this.kind == ControlKind.STASIS) {
+         if (deniesActions(this.kind)) {
             // The freeze clears the victim's own velocity; leave gravity to
             // reassert naturally.
             target.hurtMarked = true;

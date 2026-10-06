@@ -49,7 +49,7 @@ public final class Evangelium {
    /** Item use -> begin the 60t channel. Server-authoritative gate. */
    public static boolean beginRitual(ServerPlayer player) {
       RegulusState state = RegulusHero.stateOf(player);
-      if (state == null || !canBegin(state)) {
+      if (state == null || !canBegin(state, HeroDamage.isAnchored(player))) {
          return false;
       }
 
@@ -60,9 +60,14 @@ public final class Evangelium {
       return true;
    }
 
-   /** The ritual needs an idle Regulus who is not mad, not on cooldown and not channeling. */
+   /** The ritual needs an idle, unanchored Regulus who is not mad, not on cooldown and not channeling (spec 8.2). */
    static boolean canBegin(RegulusState state) {
-      return state.ritualTicks < 0
+      return canBegin(state, false);
+   }
+
+   static boolean canBegin(RegulusState state, boolean anchored) {
+      return !anchored
+         && state.ritualTicks < 0
          && state.madnessTicksLeft <= 0
          && state.cooldownOf(RegulusAbilities.EVANGELIUM) <= 0
          && !state.busy()
