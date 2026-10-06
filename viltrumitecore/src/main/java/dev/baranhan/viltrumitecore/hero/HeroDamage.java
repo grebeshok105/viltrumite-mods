@@ -174,6 +174,21 @@ public final class HeroDamage {
    }
 
    /**
+    * Per-hit bookkeeping: the player hurt() tail reports the health one single
+    * applied external hit actually cost (blocked/queued hits never reach it).
+    * The ritual interrupt reads this per-hit maximum, not the per-tick
+    * aggregate (spec 11.1: за один удар >=4 HP).
+    */
+   public static void recordAppliedLoss(LivingEntity target, float loss) {
+      if (loss > 0.0F && target instanceof ServerPlayer player) {
+         RegulusState state = RegulusHero.stateOf(player);
+         if (state != null) {
+            state.maxHitLoss = Math.max(state.maxHitLoss, loss);
+         }
+      }
+   }
+
+   /**
     * Apply damage directly (deferred release + internal causes). The lethal
     * boundary (hero totem) is handled here for every path uniformly.
     */

@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -25,6 +27,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -41,9 +44,23 @@ public final class ControlManager {
     * Projectiles whose freeze record was dropped while they were unreachable
     * (unloaded chunk or another level). The saved noGravity value is applied
     * the next time the projectile joins any level, so it can never hang
-    * mid-air with noGravity baked into NBT.
+    * mid-air with noGravity baked into NBT. Bounded: entries for entities
+    * that never rejoin evict the eldest first.
     */
-   private static final Map<UUID, Boolean> PENDING_GRAVITY_RESTORE = new ConcurrentHashMap<>();
+   private static final int PENDING_RESTORE_CAP = 512;
+   private static final Map<UUID, Boolean> PENDING_GRAVITY_RESTORE = new BoundedMap<>(PENDING_RESTORE_CAP);
+
+   /**
+    * Living targets (FREEZE/STASIS) whose record dropped while they were
+    * unreachable — disconnect or a dimension change. Their entity NBT already
+    * carries the frozen flags; the saved values come back the next time the
+    * entity joins any level, so it cannot stay frozen forever.
+    */
+   private static final Map<UUID, SavedFlags> PENDING_TARGET_RESTORE = new BoundedMap<>(PENDING_RESTORE_CAP);
+
+   /** Saved victim flags deferred for a target that left its level unreachable. */
+   private record SavedFlags(boolean noGravity, boolean noAi) {
+   }
 
    private final Map<UUID, ControlRecord> controls = new HashMap<>();
    private final Map<UUID, DomeRecord> domes = new HashMap<>();
@@ -183,12 +200,14 @@ public final class ControlManager {
          return false;
       }
 
-      record.unapply();
       record.kind = next;
       record.expiresAt = expiresAt;
       ServerLevel level = this.firstLevel();
       LivingEntity target = find(level, record.targetId);
       if (target != null) {
+         // Hand the captured flags back before re-applying under the new kind:
+         // an anchor -> non-anchor move would otherwise leak noGravity/noAi.
+         record.unapply(target);
          if (deniesActions(next)) {
             record.anchor = target.position();
          }
@@ -282,9 +301,24 @@ public final class ControlManager {
       };
    }
 
-   /** Target lifecycle: detach the record entirely (targets vanish on death). */
+   /**
+    * Target lifecycle: detach the record entirely (targets vanish on death),
+    * restoring the victim's saved flags when it can still be resolved — and
+    * deferring that restore to its next level join when it cannot.
+    */
    public void cleanupTarget(UUID targetId) {
-      this.controls.remove(targetId);
+      ControlRecord record = this.controls.remove(targetId);
+      if (record == null) {
+         return;
+      }
+
+      this.dirty = true;
+      LivingEntity target = find(this.firstLevel(), targetId);
+      if (target != null) {
+         record.restore(target);
+      } else {
+         PENDING_TARGET_RESTORE.put(targetId, new SavedFlags(record.savedNoGravity, record.savedNoAi));
+      }
    }
 
    // --- deferred damage -----------------------------------------------------
@@ -398,6 +432,29 @@ public final class ControlManager {
             entity.setNoGravity(savedNoGravity);
          }
       }
+
+      if (entity instanceof LivingEntity) {
+         restorePendingTarget(entity);
+      }
+   }
+
+   /**
+    * A living target whose control record dropped while it was unreachable
+    * (disconnect, dimension change) gets its saved noGravity/noAi flags back
+    * on the next level join — the deferred mirror of the frozen-projectile
+    * restore. Called from the join event and the player login/respawn/dimension
+    * handlers; a repeat call is a no-op.
+    */
+   public static void restorePendingTarget(Entity entity) {
+      SavedFlags flags = PENDING_TARGET_RESTORE.remove(entity.getUUID());
+      if (flags == null) {
+         return;
+      }
+
+      entity.setNoGravity(flags.noGravity());
+      if (entity instanceof Mob mob) {
+         mob.setNoAi(flags.noAi());
+      }
    }
 
    // --- tick -----------------------------------------------------------------
@@ -409,6 +466,12 @@ public final class ControlManager {
          ControlRecord record = it.next();
          LivingEntity target = find(level, record.targetId);
          if (target == null || !target.isAlive()) {
+            if (target == null) {
+               // Unreachable but not provably dead (disconnect, dimension
+               // change): the entity was serialized with the frozen flags —
+               // defer their restore to its next level join.
+               PENDING_TARGET_RESTORE.put(record.targetId, new SavedFlags(record.savedNoGravity, record.savedNoAi));
+            }
             // Targets vanish on death/despawn: detach and discard the queue.
             it.remove();
             this.dirty = true;
@@ -604,7 +667,11 @@ public final class ControlManager {
          }
       }
 
-      void unapply() {
+      void unapply(LivingEntity target) {
+         target.setNoGravity(this.savedNoGravity);
+         if (target instanceof Mob mob) {
+            mob.setNoAi(this.savedNoAi);
+         }
       }
 
       void restore(LivingEntity target) {
@@ -623,14 +690,18 @@ public final class ControlManager {
 
    static final class ProjectileFreezeRecord {
       private final UUID projectileId;
-      private final ServerLevel level;
+      // The frozen-in level is kept by dimension key, not by reference — a
+      // strong ServerLevel here would pin the WeakHashMap INSTANCES key.
+      private final MinecraftServer server;
+      private final ResourceKey<Level> dimension;
       private final BlockPos position;
       final Set<UUID> casters = ConcurrentHashMap.newKeySet();
       boolean savedNoGravity;
 
       ProjectileFreezeRecord(Projectile projectile) {
          this.projectileId = projectile.getUUID();
-         this.level = (ServerLevel)projectile.level();
+         this.server = projectile.level().getServer();
+         this.dimension = projectile.level().dimension();
          this.position = projectile.blockPosition();
          // A restore deferred while this projectile was unreachable carries
          // the original flag; re-saving the current value (true while frozen)
@@ -640,13 +711,20 @@ public final class ControlManager {
       }
 
       @Nullable
+      private ServerLevel level() {
+         return this.server == null ? null : this.server.getLevel(this.dimension);
+      }
+
+      @Nullable
       Projectile projectile() {
-         Entity entity = this.level.getEntity(this.projectileId);
+         ServerLevel level = this.level();
+         Entity entity = level == null ? null : level.getEntity(this.projectileId);
          return entity instanceof Projectile p ? p : null;
       }
 
       boolean isLoaded() {
-         return this.level.hasChunkAt(this.position);
+         ServerLevel level = this.level();
+         return level != null && level.hasChunkAt(this.position);
       }
 
       void restoreOrDefer() {

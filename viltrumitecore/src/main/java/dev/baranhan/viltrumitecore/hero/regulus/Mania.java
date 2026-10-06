@@ -84,6 +84,8 @@ public final class Mania {
       state.channelTargetId = target.getUUID();
       state.channelEffectId = effectId;
       state.channelTicks = 0;
+      // Preserve an external slowness before the channel slow overwrites it.
+      RegulusPassives.preserveExternalSlowness(player, state);
       applyCasterDebuffs(player);
       level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.2F);
    }
@@ -156,7 +158,7 @@ public final class Mania {
       }
 
       // The viltrumite counterplay: only the fast flight states outrun the pull.
-      if (target instanceof Player flightTarget && flightTarget instanceof ViltrumiteFlightPlayer omni && RegulusRules.pullEscapes(omni.getFlightState())) {
+      if (target instanceof Player && target instanceof ViltrumiteFlightPlayer omni && RegulusRules.pullEscapes(omni.getFlightState())) {
          endChannel(player, state, ReleaseReason.INTERRUPTED);
          return;
       }
@@ -205,8 +207,10 @@ public final class Mania {
       player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 4, 1, true, false, true));
    }
 
-   private static void clearCasterDebuffs(ServerPlayer player) {
-      player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+   private static void clearCasterDebuffs(ServerPlayer player, RegulusState state, int elapsedTicks) {
+      // Strip only this channel's own (ambient) slow and restore whatever
+      // remains of a stashed external one — never clobber foreign slowness.
+      RegulusPassives.clearOwnSlowness(player, state, elapsedTicks);
    }
 
    /**
@@ -217,6 +221,7 @@ public final class Mania {
    public static void endChannel(ServerPlayer player, RegulusState state, ReleaseReason reason) {
       UUID targetId = state.channelTargetId;
       UUID effectId = state.channelEffectId;
+      int elapsed = state.channelTicks;
       state.channelTargetId = null;
       state.channelEffectId = null;
       state.channelTicks = 0;
@@ -226,7 +231,7 @@ public final class Mania {
 
       // Only a real channel-end strips the caster debuff — a cleanup with no
       // open channel must not clear an unrelated Slowness (spec 8.2).
-      clearCasterDebuffs(player);
+      clearCasterDebuffs(player, state, elapsed);
 
       if (player.level() instanceof ServerLevel level) {
          ControlManager manager = ControlManager.get(level);

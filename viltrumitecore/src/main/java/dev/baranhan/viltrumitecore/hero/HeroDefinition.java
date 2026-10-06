@@ -1,6 +1,7 @@
 package dev.baranhan.viltrumitecore.hero;
 
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -62,6 +63,27 @@ public interface HeroDefinition {
 
    /** Server-authoritative public snapshot; written to the synced data for all trackers. */
    HeroPublicSnapshot snapshot(Player player);
+
+   /**
+    * Hero-private data saved with the entity's HeroData on logout (cooldowns,
+    * charges — duration bookkeeping only). Default: nothing to save.
+    */
+   default void saveHeroState(Player player, CompoundTag nbt) {
+   }
+
+   /**
+    * Load counterpart of saveHeroState on login. The default drops the
+    * transient hero state object, matching the previous rebuild-empty path.
+    */
+   default void loadHeroState(Player player, CompoundTag nbt) {
+      if (player instanceof HeroPlayer heroPlayer) {
+         heroPlayer.viltrumitecore$setHeroState(null);
+      }
+   }
+
+   /** On respawn the clone receives whatever the hero wants carried. Default: nothing. */
+   default void cloneHeroState(Player original, Player clone) {
+   }
 
    /**
     * Idempotent cleanup that precedes transient-state discard. Reasons

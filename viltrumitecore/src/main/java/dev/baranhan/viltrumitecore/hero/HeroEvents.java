@@ -51,6 +51,8 @@ public final class HeroEvents {
       }
 
       HeroRegistry.restoreHero(newPlayer, originalHero.getHeroSession());
+      // The hero decides what carries over to the clone (Regulus: cooldowns).
+      HeroRegistry.get(newPlayer).cloneHeroState(original, newPlayer);
 
       if (newPlayer instanceof ViltrumiteAbilityUser newAbility && original instanceof ViltrumiteAbilityUser oldAbility) {
          for (int slot = 0; slot < 18; slot++) {
@@ -185,15 +187,16 @@ public final class HeroEvents {
          return;
       }
 
+      // Deferred restores run first: a cancelled projectile join below must
+      // still consume its pending gravity restore (a4 audit finding).
+      Entity entity = event.getEntity();
+      ControlManager.onEntityJoinLevel(entity);
+
       // Projectiles released while the owner is anchored never spawn — the
       // last deny layer for crossbow/trident throws past the item-use gates.
-      Entity entity = event.getEntity();
       if (entity instanceof Projectile projectile && projectile.getOwner() instanceof LivingEntity owner && HeroDamage.isAnchored(owner)) {
          event.setCanceled(true);
-         return;
       }
-
-      ControlManager.onEntityJoinLevel(entity);
    }
 
    /** The bound Evangelium never drops on death. */
@@ -217,6 +220,7 @@ public final class HeroEvents {
    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
+         ControlManager.restorePendingTarget(player);
       }
    }
 
@@ -224,6 +228,7 @@ public final class HeroEvents {
    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
+         ControlManager.restorePendingTarget(player);
          // The bound Evangelium returns on respawn when it is missing (spec 11.2).
          if (player instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.REGULUS) {
             Evangelium.grant(player);
@@ -235,6 +240,7 @@ public final class HeroEvents {
    public static void onPlayerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
+         ControlManager.restorePendingTarget(player);
       }
    }
 

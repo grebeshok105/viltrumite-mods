@@ -130,6 +130,35 @@ class RegulusRulesTest {
    }
 
    @Test
+   void repulsePushNeverMovesTheImmuneOrAnchored() {
+      // Spec 6.2/8.3: the impulse gate and the anchor guard cap the push even
+      // when the opponent filter passes.
+      assertTrue(RegulusRules.repulsePushable(true, false, false, true, false));
+      assertTrue(!RegulusRules.repulsePushable(true, false, false, false, false), "impulse-immune target");
+      assertTrue(!RegulusRules.repulsePushable(true, false, false, true, true), "already anchored");
+      // Opponent rules still gate first.
+      assertTrue(!RegulusRules.repulsePushable(false, false, false, true, false));
+      assertTrue(!RegulusRules.repulsePushable(true, true, false, true, false));
+      assertTrue(!RegulusRules.repulsePushable(true, false, true, true, false));
+   }
+
+   @Test
+   void shockwaveDamageIgnoresTheHeartBonus() {
+      // Spec 5.4 scopes the +2%/heart bonus to abilities and melee; the landing
+      // shockwave is a section-4 passive and stays flat.
+      assertEquals(RegulusRules.SHOCKWAVE_DAMAGE, RegulusRules.shockwaveDamage(0));
+      assertEquals(RegulusRules.SHOCKWAVE_DAMAGE, RegulusRules.shockwaveDamage(RegulusRules.MAX_HEARTS));
+   }
+
+   @Test
+   void savedSlownessRestoresOnlyItsRemainder() {
+      assertEquals(0, RegulusRules.slownessRemainder(10, 14));
+      assertEquals(46, RegulusRules.slownessRemainder(60, 14));
+      assertEquals(0, RegulusRules.slownessRemainder(60, 60));
+      assertEquals(0, RegulusRules.slownessRemainder(0, 0));
+   }
+
+   @Test
    void lionOffToggleIgnoresEquipAndCooldown() {
       // A second press while Lion runs reaches the toggle even with the slot
       // unequipped and a cooldown set (spec 6.4).

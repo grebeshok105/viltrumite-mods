@@ -1,6 +1,8 @@
 package dev.baranhan.viltrumitecore.hero.regulus;
 
 import dev.baranhan.viltrumitecore.hero.HeroDamage;
+import dev.baranhan.viltrumitecore.hero.HeroRegistry;
+import dev.baranhan.viltrumitecore.hero.control.ControlKind;
 import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +38,10 @@ public final class LionsHeart {
          return;
       }
 
-      if (state.busy() || state.madnessTicksLeft > 0) {
+      // Madness is a resolved effect and occupies no slot (spec 1.2.5): the
+      // action policy and HUD keep the toggle lit during madness, so the
+      // toggle must answer too — only an in-flight cast locks it out.
+      if (state.busy()) {
          return;
       }
 
@@ -183,7 +188,8 @@ public final class LionsHeart {
 
       Vec3 center = player.position();
       AABB area = player.getBoundingBox().inflate(RegulusRules.LION_REPULSE_RADIUS);
-      for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area, entity -> isOpponent(player, entity, state))) {
+      ControlManager manager = ControlManager.get(level);
+      for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area, entity -> isOpponent(player, entity, state, manager))) {
          Vec3 away = entity.position().subtract(center);
          Vec3 push = new Vec3(away.x, 0.0, away.z);
          if (push.lengthSqr() < 1.0E-4) {
@@ -203,16 +209,20 @@ public final class LionsHeart {
    /**
     * Opponents only (spec 6.4 "ближайших противников"): enemy players and
     * hostile mobs — never the caster's allies, pets, or own heart carriers.
+    * The impulse policy still applies: the control-immune and already-anchored
+    * targets are not shoved.
     */
-   private static boolean isOpponent(ServerPlayer player, LivingEntity entity, RegulusState state) {
+   private static boolean isOpponent(ServerPlayer player, LivingEntity entity, RegulusState state, ControlManager manager) {
       if (entity == player) {
          return false;
       }
 
-      return RegulusRules.repulseTarget(
+      return RegulusRules.repulsePushable(
          entity instanceof Player || entity instanceof Enemy,
          player.isAlliedTo(entity),
-         state.carriers.contains(entity.getUUID())
+         state.carriers.contains(entity.getUUID()),
+         HeroRegistry.allowsExternalControl(entity, ControlKind.IMPULSE),
+         manager.isAnchored(entity)
       );
    }
 }

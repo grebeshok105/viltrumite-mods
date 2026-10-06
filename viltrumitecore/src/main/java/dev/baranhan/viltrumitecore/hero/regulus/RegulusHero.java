@@ -12,6 +12,7 @@ import dev.baranhan.viltrumitecore.hero.control.ReleaseReason;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -41,7 +42,7 @@ public class RegulusHero implements HeroDefinition {
       return null;
    }
 
-   public static RegulusState ensureState(ServerPlayer player) {
+   public static RegulusState ensureState(Player player) {
       HeroPlayer heroPlayer = (HeroPlayer)player;
       Object state = heroPlayer.viltrumitecore$getHeroState();
       if (!(state instanceof RegulusState regulus)) {
@@ -238,7 +239,10 @@ public class RegulusHero implements HeroDefinition {
       state.tickCooldowns();
       this.tickActionLock(player, state);
       this.tickDamageBookkeeping(player, state);
-      RegulusPassives.refreshAmbient(player);
+      // Base passives are transient modifiers — vanilla never serializes them,
+      // so relogin/respawn strips them; apply() is idempotent and re-adds them
+      // every tick (spec §4: always-on while Regulus).
+      RegulusPassives.apply(player);
       RegulusMovement.tick(player, state);
       RegulusHearts.tick(player, state);
       LionsHeart.tick(player, state);
@@ -273,21 +277,49 @@ public class RegulusHero implements HeroDefinition {
          return;
       }
 
+      float hit = state.maxHitLoss;
+      state.maxHitLoss = 0.0F;
       float lost = RegulusRules.externalHealthLoss(state.lastSeenHealth, health, state.internalDamage);
       state.lastSeenHealth = health;
       state.internalDamage = 0.0F;
-      if (lost <= 0.0F) {
+
+      // Spec 11.1 is per hit (за один удар): two stacked sub-4 HP hits must not
+      // interrupt, and same-tick healing must not mask a qualifying hit.
+      if (state.ritualTicks >= 0 && RegulusRules.ritualDamageInterrupts(hit, state.lionActive)) {
+         Evangelium.interrupt(player, state);
          return;
       }
 
-      if (state.ritualTicks >= 0 && RegulusRules.ritualDamageInterrupts(lost, state.lionActive)) {
-         Evangelium.interrupt(player, state);
+      if (lost <= 0.0F) {
          return;
       }
 
       // A real hit before the action's event cancels the cast for free.
       if (state.busy() && !state.eventFired) {
          state.clearAction();
+      }
+   }
+
+   @Override
+   public void saveHeroState(Player player, CompoundTag nbt) {
+      RegulusState state = stateOf(player);
+      if (state != null) {
+         state.saveHeroData(nbt);
+      }
+   }
+
+   @Override
+   public void loadHeroState(Player player, CompoundTag nbt) {
+      ensureState(player).loadHeroData(nbt);
+   }
+
+   @Override
+   public void cloneHeroState(Player original, Player clone) {
+      // Death hands forward duration bookkeeping only: cooldowns carry over,
+      // combat state dies with the body (a2/a3 audit finding).
+      RegulusState previous = stateOf(original);
+      if (previous != null) {
+         ensureState(clone).inheritPersistent(previous);
       }
    }
 

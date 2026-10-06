@@ -74,8 +74,8 @@ class RegulusHeartsTest {
       // A duplicate candidate still counts as one heart.
       candidates.add(candidates.get(0));
 
-      int added = RegulusHearts.addCarriers(carriers, candidates, RegulusRules.MAX_HEARTS);
-      assertEquals(RegulusRules.MAX_HEARTS, added);
+      java.util.List<UUID> added = RegulusHearts.addCarriers(carriers, candidates, RegulusRules.MAX_HEARTS);
+      assertEquals(RegulusRules.MAX_HEARTS, added.size());
       assertEquals(RegulusRules.MAX_HEARTS, carriers.size());
       assertFalse(carriers.add(candidates.get(3)), "a carrier holds at most one heart per owner");
    }
@@ -88,9 +88,30 @@ class RegulusHeartsTest {
       UUID bound = UUID.randomUUID();
       RegulusHearts.addCarriers(carriers, List.of(bound), RegulusRules.MAX_HEARTS);
 
-      int added = RegulusHearts.addCarriers(carriers, List.of(), RegulusRules.MAX_HEARTS);
-      assertEquals(0, added);
+      java.util.List<UUID> added = RegulusHearts.addCarriers(carriers, List.of(), RegulusRules.MAX_HEARTS);
+      assertTrue(added.isEmpty());
       assertTrue(carriers.contains(bound));
+   }
+
+   @Test
+   void carrierLevelsBindOnlyActuallyBoundCandidates() {
+      // Candidates rejected by the cap must not leave stale dimension bindings
+      // behind (a3 audit finding).
+      RegulusState state = new RegulusState();
+      List<UUID> candidates = new ArrayList<>();
+      for (int i = 0; i < RegulusRules.MAX_HEARTS + 3; i++) {
+         candidates.add(UUID.randomUUID());
+      }
+
+      java.util.List<UUID> added = RegulusHearts.addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS);
+      RegulusHearts.bindCarrierLevels(state, added, new ResourceLocation("minecraft", "overworld"));
+
+      assertEquals(RegulusRules.MAX_HEARTS, state.carrierLevels.size());
+      assertTrue(state.carrierLevels.containsKey(candidates.get(0)));
+      assertFalse(
+         state.carrierLevels.containsKey(candidates.get(RegulusRules.MAX_HEARTS)),
+         "an over-cap candidate must not record a dimension binding"
+      );
    }
 
    @Test

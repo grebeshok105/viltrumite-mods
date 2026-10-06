@@ -109,4 +109,20 @@ class ControlManagerTest {
       assertEquals(ReleaseReason.CASTER_DISCONNECT, ControlManager.cleanupReleaseReason(CleanupReason.DISCONNECT));
       assertEquals(ReleaseReason.HERO_CHANGE, ControlManager.cleanupReleaseReason(CleanupReason.HERO_CHANGE));
    }
+
+   // --- deferred restores ---------------------------------------------------
+
+   @Test
+   void pendingRestoreMapsEvictTheOldestEntry() {
+      // Restores deferred for a never-rejoining entity must not accumulate
+      // without bound (a3 audit finding).
+      BoundedMap<java.util.UUID, Boolean> map = new BoundedMap<>(3);
+      java.util.UUID first = java.util.UUID.randomUUID();
+      map.put(first, Boolean.TRUE);
+      map.put(java.util.UUID.randomUUID(), Boolean.TRUE);
+      map.put(java.util.UUID.randomUUID(), Boolean.TRUE);
+      map.put(java.util.UUID.randomUUID(), Boolean.TRUE);
+      assertEquals(3, map.size());
+      assertFalse(map.containsKey(first), "the eldest entry is evicted first");
+   }
 }

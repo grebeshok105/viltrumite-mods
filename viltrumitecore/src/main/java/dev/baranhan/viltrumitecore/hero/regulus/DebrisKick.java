@@ -51,6 +51,8 @@ public final class DebrisKick {
       }
 
       state.beginAction(RegulusHero.ACTION_DEBRIS, RegulusRules.DEBRIS_ANIM_TICKS, RegulusRules.DEBRIS_EVENT_TICK, RegulusRules.DEBRIS_EVENT_TICK);
+      // Preserve an external slowness before the windup slow overwrites it.
+      RegulusPassives.preserveExternalSlowness(player, state);
    }
 
    /** The strike fires exactly once at the 14t event (spec 7.1). */
@@ -72,7 +74,8 @@ public final class DebrisKick {
       }
 
       // Slowness I from the start of the animation until the strike lands.
-      player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, SLOWNESS_REFRESH, 0));
+      // Ambient marks it as ours so clearOwnSlowness never strips a foreign one.
+      player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, SLOWNESS_REFRESH, 0, true, false, true));
       if (rising(state)) {
          riseVisual(player);
       }
@@ -84,8 +87,9 @@ public final class DebrisKick {
 
    private static void fire(ServerPlayer player, RegulusState state) {
       state.eventFired = true;
-      // Slowness I is scoped to the windup: it ends exactly at the strike (spec 7.1).
-      player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+      // Slowness I is scoped to the windup: it ends exactly at the strike
+      // (spec 7.1); a stashed external slow gets its remainder back.
+      RegulusPassives.clearOwnSlowness(player, state, state.actionElapsed);
       state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
       if (!(player.level() instanceof ServerLevel level)) {
          return;

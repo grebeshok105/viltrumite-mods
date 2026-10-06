@@ -97,6 +97,29 @@ public final class RegulusRules {
    }
 
    /**
+    * Full push gate for the Lion release impulse and equivalent shoves: the
+    * opponent filter must pass, the target must accept external impulses
+    * (spec 6.2 — a Lion-active Regulus is never shoved) and must not already
+    * be pinned by a control (spec 8.3/9.2).
+    */
+   public static boolean repulsePushable(boolean opponent, boolean allied, boolean ownCarrier, boolean impulseAllowed, boolean anchored) {
+      return repulseTarget(opponent, allied, ownCarrier) && impulseAllowed && !anchored;
+   }
+
+   /**
+    * Section-4 landing shockwave stays flat: the +2%/heart bonus is scoped to
+    * abilities and melee (spec 5.4), so hearts are accepted but ignored.
+    */
+   public static float shockwaveDamage(int hearts) {
+      return SHOCKWAVE_DAMAGE;
+   }
+
+   /** Remaining ticks of a stashed external Slowness once our own slow ends. */
+   public static int slownessRemainder(int savedTicks, int elapsedTicks) {
+      return Math.max(0, savedTicks - elapsedTicks);
+   }
+
+   /**
     * A new cast needs its slot equipped and off cooldown; the Lion off-toggle
     * is not a new cast and always passes (spec 6.4 "повторное нажатие").
     */

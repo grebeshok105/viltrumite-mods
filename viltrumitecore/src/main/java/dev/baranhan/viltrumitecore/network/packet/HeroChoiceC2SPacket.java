@@ -38,6 +38,12 @@ public class HeroChoiceC2SPacket {
          }
 
          if (player instanceof ViltrumiteCorePlayer corePlayer) {
+            // Race choice is one-time: a replayed packet must never re-enter a
+            // hero — a fresh session would re-arm the totem, wipe cooldowns and
+            // re-grant the book (REGULUS -> VILTRUMITE -> REGULUS in two packets).
+            if (corePlayer.hasChosenRace()) {
+               return;
+            }
             corePlayer.setChosenRace(true);
          }
 

@@ -15,6 +15,7 @@ import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroId;
 import dev.baranhan.viltrumitecore.hero.HeroPlayer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.hero.control.ControlKind;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
 import dev.baranhan.viltrumitecore.network.packet.HeroControlS2CPacket;
 import java.util.ArrayList;
@@ -408,7 +409,9 @@ public class RegulusActionVFXManager {
    /** Frozen/stasis targets get a gold pixel outline (spec 14). */
    private static void drawControlOutlines(ClientLevel level, BufferBuilder buffer, Vec3 cameraPos, Camera camera, float partialTick) {
       for (HeroControlS2CPacket.ControlInfo control : ClientHeroData.controls()) {
-         if (control.kindOrdinal() != 1 && control.kindOrdinal() != 2) {
+         int ordinal = control.kindOrdinal();
+         ControlKind kind = ordinal >= 0 && ordinal < ControlKind.values().length ? ControlKind.values()[ordinal] : null;
+         if (kind != ControlKind.FREEZE && kind != ControlKind.STASIS) {
             continue;
          }
 

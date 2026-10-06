@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
@@ -39,6 +40,15 @@ public final class Evangelium {
       Inventory inventory = player.getInventory();
       for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
          if (inventory.getItem(slot).is(ViltrumiteItems.EVANGELIUM.get())) {
+            return true;
+         }
+      }
+
+      // The ender chest is still the player's own storage: a book stashed there
+      // must not dupe the respawn grant (a1/a3 audit finding, cosmetic).
+      Container enderChest = player.getEnderChestInventory();
+      for (int slot = 0; slot < enderChest.getContainerSize(); slot++) {
+         if (enderChest.getItem(slot).is(ViltrumiteItems.EVANGELIUM.get())) {
             return true;
          }
       }

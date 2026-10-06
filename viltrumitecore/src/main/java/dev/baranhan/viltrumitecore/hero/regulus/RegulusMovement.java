@@ -1,5 +1,8 @@
 package dev.baranhan.viltrumitecore.hero.regulus;
 
+import dev.baranhan.viltrumitecore.hero.HeroRegistry;
+import dev.baranhan.viltrumitecore.hero.control.ControlKind;
+import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -53,15 +56,20 @@ public final class RegulusMovement {
       }
 
       AABB area = player.getBoundingBox().inflate(RegulusRules.SHOCKWAVE_RADIUS, 1.5, RegulusRules.SHOCKWAVE_RADIUS);
-      float damage = RegulusRules.SHOCKWAVE_DAMAGE * RegulusRules.heartBonus(state.hearts());
+      float damage = RegulusRules.shockwaveDamage(state.hearts());
+      ControlManager manager = ControlManager.get(level);
       for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {
          if (entity == player || !entity.isAlive()) {
             continue;
          }
 
          entity.hurt(player.damageSources().mobAttack(player), damage);
-         Vec3 push = entity.position().subtract(player.position()).normalize().scale(1.2);
-         entity.push(push.x, 0.4, push.z);
+         // The shove honors the shared impulse policy: a Lion-active hero is
+         // never shoved (spec 6.2) and an anchored victim stays pinned.
+         if (HeroRegistry.allowsExternalControl(entity, ControlKind.IMPULSE) && !manager.isAnchored(entity)) {
+            Vec3 push = entity.position().subtract(player.position()).normalize().scale(1.2);
+            entity.push(push.x, 0.4, push.z);
+         }
       }
 
       level.playSound(null, player.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.8F, 0.8F);

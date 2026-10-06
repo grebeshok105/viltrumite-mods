@@ -73,16 +73,20 @@ public final class RegulusHearts {
       );
    }
 
-   /** Fill the carrier set from scan candidates up to the cap; existing hearts stay. */
-   public static int addCarriers(Set<UUID> carriers, Collection<UUID> candidates, int cap) {
-      int added = 0;
+   /**
+    * Fill the carrier set from scan candidates up to the cap; existing hearts
+    * stay. Returns the ids actually bound so level bindings are never written
+    * for candidates the cap rejected.
+    */
+   public static List<UUID> addCarriers(Set<UUID> carriers, Collection<UUID> candidates, int cap) {
+      List<UUID> added = new ArrayList<>();
       for (UUID candidate : candidates) {
          if (carriers.size() >= cap) {
             break;
          }
 
          if (carriers.add(candidate)) {
-            added++;
+            added.add(candidate);
          }
       }
 
@@ -169,8 +173,9 @@ public final class RegulusHearts {
          }
       }
 
-      bindCarrierLevels(state, candidates, level.dimension().location());
-      addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS);
+      // Only actually-bound carriers record a dimension binding; over-cap
+      // candidates never join the set and must not leave stale entries.
+      bindCarrierLevels(state, addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS), level.dimension().location());
    }
 
    private static void pushSnapshotIfChanged(ServerPlayer player, RegulusState state) {

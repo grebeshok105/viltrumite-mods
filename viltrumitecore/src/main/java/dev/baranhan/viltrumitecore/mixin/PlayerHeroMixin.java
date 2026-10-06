@@ -143,7 +143,9 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
 
    @Inject(method = {"addAdditionalSaveData"}, at = {@At("TAIL")})
    private void viltrumitecore$writeHeroData(CompoundTag nbt, CallbackInfo ci) {
+      Player player = (Player)(Object)this;
       new HeroSession(this.getHeroId(), this.heroSessionId == null ? UUID.randomUUID() : this.heroSessionId, this.heroTotemConsumed).save(nbt);
+      HeroRegistry.get(player).saveHeroState(player, nbt);
    }
 
    @Inject(method = {"readAdditionalSaveData"}, at = {@At("TAIL")})
@@ -157,6 +159,8 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
       HeroSession session = HeroSession.load(nbt, legacy);
       // Restore path: identity + session fields, never a lifecycle entry.
       this.viltrumitecore$setHeroSession(session);
-      this.heroState = null;
+      // The hero definition decides what state survives a relog (Regulus keeps
+      // its cooldowns); the default rebuilds the state empty as before.
+      HeroRegistry.get(serverPlayer).loadHeroState(serverPlayer, nbt);
    }
 }

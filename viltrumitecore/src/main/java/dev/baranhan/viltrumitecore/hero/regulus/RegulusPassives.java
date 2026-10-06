@@ -94,6 +94,42 @@ public final class RegulusPassives {
       }
    }
 
+   /**
+    * Preserve an externally applied (non-ambient) Slowness before an ability's
+    * own slow overwrites it; clearOwnSlowness puts the remainder back. Our own
+    * applications are ambient, so the flag discriminates foreign instances.
+    */
+   public static void preserveExternalSlowness(Player player, RegulusState state) {
+      MobEffectInstance current = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+      if (state.savedSlowness == null && current != null && !current.isAmbient()) {
+         state.savedSlowness = new MobEffectInstance(current);
+      }
+   }
+
+   /**
+    * End an ability's own Slowness: only an ambient instance is ours to strip;
+    * a live non-ambient one belongs to another source and wins over the stale
+    * stash. Otherwise the stashed external slow comes back with its remaining
+    * duration (elapsed ticks already counted against it).
+    */
+   public static void clearOwnSlowness(Player player, RegulusState state, int elapsedTicks) {
+      MobEffectInstance saved = state.savedSlowness;
+      state.savedSlowness = null;
+      MobEffectInstance current = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+      if (current != null && !current.isAmbient()) {
+         return;
+      }
+
+      if (current != null) {
+         player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+      }
+
+      int remaining = RegulusRules.slownessRemainder(saved == null ? 0 : saved.getDuration(), elapsedTicks);
+      if (saved != null && remaining > 0) {
+         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, remaining, saved.getAmplifier(), saved.isAmbient(), saved.isVisible(), saved.showIcon()));
+      }
+   }
+
    private static void addModifier(LivingEntity entity, net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id, String name, double amount, Operation operation) {
       AttributeInstance instance = entity.getAttribute(attribute);
       if (instance == null || instance.getModifier(id) != null) {

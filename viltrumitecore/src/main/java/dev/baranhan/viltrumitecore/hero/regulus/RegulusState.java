@@ -8,15 +8,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.phys.Vec3;
 
 /**
  * Server-only transient Regulus state. Persistent data (hero id, session id,
- * totem) lives on HeroPlayer/HeroData instead; this object is rebuilt empty on
- * login and is discarded on death/disconnect/hero change.
+ * totem) lives on HeroPlayer/HeroData instead; the cooldown map rides along
+ * through saveHeroData/loadHeroData; the rest of this object is rebuilt empty
+ * on login and is discarded on death/disconnect/hero change.
  */
 public final class RegulusState {
+   /** HeroData key carrying the cooldown map across relog and respawn. */
+   public static final String COOLDOWNS_TAG = "RegulusCooldowns";
+
    // Timed action lock: the current cast. Event rules live in the abilities;
    // until eventFired cancellation is free and starts no cooldown.
    @Nullable
@@ -77,6 +83,13 @@ public final class RegulusState {
    // heart backlash, overheat). The read subtracts it from the observed loss so
    // self-inflicted drains never count as an interrupting hit (spec 7.1/10/11).
    public float internalDamage;
+   // Largest single external hit observed since the last read: the ritual
+   // interrupt is per hit (spec 11.1 за один удар), not the tick aggregate.
+   public float maxHitLoss;
+   // A non-ambient (externally applied) Slowness stashed before an ability's
+   // own slow overwrites it, restored when that slow ends (a3 audit finding).
+   @Nullable
+   public MobEffectInstance savedSlowness;
 
    /**
     * Action lock: busy while a cast runs before its event; once the event has
@@ -101,6 +114,39 @@ public final class RegulusState {
 
    public void tickCooldowns() {
       this.cooldowns.replaceAll((id, ticks) -> Math.max(0, ticks - 1));
+   }
+
+   /** Cooldowns into HeroData; only unfinished, known regulus ids load back. */
+   public void saveHeroData(CompoundTag nbt) {
+      CompoundTag cooldowns = new CompoundTag();
+      for (Map.Entry<String, Integer> entry : this.cooldowns.entrySet()) {
+         if (entry.getValue() != null && entry.getValue() > 0) {
+            cooldowns.putInt(entry.getKey(), entry.getValue());
+         }
+      }
+
+      if (!cooldowns.isEmpty()) {
+         nbt.put(COOLDOWNS_TAG, cooldowns);
+      }
+   }
+
+   public void loadHeroData(CompoundTag nbt) {
+      if (!nbt.contains(COOLDOWNS_TAG)) {
+         return;
+      }
+
+      CompoundTag cooldowns = nbt.getCompound(COOLDOWNS_TAG);
+      for (String key : cooldowns.getAllKeys()) {
+         int ticks = cooldowns.getInt(key);
+         if (ticks > 0 && RegulusAbilities.isRegulusAbility(key)) {
+            this.cooldowns.put(key, ticks);
+         }
+      }
+   }
+
+   /** Respawn clone: duration bookkeeping carries over; combat state does not. */
+   public void inheritPersistent(RegulusState previous) {
+      this.cooldowns.putAll(previous.cooldowns);
    }
 
    public void clearAction() {
@@ -130,8 +176,9 @@ public final class RegulusState {
     * its fresh-state default. Ability cleanups handle the Minecraft side
     * (modifiers, control ownership, channel ends) before this runs; only a
     * hero change clears the cast lock — on death/disconnect this object is
-    * discarded with the entity anyway. Cooldowns survive: they are duration
-    * bookkeeping, not transient combat state.
+    * discarded with the entity anyway. Cooldowns are duration bookkeeping:
+    * untouched here, persisted through saveHeroData into HeroData (relogin)
+    * and inheritPersistent (respawn clone).
     */
    public void resetTransient(CleanupReason reason) {
       if (reason == CleanupReason.HERO_CHANGE) {
@@ -158,6 +205,7 @@ public final class RegulusState {
       this.ritualStartPos = null;
 
       this.channelTargetId = null;
+      this.channelEffectId = null;
       this.channelTicks = 0;
 
       this.jumpHeld = false;
@@ -167,5 +215,7 @@ public final class RegulusState {
 
       this.lastSeenHealth = -1.0F;
       this.internalDamage = 0.0F;
+      this.maxHitLoss = 0.0F;
+      this.savedSlowness = null;
    }
 }

@@ -5,7 +5,6 @@ import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
 import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import dev.baranhan.viltrumitecore.hero.control.DomeRecord;
-import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -72,11 +71,16 @@ public final class GreedsEmbrace {
     * and the control-immune. Cooldown 700 starts on appearance.
     */
    private static void appear(ServerPlayer player, ServerLevel level, RegulusState state) {
-      state.eventFired = true;
       ControlManager manager = ControlManager.get(level);
       if (manager.hasDomeFrom(player.getUUID())) {
+         // One dome per caster: while the old dome stands the recast fizzles
+         // for free — the event never fires, so no cooldown is charged and the
+         // cast simply unwinds (spec 9.2/12).
+         state.clearAction();
          return;
       }
+
+      state.eventFired = true;
 
       Vec3 center = state.actionPoint == null ? player.position() : state.actionPoint;
       long now = level.getGameTime();
