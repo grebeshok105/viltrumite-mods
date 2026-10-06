@@ -15,6 +15,7 @@ import dev.baranhan.viltrumitecore.network.packet.GrabToggleC2SPacket;
 import dev.baranhan.viltrumitecore.network.packet.GrabbedPosSyncS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.HandPosSyncC2SPacket;
 import dev.baranhan.viltrumitecore.network.packet.HeroChoiceC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.HeroControlS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket;
 import dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.MeltedBlocksS2CPacket;
@@ -179,6 +180,12 @@ public class CoreMessages {
          .decoder(HeroOwnerSnapshotS2CPacket::new)
          .encoder(HeroOwnerSnapshotS2CPacket::toBytes)
          .consumerMainThread(HeroOwnerSnapshotS2CPacket::handle)
+         .add();
+
+      net.messageBuilder(HeroControlS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(HeroControlS2CPacket::new)
+         .encoder(HeroControlS2CPacket::toBytes)
+         .consumerMainThread(HeroControlS2CPacket::handle)
          .add();
    }
 

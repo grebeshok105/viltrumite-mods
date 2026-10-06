@@ -61,6 +61,7 @@ public final class RegulusState {
 
    // Mania channel.
    public UUID channelTargetId;
+   public UUID channelEffectId;
    public int channelTicks;
 
    // Super jump / landing.

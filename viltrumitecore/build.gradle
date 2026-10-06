@@ -58,6 +58,7 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testImplementation sourceSets.main.output
+    testImplementation files(project(':viltrumiteflight').sourceSets.main.output)
     testImplementation files(configurations.minecraft)
 }
 

@@ -48,6 +48,7 @@ public final class RegulusRules {
    public static final double EMBRACE_RADIUS = 8.0;
    public static final int EMBRACE_DURATION_TICKS = 80;
    public static final int EMBRACE_COOLDOWN = 700;
+   public static final double EMBRACE_RELEASE_IMPULSE = 1.2;
 
    public static final int COUNTER_LIFT_TICKS = 20;
    public static final int COUNTER_SLAM_TICKS = 7;
@@ -204,6 +205,22 @@ public final class RegulusRules {
 
    public static float domeDeferredCap(float maxHealth) {
       return 0.35F * maxHealth;
+   }
+
+   /** Deferred queue math: damage accumulates but never crosses the cap. */
+   public static float deferredAccumulate(float queued, float incoming, float cap) {
+      return Math.min(cap, Math.max(0.0F, queued + incoming));
+   }
+
+   /** Spec 8.2: the channel ends at 120 ticks at the latest. */
+   public static boolean maniaChannelDone(int channelTicks) {
+      return channelTicks >= MANIA_CHANNEL_TICKS;
+   }
+
+   /** Spec 8.2: only the fast flight states outrun the pull; hover/ground cannot. */
+   public static boolean pullEscapes(dev.baranhan.viltrumiteflight.util.FlightState state) {
+      return state == dev.baranhan.viltrumiteflight.util.FlightState.CRUISE
+         || state == dev.baranhan.viltrumiteflight.util.FlightState.SONIC;
    }
 
    public static float heartBacklash(float maxHealth) {

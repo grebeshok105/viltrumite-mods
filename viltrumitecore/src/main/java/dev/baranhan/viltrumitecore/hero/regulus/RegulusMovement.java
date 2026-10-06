@@ -20,7 +20,8 @@ public final class RegulusMovement {
    public static void tick(Player player, RegulusState state) {
       boolean onGround = player.onGround();
 
-      if (state.jumpHeld) {
+      // A Mania channel grounds the caster for its duration (spec 8.2).
+      if (state.jumpHeld && state.channelTargetId == null) {
          if (onGround) {
             state.jumpCharge = Math.min(state.jumpCharge + 1, RegulusRules.JUMP_CHARGE_TICKS);
          } else {

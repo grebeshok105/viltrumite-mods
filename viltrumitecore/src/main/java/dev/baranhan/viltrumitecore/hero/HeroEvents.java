@@ -1,8 +1,9 @@
 package dev.baranhan.viltrumitecore.hero;
 
+import dev.baranhan.viltrumitecore.hero.control.ControlManager;
+import dev.baranhan.viltrumitecore.hero.control.HeroControlSync;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusHero;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusState;
-import dev.baranhan.viltrumitecore.hero.control.ControlManager;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -116,6 +117,29 @@ public final class HeroEvents {
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroRegistry.get(player).cleanup(player, CleanupReason.DISCONNECT);
+      }
+   }
+
+   // Control-state baselines: a client sees the whole world snapshot on join,
+   // respawn and dimension change; mutations re-broadcast from the tick.
+   @SubscribeEvent
+   public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player) {
+         HeroControlSync.sendBaseline(player);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player) {
+         HeroControlSync.sendBaseline(player);
+      }
+   }
+
+   @SubscribeEvent
+   public static void onPlayerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player) {
+         HeroControlSync.sendBaseline(player);
       }
    }
 
