@@ -66,8 +66,13 @@ public final class RegulusState {
    // Damage bookkeeping for interruption rules.
    public float lastSeenHealth = -1.0F;
 
+   /**
+    * Action lock: busy while a cast runs before its event; once the event has
+    * fired and the unlock tick passed the remaining animation is free — the
+    * player may start another action while the tail plays out (spec 13.2).
+    */
    public boolean busy() {
-      return this.actionId != null;
+      return this.actionId != null && !(this.eventFired && this.actionElapsed >= this.actionUnlockTick);
    }
 
    public int hearts() {
