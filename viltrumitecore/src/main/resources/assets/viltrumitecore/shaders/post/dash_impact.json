@@ -27,7 +27,11 @@
         { "name": "BarrageIntensity", "values": [ 0.0 ] },
         { "name": "BarrageIsLeft", "values": [ 0.0 ] },
         { "name": "ScourgeIntensity", "values": [ 0.0 ] },
-        { "name": "ScourgeTurn", "values": [ 0.0 ] }
+        { "name": "ScourgeTurn", "values": [ 0.0 ] },
+        { "name": "RegulusOverheat", "values": [ 0.0 ] },
+        { "name": "RegulusHeartFlash", "values": [ 0.0 ] },
+        { "name": "RegulusMadness", "values": [ 0.0 ] },
+        { "name": "RegulusPulse", "values": [ 0.0 ] }
       ]
     },
     {

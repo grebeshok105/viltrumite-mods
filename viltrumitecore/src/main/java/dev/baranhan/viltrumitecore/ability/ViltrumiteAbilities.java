@@ -1,11 +1,13 @@
 package dev.baranhan.viltrumitecore.ability;
 
+import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
 public class ViltrumiteAbilities {
    public static final Map<String, ViltrumiteAbility> REGISTRY = new LinkedHashMap<>();
@@ -238,14 +240,14 @@ public class ViltrumiteAbilities {
             }
          )
       );
-      registerRegulusAbility("regulus:lions_heart", "lions_heart", 0);
-      registerRegulusAbility("regulus:debris_kick", "debris_kick", 1);
-      registerRegulusAbility("regulus:mania", "mania", 2);
-      registerRegulusAbility("regulus:greeds_embrace", "greeds_embrace", 3);
-      registerRegulusAbility("regulus:counter", "counter", 4);
+      registerRegulusAbility("regulus:lions_heart", "lions_heart", 0, HeroAction.LIONS_HEART);
+      registerRegulusAbility("regulus:debris_kick", "debris_kick", 1, HeroAction.DEBRIS_KICK);
+      registerRegulusAbility("regulus:mania", "mania", 2, HeroAction.MANIA);
+      registerRegulusAbility("regulus:greeds_embrace", "greeds_embrace", 3, HeroAction.GREEDS_EMBRACE);
+      registerRegulusAbility("regulus:counter", "counter", 4, HeroAction.COUNTER);
    }
 
-   private static void registerRegulusAbility(String id, String name, int cooldownIndex) {
+   private static void registerRegulusAbility(String id, String name, int cooldownIndex, HeroAction action) {
       register(
          new ViltrumiteAbility(
             id,
@@ -253,16 +255,50 @@ public class ViltrumiteAbilities {
             "ability.viltrumitecore." + name + ".name",
             "ability.viltrumitecore." + name + ".desc",
             0,
-            player -> {
-               if (player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer) {
-                  int[] cooldowns = heroPlayer.getHeroSnapshot().cooldowns();
-                  return cooldownIndex < cooldowns.length && cooldowns[cooldownIndex] > 0;
-               }
-
-               return false;
-            }
+            player -> regulusSlotGrey(player, cooldownIndex, action)
          )
       );
+   }
+
+   /**
+    * Panel grey-out mirrors RegulusHero.actionPermitted for the five ability
+    * slots: while Lion's Heart runs only the heart itself stays lit, during
+    * madness only Counter does, and Counter additionally needs madness. Slots
+    * are grey while another cast is busy or the ritual is channeling.
+    */
+   private static boolean regulusSlotGrey(Player player, int cooldownIndex, HeroAction action) {
+      if (!(player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer)) {
+         return false;
+      }
+
+      dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
+      if (snapshot == null || snapshot.heroId() != dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
+         return false;
+      }
+
+      int[] cooldowns = snapshot.cooldowns();
+      if (cooldownIndex < cooldowns.length && cooldowns[cooldownIndex] > 0) {
+         return true;
+      }
+
+      HeroAction active = HeroAction.byId(snapshot.actionId());
+      if (snapshot.ritualTicks() >= 0) {
+         return true;
+      }
+
+      if (active != null && active != action && active != HeroAction.RITUAL) {
+         return true;
+      }
+
+      if (snapshot.lionActive() && action != HeroAction.LIONS_HEART) {
+         return true;
+      }
+
+      if (snapshot.madness() && action != HeroAction.COUNTER) {
+         return true;
+      }
+
+      return action == HeroAction.COUNTER && !snapshot.madness();
    }
 
    private static void register(ViltrumiteAbility ability) {
