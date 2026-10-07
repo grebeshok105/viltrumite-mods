@@ -4,13 +4,12 @@ import dev.baranhan.viltrumitecore.hero.HeroDestruction;
 import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
 import java.util.HashSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -41,7 +40,6 @@ public final class DebrisKick {
       final int hearts;
       final Set<UUID> hitTargets = new HashSet<>();
       final Set<BlockPos> broken = new HashSet<>();
-      final Map<BlockPos, BlockPos> surfaces = new HashMap<>();
       int step;
       int groundY;
 
@@ -61,14 +59,21 @@ public final class DebrisKick {
          return this.hitTargets.add(target);
       }
 
-      @Nullable BlockPos surface(ServerLevel level, BlockPos feet) {
-         BlockPos column = new BlockPos(feet.getX(), 0, feet.getZ());
-         return this.surfaces.computeIfAbsent(column, key -> surfaceAt(level, feet));
+      /** Feet pos of the first slice the wave would bite — the cast gate. */
+      BlockPos nextSlicePos() {
+         Vec3 first = this.origin.add(this.direction);
+         return BlockPos.containing(first.x, this.groundY, first.z);
       }
    }
 
    public static void start(ServerPlayer player, RegulusState state) {
       if (state.busy()) {
+         return;
+      }
+      // A ground kick needs ground: an airborne cast never spawns a wave, so
+      // it costs nothing and tells the player why.
+      if (!player.onGround()) {
+         player.displayClientMessage(Component.translatable("message.viltrumitecore.debris.no_ground"), true);
          return;
       }
       state.beginAction(RegulusHero.ACTION_DEBRIS, RegulusRules.DEBRIS_ANIM_TICKS, RegulusRules.DEBRIS_EVENT_TICK, RegulusRules.DEBRIS_EVENT_TICK);
@@ -85,10 +90,19 @@ public final class DebrisKick {
          if (shouldFire(state)) {
             state.eventFired = true;
             RegulusPassives.clearOwnSlowness(player, state, state.actionElapsed);
-            state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
             double yaw = Math.toRadians(player.getYRot());
-            state.debrisWave = new Wave(player.position(), new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw)), state.hearts(), player.level().dimension().location());
-            player.level().playSound(null, player.blockPosition(), SoundEvents.STONE_BREAK, SoundSource.PLAYERS, 1.4F, 0.6F);
+            Wave wave = new Wave(player.position(), new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw)), state.hearts(), player.level().dimension().location());
+            // A knock-up during the windup can leave the wave with no ground
+            // to bite: abort it the same way as an airborne cast — no
+            // cooldown, just feedback.
+            if (surfaceAt(player.serverLevel(), wave.nextSlicePos()) == null) {
+               player.displayClientMessage(Component.translatable("message.viltrumitecore.debris.no_ground"), true);
+               state.clearAction();
+            } else {
+               state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
+               state.debrisWave = wave;
+               player.level().playSound(null, player.blockPosition(), SoundEvents.STONE_BREAK, SoundSource.PLAYERS, 1.4F, 0.6F);
+            }
          }
       }
       if (state.debrisWave != null && !advanceWave(player, state.debrisWave)) {
@@ -105,23 +119,22 @@ public final class DebrisKick {
       if (slice == null) {
          return false;
       }
-      BlockPos center = wave.surface(level, BlockPos.containing(slice.x, wave.groundY, slice.z));
-      if (center == null || level.getBlockState(center).getDestroySpeed(level, center) < 0.0F) {
+      BlockPos center = surfaceAt(level, BlockPos.containing(slice.x, wave.groundY, slice.z));
+      if (center == null || !HeroDestruction.canDestroy(level, center)) {
          return false;
       }
       wave.groundY = center.getY() + 1;
       Vec3 side = new Vec3(-wave.direction.z, 0.0, wave.direction.x);
       for (int lane = -1; lane <= 1; lane++) {
          Vec3 lanePos = slice.add(side.scale(lane));
-         BlockPos ground = wave.surface(level, BlockPos.containing(lanePos.x, wave.groundY, lanePos.z));
-         if (ground == null || !wave.broken.add(ground)) {
+         BlockPos ground = surfaceAt(level, BlockPos.containing(lanePos.x, wave.groundY, lanePos.z));
+         if (ground == null || !HeroDestruction.canDestroy(level, ground) || !wave.broken.add(ground)) {
             continue;
          }
          BlockState block = level.getBlockState(ground);
-         if (block.getDestroySpeed(level, ground) < 0.0F) {
+         if (!HeroDestruction.destroyBlock(level, ground)) {
             continue;
          }
-         HeroDestruction.destroyBlock(level, ground);
          BlockParticleOption debris = new BlockParticleOption(ParticleTypes.BLOCK, block);
          for (int i = 0; i < 6; i++) {
             level.sendParticles(debris, ground.getX() + 0.2 + level.random.nextDouble() * 0.6, ground.getY() + 1.0, ground.getZ() + 0.2 + level.random.nextDouble() * 0.6,
@@ -137,8 +150,8 @@ public final class DebrisKick {
          double lateral = Math.abs(offset.dot(side));
          boolean visible = level.clip(new ClipContext(surface.add(0.0, 0.5, 0.0), target.getBoundingBox().getCenter(),
             ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getType() == HitResult.Type.MISS;
-         if (along >= wave.step - 1.0 && along <= wave.step + 0.75 && lateral <= 1.8 && visible && wave.claim(target.getUUID())) {
-            applyHit(player, target, along, wave);
+         if (along >= wave.step - 1.0 && along <= wave.step + 0.75 && lateral <= 1.8 && visible && applyHit(player, target, along, wave)) {
+            wave.claim(target.getUUID());
          }
       }
       if (wave.step % 2 == 0) {
@@ -147,17 +160,26 @@ public final class DebrisKick {
       return wave.step < RegulusRules.DEBRIS_RANGE;
    }
 
-   /** A wave follows one-block steps; tall walls and missing ground stop it. */
-   @Nullable private static BlockPos surfaceAt(ServerLevel level, BlockPos feet) {
-      for (int dy = 0; dy >= -3; dy--) {
-         BlockPos ground = feet.offset(0, dy, 0);
-         BlockState state = level.getBlockState(ground);
-         if (!state.getCollisionShape(level, ground).isEmpty()
-            && level.getBlockState(ground.above()).getCollisionShape(level, ground.above()).isEmpty()) {
-            return ground;
+   /**
+    * Walkable surface within ±2 of the running ground line, top-down so the
+    * wave prefers climbing: feet+1 down to feet-3. A two-block ledge or a
+    * three-block drop still carries the wave; taller walls and sheer drops
+    * stop it. Pure predicates keep the rule unit-testable.
+    */
+   static int pickSurfaceDy(java.util.function.IntPredicate solidAtDy, java.util.function.IntPredicate clearAtDy) {
+      for (int dy = 1; dy >= -3; dy--) {
+         if (solidAtDy.test(dy) && clearAtDy.test(dy + 1)) {
+            return dy;
          }
       }
-      return null;
+      return Integer.MIN_VALUE;
+   }
+
+   @Nullable private static BlockPos surfaceAt(ServerLevel level, BlockPos feet) {
+      int dy = pickSurfaceDy(
+         d -> !level.getBlockState(feet.offset(0, d, 0)).getCollisionShape(level, feet.offset(0, d, 0)).isEmpty(),
+         d -> level.getBlockState(feet.offset(0, d, 0)).getCollisionShape(level, feet.offset(0, d, 0)).isEmpty());
+      return dy == Integer.MIN_VALUE ? null : feet.offset(0, dy, 0);
    }
 
    /** Shared gaze collision helper used by Mania and manual heart assignment. */
@@ -165,8 +187,16 @@ public final class DebrisKick {
       return box.contains(origin) ? 0.0 : box.clip(origin, far).map(origin::distanceTo).orElse(Double.MAX_VALUE);
    }
 
-   private static void applyHit(ServerPlayer player, LivingEntity target, double distance, Wave wave) {
+   /**
+    * One hit per target per wave: vanilla i-frames are lifted for the strike
+    * so a recently-hurt target still takes damage and knockback. Returns
+    * whether the hit landed — only then is the target consumed by the wave.
+    */
+   private static boolean applyHit(ServerPlayer player, LivingEntity target, double distance, Wave wave) {
+      int savedInvulnerable = target.invulnerableTime;
+      target.invulnerableTime = 0;
       boolean landed = target.hurt(player.damageSources().playerAttack(player), RegulusRules.debrisDamage(distance, wave.hearts));
+      target.invulnerableTime = savedInvulnerable;
       if (landed && HeroRegistry.allowsExternalControl(target, ControlKind.IMPULSE)) {
          target.setDeltaMovement(wave.direction.x, 0.3, wave.direction.z);
          target.hasImpulse = true;
@@ -174,5 +204,6 @@ public final class DebrisKick {
             targetPlayer.connection.send(new ClientboundSetEntityMotionPacket(targetPlayer));
          }
       }
+      return landed;
    }
 }

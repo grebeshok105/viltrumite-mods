@@ -74,12 +74,10 @@ class RegulusStateTest {
       state.channelTargetId = UUID.randomUUID();
       state.channelEffectId = UUID.randomUUID();
       state.channelTicks = 40;
-      state.maxHitLoss = 6.0F;
 
       state.resetTransient(CleanupReason.DEATH);
       assertNull(state.channelTargetId);
       assertNull(state.channelEffectId, "a stale channel effect id must not survive cleanup");
       assertEquals(0, state.channelTicks);
-      assertEquals(0.0F, state.maxHitLoss);
    }
 }

@@ -151,10 +151,4 @@ class EvangeliumTest {
       );
    }
 
-   @Test
-   void damageNeverInterruptsHeldBook() {
-      assertFalse(RegulusRules.ritualDamageInterrupts(0.5F, false), "chip damage below 4 never interrupts");
-      assertFalse(RegulusRules.ritualDamageInterrupts(50.0F, false), "damage does not release RMB");
-      assertFalse(RegulusRules.ritualDamageInterrupts(50.0F, true), "inside Lion blocked hits cannot interrupt (§16)");
-   }
 }

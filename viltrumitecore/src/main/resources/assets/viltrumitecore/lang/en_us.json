@@ -1,5 +1,4 @@
 {
-  "key.viltrumitecore.assign_heart": "Regulus: assign / remove heart",
   "message.viltrumitecore.hearts.no_target": "Look at a peaceful creature within 20 blocks.",
   "message.viltrumitecore.hearts.invalid": "That creature cannot carry your heart.",
   "message.viltrumitecore.hearts.full": "All 12 hearts are assigned. Remove one first.",
@@ -10,6 +9,7 @@
   "message.viltrumitecore.evangelium.complete": "Evangelium complete. Madness awakened.",
   "message.viltrumitecore.embrace.active": "Your previous dome is still active.",
   "message.viltrumitecore.embrace.no_surface": "No reachable surface for the dome.",
+  "message.viltrumitecore.debris.no_ground": "Debris Kick needs ground under your feet.",
   "itemgroup.viltrumitecore.main_tab": "Viltrumite Core",
   "item.viltrumitecore.infinity_gun": "Infinity Gun",
   "item.viltrumitecore.infinity_gun_handle": "Infinity Gun Handle",

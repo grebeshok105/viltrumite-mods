@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
-import dev.baranhan.viltrumitecore.client.hero.ClientHeroData;
 import dev.baranhan.viltrumitecore.client.regulus.RegulusVfxMath;
 import dev.baranhan.viltrumitecore.hero.HeroId;
 import dev.baranhan.viltrumitecore.hero.HeroPlayer;
@@ -26,8 +25,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.level.ClipContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
@@ -37,7 +34,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
-/** Lion's frozen mote boundary and owner-private body-center carrier glow. */
+/** Lion's frozen mote boundary and chest pulses; carrier silhouettes live in the render mixin. */
 @EventBusSubscriber(
    modid = "viltrumitecore",
    bus = Bus.FORGE,
@@ -111,7 +108,7 @@ public class RegulusLionVFXManager {
          }
       }
 
-      if (activeLions.isEmpty() && PULSES.isEmpty() && ClientHeroData.carriers().length == 0) {
+      if (activeLions.isEmpty() && PULSES.isEmpty()) {
          return;
       }
 
@@ -172,12 +169,6 @@ public class RegulusLionVFXManager {
          }
 
          tessellator.end();
-         // Body-center markers bypass the entity skin, but never the owner's block LOS.
-         RenderSystem.disableDepthTest();
-         buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-         drawCarriers(client, level, buffer, cameraPos, camera, partialTick, timeSeconds);
-         tessellator.end();
-         RenderSystem.enableDepthTest();
       } finally {
          RenderSystem.enableDepthTest();
          RenderSystem.depthMask(true);
@@ -186,29 +177,6 @@ public class RegulusLionVFXManager {
          RenderSystem.disableBlend();
          modelViewStack.popPose();
          RenderSystem.applyModelViewMatrix();
-      }
-   }
-
-   private static void drawCarriers(Minecraft client, ClientLevel level, BufferBuilder buffer, Vec3 cameraPos, Camera camera, float partialTick, float timeSeconds) {
-      if (!(client.player instanceof HeroPlayer heroPlayer)) {
-         return;
-      }
-      HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
-      if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
-         return;
-      }
-      for (int id : ClientHeroData.carriers()) {
-         Entity carrier = level.getEntity(id);
-         if (carrier == null || !carrier.isAlive()) {
-            continue;
-         }
-         Vec3 chest = carrier.getPosition(partialTick).add(0.0, carrier.getBbHeight() * 0.55, 0.0);
-         if (level.clip(new ClipContext(cameraPos, chest, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, client.player)).getType() != HitResult.Type.MISS) {
-            continue;
-         }
-         float pulse = 0.5F + 0.5F * (float)Math.sin(timeSeconds * 2.4F);
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.055F, 180, 20, 15, 35 + (int)(25 * pulse));
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.027F, 245, 35, 25, 100 + (int)(60 * pulse));
       }
    }
 

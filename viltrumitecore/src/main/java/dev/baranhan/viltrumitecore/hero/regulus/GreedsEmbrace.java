@@ -32,10 +32,6 @@ public final class GreedsEmbrace {
 
    /** Cast lock: event at 18 (dome appears), pose unlock at 32 (hand lowers). */
    public static void start(ServerPlayer player, RegulusState state) {
-      if (ControlManager.get(player.serverLevel()).hasDomeFrom(player.getUUID())) {
-         feedback(player, "active");
-         return;
-      }
       state.beginAction(RegulusHero.ACTION_EMBRACE, RegulusRules.EMBRACE_RECOVER_TICK + 1, RegulusRules.EMBRACE_APPEAR_TICK, RegulusRules.EMBRACE_RECOVER_TICK);
    }
 

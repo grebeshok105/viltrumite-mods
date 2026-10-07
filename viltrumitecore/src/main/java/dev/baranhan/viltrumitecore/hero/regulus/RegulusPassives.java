@@ -57,10 +57,11 @@ public final class RegulusPassives {
    public static void applyMadness(Player player) {
       removeModifier(player, Attributes.ARMOR, MADNESS_ARMOR_MODIFIER_ID);
       addModifier(player, Attributes.MAX_HEALTH, MADNESS_HEALTH_MODIFIER_ID, "Regulus madness vitality", 0.2, Operation.MULTIPLY_TOTAL);
-      // Flat +0.4 attack (spec 11.2, Codex canon) — not a multiplier.
-      addModifier(player, Attributes.ATTACK_DAMAGE, MADNESS_ATTACK_MODIFIER_ID, "Regulus madness strength", 0.4, Operation.ADDITION);
+      addModifier(player, Attributes.ATTACK_DAMAGE, MADNESS_ATTACK_MODIFIER_ID, "Regulus madness strength", 0.4, Operation.MULTIPLY_TOTAL);
       for (int i = 0; i < MADNESS_EFFECTS.length; i++) {
-         player.addEffect(new MobEffectInstance(MADNESS_EFFECTS[i], 2100, MADNESS_AMPLIFIER[i], true, false, true));
+         // Ambient so removeMadness can tell ours from a foreign instance,
+         // but fully visible: particles on the body, icons in the HUD.
+         player.addEffect(new MobEffectInstance(MADNESS_EFFECTS[i], 2100, MADNESS_AMPLIFIER[i], true, true, true));
       }
    }
 

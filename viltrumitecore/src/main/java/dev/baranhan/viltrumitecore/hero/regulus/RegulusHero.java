@@ -124,9 +124,9 @@ public class RegulusHero implements HeroDefinition {
 
    /**
     * §6.2/§10-11/§16 input policy — pure so JUnit covers the whole matrix.
-    * Jump always passes; Lion leaves only the off-toggle and the ritual; a
-    * busy cast, an open channel or a running ritual locks every slot; the
-    * Counter is a madness-only slot and the ritual cannot re-enter mid-madness.
+    * Jump always passes; Lion leaves only the off-toggle; a busy cast, an
+    * open channel or a running ritual locks every slot; the Counter is a
+    * madness-only slot and the ritual cannot re-enter mid-madness.
     */
    static boolean actionPermitted(HeroAction action, boolean lionActive, boolean busy, boolean channelOpen, boolean ritualActive, boolean madnessActive) {
       if (action == HeroAction.JUMP) {
@@ -134,7 +134,7 @@ public class RegulusHero implements HeroDefinition {
       }
 
       if (lionActive) {
-         return action == HeroAction.LIONS_HEART || action == HeroAction.RITUAL;
+         return action == HeroAction.LIONS_HEART;
       }
 
       if (busy || channelOpen || ritualActive) {
@@ -285,14 +285,9 @@ public class RegulusHero implements HeroDefinition {
          return;
       }
 
-      state.maxHitLoss = 0.0F;
       float lost = RegulusRules.externalHealthLoss(state.lastSeenHealth, health, state.internalDamage);
       state.lastSeenHealth = health;
       state.internalDamage = 0.0F;
-
-      if (state.ritualTicks >= 0 && !RegulusRules.ritualDamageInterrupts(lost, state.lionActive)) {
-         return;
-      }
 
       if (lost <= 0.0F) {
          return;

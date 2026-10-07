@@ -361,7 +361,7 @@ public class RegulusActionVFXManager {
       }
    }
 
-   /** Embrace domes: ground ring + translucent shell + suspended motes. */
+   /** Embrace domes: translucent shell + suspended motes. */
    private static void drawDomes(BufferBuilder buffer, Vec3 cameraPos, Camera camera, long gameTime, float timeSeconds) {
       for (HeroControlS2CPacket.DomeInfo dome : ClientHeroData.domes()) {
          Vec3 center = new Vec3(dome.x(), dome.y(), dome.z());

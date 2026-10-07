@@ -91,7 +91,7 @@ class RegulusHeartsTest {
       // A duplicate candidate still counts as one heart.
       candidates.add(candidates.get(0));
 
-      java.util.List<UUID> added = RegulusHearts.addCarriers(carriers, candidates, RegulusRules.MAX_HEARTS);
+      java.util.List<UUID> added = addCarriers(carriers, candidates, RegulusRules.MAX_HEARTS);
       assertEquals(RegulusRules.MAX_HEARTS, added.size());
       assertEquals(RegulusRules.MAX_HEARTS, carriers.size());
       assertFalse(carriers.add(candidates.get(3)), "a carrier holds at most one heart per owner");
@@ -103,9 +103,9 @@ class RegulusHeartsTest {
       // candidate list never removes an existing carrier.
       Set<UUID> carriers = new LinkedHashSet<>();
       UUID bound = UUID.randomUUID();
-      RegulusHearts.addCarriers(carriers, List.of(bound), RegulusRules.MAX_HEARTS);
+      addCarriers(carriers, List.of(bound), RegulusRules.MAX_HEARTS);
 
-      java.util.List<UUID> added = RegulusHearts.addCarriers(carriers, List.of(), RegulusRules.MAX_HEARTS);
+      java.util.List<UUID> added = addCarriers(carriers, List.of(), RegulusRules.MAX_HEARTS);
       assertTrue(added.isEmpty());
       assertTrue(carriers.contains(bound));
    }
@@ -120,7 +120,7 @@ class RegulusHeartsTest {
          candidates.add(UUID.randomUUID());
       }
 
-      java.util.List<UUID> added = RegulusHearts.addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS);
+      java.util.List<UUID> added = addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS);
       RegulusHearts.bindCarrierLevels(state, added, new ResourceLocation("minecraft", "overworld"));
 
       assertEquals(RegulusRules.MAX_HEARTS, state.carrierLevels.size());
@@ -129,6 +129,20 @@ class RegulusHeartsTest {
          state.carrierLevels.containsKey(candidates.get(RegulusRules.MAX_HEARTS)),
          "an over-cap candidate must not record a dimension binding"
       );
+   }
+
+   /** Same fill-up-to-cap semantics the server applied to scan candidates. */
+   private static java.util.List<UUID> addCarriers(Set<UUID> carriers, List<UUID> candidates, int cap) {
+      java.util.List<UUID> added = new ArrayList<>();
+      for (UUID candidate : candidates) {
+         if (carriers.size() >= cap) {
+            break;
+         }
+         if (carriers.add(candidate)) {
+            added.add(candidate);
+         }
+      }
+      return added;
    }
 
    @Test

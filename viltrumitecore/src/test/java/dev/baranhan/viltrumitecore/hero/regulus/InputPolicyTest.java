@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Spec 6.2/10-11/16 input policy: jump always passes; Lion locks every slot
- * except its off-toggle and the ritual; a running cast, channel or ritual
- * locks everything else; Counter is a madness-only slot.
+ * except its off-toggle; a running cast, channel or ritual locks everything
+ * else; Counter is a madness-only slot.
  */
 class InputPolicyTest {
 
@@ -25,9 +25,10 @@ class InputPolicyTest {
    }
 
    @Test
-   void lionLeavesOnlyOffToggleAndRitual() {
+   void lionLeavesOnlyOffToggle() {
       assertTrue(RegulusHero.actionPermitted(HeroAction.LIONS_HEART, true, false, false, false, false), "the off-toggle stays live");
-      assertTrue(RegulusHero.actionPermitted(HeroAction.RITUAL, true, false, false, false, false), "ritual inside Lion (§16)");
+      // The ritual has no input dispatch — the book path bypasses this policy.
+      assertFalse(RegulusHero.actionPermitted(HeroAction.RITUAL, true, false, false, false, false), "no dead ritual permission inside Lion");
 
       for (HeroAction action : new HeroAction[]{HeroAction.DEBRIS_KICK, HeroAction.MANIA, HeroAction.GREEDS_EMBRACE, HeroAction.COUNTER}) {
          assertFalse(RegulusHero.actionPermitted(action, true, false, false, false, true), action + " greyed inside Lion");

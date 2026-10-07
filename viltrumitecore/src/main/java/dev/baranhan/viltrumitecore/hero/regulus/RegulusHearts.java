@@ -44,11 +44,13 @@ public final class RegulusHearts {
    }
 
    static Assignment toggleCarrier(RegulusState state, UUID carrierId, boolean valid) {
-      if (!valid) {
-         return Assignment.INVALID;
-      }
+      // Unbind first: a bound carrier that turned invalid (heartless tag)
+      // must still be removable by a second press.
       if (dropCarrier(state, carrierId)) {
          return Assignment.REMOVED;
+      }
+      if (!valid) {
+         return Assignment.INVALID;
       }
       if (state.hearts() >= RegulusRules.MAX_HEARTS) {
          return Assignment.FULL;
@@ -58,6 +60,9 @@ public final class RegulusHearts {
    }
 
    public static void assignLookedAt(ServerPlayer player, RegulusState state) {
+      if (player.isSpectator()) {
+         return;
+      }
       Vec3 eye = player.getEyePosition();
       Vec3 end = eye.add(player.getLookAngle().scale(RegulusRules.HEART_SCAN_RADIUS));
       Vec3 clipped = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getLocation();
@@ -125,26 +130,6 @@ public final class RegulusHearts {
          entity.getTags().contains(RegulusRules.HEARTLESS_TAG),
          entity instanceof Mob
       );
-   }
-
-   /**
-    * Fill the carrier set from scan candidates up to the cap; existing hearts
-    * stay. Returns the ids actually bound so level bindings are never written
-    * for candidates the cap rejected.
-    */
-   public static List<UUID> addCarriers(Set<UUID> carriers, Collection<UUID> candidates, int cap) {
-      List<UUID> added = new ArrayList<>();
-      for (UUID candidate : candidates) {
-         if (carriers.size() >= cap) {
-            break;
-         }
-
-         if (carriers.add(candidate)) {
-            added.add(candidate);
-         }
-      }
-
-      return added;
    }
 
    /** Drop one heart by carrier id; false when it was never bound (idempotent). */

@@ -172,7 +172,10 @@ public final class Evangelium {
 
    public static void tick(ServerPlayer player, RegulusState state) {
       if (state.ritualTicks >= 0) {
-         if (!player.isAlive() || !player.isUsingItem() || !player.getUseItem().is(ViltrumiteItems.EVANGELIUM.get())) {
+         if (!player.isAlive()) {
+            // Death drops the ritual quietly — a corpse must not pay the cancel fee.
+            state.ritualTicks = -1;
+         } else if (!player.isUsingItem() || !player.getUseItem().is(ViltrumiteItems.EVANGELIUM.get())) {
             interrupt(player, state);
          } else {
             state.ritualTicks = Math.max(state.ritualTicks, RegulusRules.RITUAL_TICKS - player.getUseItemRemainingTicks());

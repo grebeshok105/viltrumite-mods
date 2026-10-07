@@ -27,6 +27,23 @@ class DebrisKickTest {
    }
 
    @Test
+   void waveClimbsTwoBlockLedgesAndStopsAtTallerWalls() {
+      // Two-block ledge: solid through dy=+1, air above — the wave climbs it.
+      assertEquals(1, DebrisKick.pickSurfaceDy(d -> d <= 1, d -> d > 1), "two-block ledge stays a walkable surface");
+      // One-block step: surface at feet level.
+      assertEquals(0, DebrisKick.pickSurfaceDy(d -> d <= 0, d -> d > 0));
+      // Three-block wall: every probe is buried under the block above.
+      assertEquals(Integer.MIN_VALUE, DebrisKick.pickSurfaceDy(d -> d <= 2, d -> d > 2), "a 3-block wall kills the wave");
+   }
+
+   @Test
+   void waveFollowsDropsInsideTheWindowAndDiesOnSheerCliffs() {
+      assertEquals(-1, DebrisKick.pickSurfaceDy(d -> d <= -1, d -> true), "flat ground is one below feet");
+      assertEquals(-3, DebrisKick.pickSurfaceDy(d -> d <= -3, d -> true), "a three-block drop is still walkable");
+      assertEquals(Integer.MIN_VALUE, DebrisKick.pickSurfaceDy(d -> d <= -4, d -> true), "a sheer cliff has no surface");
+   }
+
+   @Test
    void waveDamageFallsFromSevenToTwo() {
       assertEquals(7.0F, RegulusRules.debrisDamage(0.0, 0), 1.0E-6);
       assertEquals(7.0F, RegulusRules.debrisDamage(4.0, 0), 1.0E-6);

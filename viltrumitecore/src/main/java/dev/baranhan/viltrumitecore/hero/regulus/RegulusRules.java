@@ -60,7 +60,6 @@ public final class RegulusRules {
    public static final int MADNESS_TICKS = 900;
    public static final float BLOOD_PRICE_PER_20_TICKS = 0.6F;
    public static final int EVANGELIUM_COOLDOWN = 1800;
-   public static final float RITUAL_INTERRUPT_DAMAGE = 4.0F;
 
    public static final int JUMP_CHARGE_TICKS = 60;
    public static final float JUMP_MAX_VELOCITY = 1.32F;
@@ -206,11 +205,6 @@ public final class RegulusRules {
 
    public static boolean attackerValid(long attackerTick, long nowTick) {
       return nowTick - attackerTick <= COUNTER_ATTACKER_WINDOW;
-   }
-
-   /** The held-book rework does not interrupt Evangelium on external damage. */
-   public static boolean ritualDamageInterrupts(float lostHealth, boolean lionActive) {
-      return false;
    }
 
    /**

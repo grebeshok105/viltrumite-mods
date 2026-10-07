@@ -83,9 +83,6 @@ public final class RegulusState {
    // heart backlash, overheat). The read subtracts it from the observed loss so
    // self-inflicted drains never count as an interrupting hit (spec 7.1/10/11).
    public float internalDamage;
-   // Largest single external hit observed since the last read: the ritual
-   // interrupt is per hit (spec 11.1 за один удар), not the tick aggregate.
-   public float maxHitLoss;
    // A non-ambient (externally applied) Slowness stashed before an ability's
    // own slow overwrites it, restored when that slow ends (a3 audit finding).
    @Nullable
@@ -215,7 +212,6 @@ public final class RegulusState {
 
       this.lastSeenHealth = -1.0F;
       this.internalDamage = 0.0F;
-      this.maxHitLoss = 0.0F;
       this.savedSlowness = null;
    }
 }
