@@ -188,10 +188,10 @@ public class CoreMessages {
          .consumerMainThread(HeroControlS2CPacket::handle)
          .add();
 
-      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-         .decoder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::new)
-         .encoder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::encode)
-         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::handle)
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket::encode)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket::handle)
          .add();
    }
 

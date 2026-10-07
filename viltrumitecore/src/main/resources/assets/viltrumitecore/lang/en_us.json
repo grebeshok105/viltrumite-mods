@@ -181,5 +181,5 @@
   "message.viltrumitecore.lion.heart_lost": "A heart burned out — Lion's Heart window shortened.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus Punch",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>Cooldown: <lime>1s\n<grey>Type: <aqua>Instant\n\n<grey>A Viltrumite-grade punch empowered by your hearts.\n<grey>Breaks blocks and launches enemies.\n\n<red>Madness: <grey>1.5x damage and a frozen-air blade\n<grey>that cuts through everything ahead.\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "Regulus: Super Jump"
+  "key.viltrumitecore.regulus_super_jump": "Super Jump"
 }

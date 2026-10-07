@@ -18,3 +18,8 @@ Append-only: дата + имя сессии + что сделано. Не пер
 - d1546d0: per-ability Model/RendererCore/FirstPerson mixins for Regulus, RegulusActionClock (synced ticks, no snapshot extrapolation), weight layers; old RegulusModelMixin/FirstPersonRegulusMixin removed.
 - runClient smoke via ffmpeg x11grab storyboards: Lion, Kick, Embrace, Ritual(+cancel), Madness walk, Mania FP. Unchecked: Counter, Mania 3rd person, shaders, old Viltrumite anim regression.
 - Gotcha: xdotool `key` is too short for ability KeyMappings; use keydown, sleep 0.15, keyup. Evangelium needs RMB held (mousedown 3) the whole ritual.
+
+## 2026-10-08 — hero-toolkit + скилл add_hero (Notion AI)
+- Из Regulus вынесен общий набор механик для всех героев: `HeroFx`/`HeroFxS2CPacket`/`HeroImpactFx` (осколки, ударные волны, след клинка, взлёт, вспышка), `CameraShake`, `PixelVfx`, `HeroDebris` (вырывание земли, летящие блоки; Thunderclap переведён на него), `HeroShockwave` (удар при приземлении), `HeroSuperJump` + `SuperJumpClient` (суперпрыжок для любого героя через `superJumpVelocity`). В `HeroDefinition` новые хуки `cancelsFallDamage`, `onLanded`, `superJumpVelocity`, `onSuperJump`. Поведение Regulus должно остаться прежним; подпись клавиши — «Super Jump» во всех локалях, id клавиши не менялся.
+- Добавлен скилл `.agents/skills/add_hero/` (процедура переноса героя, справка по точкам интеграции и общему набору, шаблон дизайн-документа, скрипт `check_hero_resources.py` для lang/звуков/текстур/миксинов; 6 известных старых проблем в baseline).
+- Проверки: `./gradlew build` зелёный, тесты зелёные. В игре не проверялось.

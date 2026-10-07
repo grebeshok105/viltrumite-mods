@@ -36,7 +36,7 @@ class RegulusVisualContractTest {
    void domePixelsHaveVerticalExtentRatherThanFloatingFloorPanels() {
       com.mojang.blaze3d.vertex.BufferBuilder builder = new com.mojang.blaze3d.vertex.BufferBuilder(8192);
       builder.begin(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_COLOR);
-      dev.baranhan.viltrumitecore.client.render.vfx.RegulusPixelVfx.domeShell(builder, net.minecraft.world.phys.Vec3.ZERO,
+      dev.baranhan.viltrumitecore.client.render.vfx.PixelVfx.domeShell(builder, net.minecraft.world.phys.Vec3.ZERO,
          new net.minecraft.client.Camera(), net.minecraft.world.phys.Vec3.ZERO, 4.0F, 0.0F, 255, 255, 255, 100);
       com.mojang.blaze3d.vertex.BufferBuilder.RenderedBuffer rendered = builder.end();
       java.nio.ByteBuffer vertices = rendered.vertexBuffer().order(java.nio.ByteOrder.nativeOrder());
@@ -54,13 +54,13 @@ class RegulusVisualContractTest {
    @Test
    void cameraRotationTransformsWorldOffsetsOnce() {
       com.mojang.blaze3d.vertex.PoseStack stack = new com.mojang.blaze3d.vertex.PoseStack();
-      dev.baranhan.viltrumitecore.client.render.vfx.RegulusPixelVfx.rotateCamera(stack, 0.0F, 0.0F);
+      dev.baranhan.viltrumitecore.client.render.vfx.PixelVfx.rotateCamera(stack, 0.0F, 0.0F);
       org.joml.Vector3f point = stack.last().pose().transformPosition(new org.joml.Vector3f(2.0F, 3.0F, 4.0F));
       assertEquals(-2.0F, point.x, 0.00001F);
       assertEquals(3.0F, point.y, 0.00001F);
       assertEquals(-4.0F, point.z, 0.00001F);
       stack = new com.mojang.blaze3d.vertex.PoseStack();
-      dev.baranhan.viltrumitecore.client.render.vfx.RegulusPixelVfx.rotateCamera(stack, 90.0F, 0.0F);
+      dev.baranhan.viltrumitecore.client.render.vfx.PixelVfx.rotateCamera(stack, 90.0F, 0.0F);
       point = stack.last().pose().transformPosition(new org.joml.Vector3f(0.0F, 1.0F, 0.0F));
       assertEquals(0.0F, point.y, 0.00001F);
       assertEquals(1.0F, point.z, 0.00001F);

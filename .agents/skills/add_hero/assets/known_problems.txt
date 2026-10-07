@@ -1,0 +1,8 @@
+# Legacy problems from the original JARs. One exact checker line per entry.
+# Remove a line when you fix the problem.
+[sounds] viltrumitecore/sounds.json takeoff: viltrumitecore:takeoff1.ogg not found
+[mixins] dev.baranhan.viltrumitecore.client.mixin.GeckoLibGrabRendererMixin is not in any mixin config
+[mixins] dev.baranhan.viltrumitecore.client.mixin.GrabbedEntityRendererMixin is not in any mixin config
+[mixins] dev.baranhan.viltrumitecore.mixin.PlayerFreezeMixin is not in any mixin config
+[textures] viltrumiteflight/src/main/java/dev/baranhan/viltrumiteflight/client/mixin/AbstractClientPlayerMixin.java: viltrumiteflight:textures/entity/skin_viltrumite_1.png not found
+[textures] viltrumiteflight/src/main/java/dev/baranhan/viltrumiteflight/client/render/AtmosphericHeatFeatureRenderer.java: viltrumiteflight:textures/entity/slow_flying_cape.png not found

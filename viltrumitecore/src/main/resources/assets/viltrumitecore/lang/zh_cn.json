@@ -181,5 +181,5 @@
   "message.viltrumitecore.lion.heart_lost": "一颗心脏熄灭了——狮之心的持续窗口缩短。",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus之拳",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>冷却: <lime>1秒\n<grey>类型: <aqua>瞬发\n\n<grey>由心脏强化的维尔特鲁姆之拳。\n<grey>击碎方块并击飞敌人。\n\n<red>疯狂: <grey>1.5倍伤害,并释放一道冻结空气之刃,\n<grey>切开前方的一切。\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "Regulus:超级跳跃"
+  "key.viltrumitecore.regulus_super_jump": "超级跳跃"
 }

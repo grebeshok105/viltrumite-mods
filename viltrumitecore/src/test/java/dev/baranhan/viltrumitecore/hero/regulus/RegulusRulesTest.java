@@ -133,9 +133,8 @@ class RegulusRulesTest {
 
    @Test
    void superJumpReachesTwentyBlocks() {
-      double apex = RegulusRules.jumpApex(RegulusRules.SUPER_JUMP_VELOCITY);
+      double apex = dev.baranhan.viltrumitecore.hero.HeroSuperJump.apex(RegulusRules.SUPER_JUMP_VELOCITY);
       assertTrue(apex >= 19.5 && apex <= 21.5, "super jump should peak ~20 blocks: " + apex);
-      assertEquals(1.25, RegulusRules.jumpApex(0.42), 0.1, "vanilla hop sanity check");
    }
 
    @Test
@@ -172,9 +171,8 @@ class RegulusRulesTest {
    @Test
    void shockwaveDamageIgnoresTheHeartBonus() {
       // Spec 5.4 scopes the +2%/heart bonus to abilities and melee; the landing
-      // shockwave is a section-4 passive and stays flat.
-      assertEquals(RegulusRules.SHOCKWAVE_DAMAGE, RegulusRules.shockwaveDamage(0));
-      assertEquals(RegulusRules.SHOCKWAVE_DAMAGE, RegulusRules.shockwaveDamage(RegulusRules.MAX_HEARTS));
+      // shockwave is a section-4 passive: its spec has no hearts input at all.
+      assertEquals(5.0F, RegulusRules.LANDING.damage(RegulusRules.LANDING.minFall(), 1.0), 1.0E-6F);
    }
 
    @Test

@@ -113,6 +113,7 @@ Project skills live in `.agents/skills/<name>/SKILL.md` with `name` and `descrip
 | Skill | Use for |
 |---|---|
 | `animation-system` | all animation, pose, model-mixin, renderer and VFX work (mandatory, see §3) |
+| `add_hero` | adding or porting a hero, adding a hero ability; shared hero toolkit and resource checker |
 
 `AGENTS.md` owns global rules. Skills own repeatable workflows. Do not make a skill for a micro-action. If a skill disagrees with the current code or this file, fix the skill.
 

@@ -4,7 +4,7 @@ import dev.baranhan.viltrumitecore.ViltrumiteCore;
 import dev.baranhan.viltrumitecore.hero.HeroDestruction;
 import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
-import dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket;
+import dev.baranhan.viltrumitecore.hero.fx.HeroFx;
 import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -93,7 +93,7 @@ public final class RegulusAirBlade {
       }
 
       level.playSound(null, BlockPos.containing(origin), ViltrumiteCore.REGULUS_AIR_BLADE.get(), SoundSource.PLAYERS, 2.0F, 0.9F + level.random.nextFloat() * 0.2F);
-      RegulusFx.send(player, RegulusFxS2CPacket.AIR_BLADE, origin, 1.0F, null, new float[]{(float)end.x, (float)end.y, (float)end.z});
+      HeroFx.blade(player, origin, end, ViltrumiteCore.REGULUS_SHARD_WHIZ.get());
    }
 
    /** One-block slit, a block above and below the line: the blade's cut. */

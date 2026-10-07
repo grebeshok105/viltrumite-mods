@@ -43,6 +43,31 @@ public interface HeroDefinition {
       return 1.0F;
    }
 
+   /** Whether fall damage is cancelled for this hero right now. */
+   default boolean cancelsFallDamage(Player player) {
+      return false;
+   }
+
+   /**
+    * Server: the hero landed after falling {@code fallDistance} blocks. Runs
+    * from LivingFallEvent before any cancel. Use HeroShockwave.land here.
+    */
+   default void onLanded(ServerPlayer player, float fallDistance) {
+   }
+
+   /**
+    * Instant super-jump launch velocity in blocks/tick; 0 = no super jump.
+    * Read on BOTH sides (the client launches), so it must not depend on
+    * server-only state. 2.0 peaks ~20 blocks (HeroSuperJump.apex).
+    */
+   default float superJumpVelocity(Player player) {
+      return 0.0F;
+   }
+
+   /** Server: hero-specific sounds/FX after the shared super-jump launch. */
+   default void onSuperJump(ServerPlayer player) {
+   }
+
    /** Whether food exhaustion is currently suspended for this hero (Lion). */
    default boolean preventsExhaustion(Player player) {
       return false;

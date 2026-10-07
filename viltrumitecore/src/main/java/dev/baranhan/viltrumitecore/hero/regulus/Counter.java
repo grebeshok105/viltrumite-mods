@@ -4,7 +4,7 @@ import dev.baranhan.viltrumitecore.ViltrumiteCore;
 import dev.baranhan.viltrumitecore.hero.HeroDestruction;
 import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
-import dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket;
+import dev.baranhan.viltrumitecore.hero.fx.HeroFx;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -209,7 +209,7 @@ public final class Counter {
 
       state.counterLiftStart = target.position();
       state.counterApexY = apexY(level, target, target.position().y + RegulusRules.COUNTER_LAUNCH_HEIGHT);
-      RegulusFx.send(player, RegulusFxS2CPacket.COUNTER_LAUNCH, at, 1.0F, null, null);
+      HeroFx.flash(player, at);
    }
 
    /** Stop under a ceiling: the launch never pushes the target into blocks. */
@@ -338,7 +338,7 @@ public final class Counter {
       level.sendParticles(ParticleTypes.POOF, ground.x, ground.y + 0.5, ground.z, 40, 2.5, 0.3, 2.5, 0.12);
       level.playSound(null, BlockPos.containing(ground), ViltrumiteCore.REGULUS_IMPACT_HEAVY.get(), SoundSource.PLAYERS, 4.0F, 0.6F);
       level.playSound(null, BlockPos.containing(ground), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0F, 0.6F);
-      RegulusFx.send(player, RegulusFxS2CPacket.SLAM, ground, 1.0F, material, new float[]{(float)RegulusRules.COUNTER_CRATER_RADIUS * 2.5F, 0.0F, 0.0F});
+      HeroFx.slam(player, ground, material, (float)RegulusRules.COUNTER_CRATER_RADIUS * 2.5F);
    }
 
    /** Bowl under the impact: radius 3, deepest in the middle, via the approved destruction helper. */

@@ -2,6 +2,7 @@ package dev.baranhan.viltrumitecore.network.packet;
 
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroRegistry;
+import dev.baranhan.viltrumitecore.hero.HeroSuperJump;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,6 +41,13 @@ public class HeroInputC2SPacket {
 
          HeroAction action = HeroAction.byId(this.actionOrdinal);
          if (action == null) {
+            return;
+         }
+
+         if (action == HeroAction.JUMP) {
+            if (this.pressed) {
+               HeroSuperJump.onInput(player);
+            }
             return;
          }
 
