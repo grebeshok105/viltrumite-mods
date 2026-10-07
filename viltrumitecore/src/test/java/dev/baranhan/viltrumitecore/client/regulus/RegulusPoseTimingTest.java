@@ -15,21 +15,39 @@ import org.junit.jupiter.api.Test;
 class RegulusPoseTimingTest {
 
    @Test
-   void keyframesReturnToVanillaLocomotionRatherThanZero() {
-      float[][] keys = {{0, 0, 0, 0}, {10, 60, 0, 0}, {20, 0, 0, 0}};
-      assertEquals(20.0F, RegulusPoseTiming.keyedAngle(0, 20, keys, 1));
-      assertEquals(40.0F, RegulusPoseTiming.keyedAngle(5, 20, keys, 1));
-      assertEquals(60.0F, RegulusPoseTiming.keyedAngle(10, 20, keys, 1));
-      assertEquals(40.0F, RegulusPoseTiming.keyedAngle(15, 20, keys, 1));
-      assertEquals(20.0F, RegulusPoseTiming.keyedAngle(20, 20, keys, 1));
+   void timelineEntersFromAndReturnsToThePoseUnderneath() {
+      float[][] keys = {RegulusPoseTiming.under(0), RegulusPoseTiming.key(10, 60, 0, 0), RegulusPoseTiming.under(20)};
+      assertEquals(20.0F, RegulusPoseTiming.sample(keys, 0, 0, 20, false));
+      assertEquals(40.0F, RegulusPoseTiming.sample(keys, 5, 0, 20, false), 1.0E-4F);
+      assertEquals(60.0F, RegulusPoseTiming.sample(keys, 10, 0, 20, false));
+      assertEquals(40.0F, RegulusPoseTiming.sample(keys, 15, 0, 20, false), 1.0E-4F);
+      assertEquals(20.0F, RegulusPoseTiming.sample(keys, 20, 0, 20, false));
+      assertEquals(20.0F, RegulusPoseTiming.sample(keys, 99, 0, 20, false));
    }
 
    @Test
-   void extrapolationIsBoundedAndStopsAtActionEnd() {
-      assertEquals(13.5F, RegulusPoseTiming.actionElapsed(13, 1, 0.5F, 14));
-      assertEquals(14.0F, RegulusPoseTiming.actionElapsed(13, 40, 0.5F, 14));
-      assertEquals(13.0F, RegulusPoseTiming.actionElapsed(13, -5, 0.0F, 44));
-      assertEquals(19.0F, RegulusPoseTiming.actionElapsed(13, 40, 0.0F, 44));
+   void additiveRowsAddToTheBaseAndSegmentsAreEased() {
+      float[][] keys = {RegulusPoseTiming.key(0, 0, 0, 0), RegulusPoseTiming.key(10, 10, 0, 0)};
+      assertEquals(15.0F, RegulusPoseTiming.sample(keys, 5, 0, 10, true), 1.0E-4F);
+      assertTrue(RegulusPoseTiming.sample(keys, 2, 0, 0, true) < 2.0F);
+      assertTrue(RegulusPoseTiming.sample(keys, 8, 0, 0, true) > 8.0F);
+   }
+
+   @Test
+   void strikeKeyOvershootsBy115Percent() {
+      float[] row = RegulusPoseTiming.strike(14, -80, 10, 0, 0, 0, -2);
+      assertEquals(14.0F, row[0]);
+      assertEquals(-92.0F, row[1], 1.0E-4F);
+      assertEquals(11.5F, row[2], 1.0E-4F);
+      assertEquals(-2.3F, row[6], 1.0E-4F);
+   }
+
+   @Test
+   void visualLengthNeverEndsBeforeTheServerCast() {
+      for (HeroAction action : new HeroAction[]{HeroAction.LIONS_HEART, HeroAction.DEBRIS_KICK, HeroAction.MANIA, HeroAction.GREEDS_EMBRACE, HeroAction.COUNTER}) {
+         RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(action);
+         assertTrue(timing.visualLength() >= timing.length(), action.name());
+      }
    }
 
    @Test

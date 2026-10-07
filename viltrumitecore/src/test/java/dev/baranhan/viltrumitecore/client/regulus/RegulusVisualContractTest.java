@@ -2,6 +2,7 @@ package dev.baranhan.viltrumitecore.client.regulus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -161,14 +162,29 @@ class RegulusVisualContractTest {
       }
 
       List<String> expected = List.of(
-         "RegulusModelMixin",
-         "FirstPersonRegulusMixin",
+         "RegulusMadnessModelMixin",
+         "RegulusRitualModelMixin",
+         "RegulusLionModelMixin",
+         "RegulusManiaModelMixin",
+         "RegulusEmbraceModelMixin",
+         "RegulusKickModelMixin",
+         "RegulusCounterModelMixin",
+         "RegulusKickRendererCoreMixin",
+         "RegulusCounterRendererCoreMixin",
+         "FirstPersonRegulusLionMixin",
+         "FirstPersonRegulusKickMixin",
+         "FirstPersonRegulusManiaMixin",
+         "FirstPersonRegulusEmbraceMixin",
+         "FirstPersonRegulusCounterMixin",
+         "FirstPersonRegulusRitualMixin",
          "RegulusHudMixin",
          "RegulusFovMixin"
       );
       for (String name : expected) {
          assertTrue(registered.contains(name), "viltrumitecore.client.mixins.json missing " + name);
       }
+      assertFalse(registered.contains("RegulusModelMixin"), "old all-in-one Regulus model mixin must be gone");
+      assertFalse(registered.contains("FirstPersonRegulusMixin"), "old all-in-one Regulus first-person mixin must be gone");
    }
 
    @Test
