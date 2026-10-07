@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -79,13 +80,31 @@ public final class LionsHeart {
       }
 
       state.lionElapsed++;
+      int windowBefore = state.lionWindowMax;
       tickWindow(state, state.hearts());
+      if (state.lionWindowMax < windowBefore) {
+         // A burned heart never flips Lion straight into overheat: the player
+         // gets a short, announced grace instead of an instant HP drain.
+         state.lionWindowMax = RegulusRules.windowAfterHeartLoss(windowBefore, state.lionWindowMax, state.lionElapsed);
+         player.displayClientMessage(Component.translatable("message.viltrumitecore.lion.heart_lost"), true);
+      }
       clearHarmfulEffects(player);
       freezeNearbyProjectiles(player);
 
       if (overheating(state)) {
          state.overheatTicks++;
-         HeroDamage.applyInternal(player, RegulusRules.overheatDps(state.overheatTicks) / 20.0F);
+         if (state.overheatTicks == 1) {
+            player.displayClientMessage(Component.translatable("message.viltrumitecore.lion.overheat"), true);
+            player.level().playSound(null, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.0F, 0.6F);
+         }
+
+         // One drain per second (no per-tick flinch), then Lion stops itself
+         // instead of bleeding the hero down to the 4 HP floor.
+         HeroDamage.applyInternal(player, RegulusRules.overheatDrain(state.overheatTicks));
+         if (RegulusRules.overheatExhausted(state.overheatTicks) && state.lionActive) {
+            deactivate(player, state, false);
+            return;
+         }
       }
 
       // Any internal HP loss to 4 or below collapses the heart (spec 6.3).

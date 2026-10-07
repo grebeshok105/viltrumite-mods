@@ -12,8 +12,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Regulus base-passive chassis: +70 armor (capped by vanilla's effective 30),
- * 100% knockback resistance, ambient Regen I / Speed II / Strength II /
+ * Regulus base-passive chassis: +20 armor, +40 max health, +2 attack,
+ * 100% knockback resistance, ambient Regen I / Speed II /
  * Jump II / Fire Resistance. Applies and removes ONLY its own modifiers and
  * ambient effect instances.
  */
@@ -23,24 +23,31 @@ public final class RegulusPassives {
    private static final UUID MADNESS_ARMOR_MODIFIER_ID = UUID.fromString("a9f38f5d-1908-4b6e-8e4e-4e93f0d0a003");
    private static final UUID MADNESS_HEALTH_MODIFIER_ID = UUID.fromString("a9f38f5d-1908-4b6e-8e4e-4e93f0d0a004");
    private static final UUID MADNESS_ATTACK_MODIFIER_ID = UUID.fromString("a9f38f5d-1908-4b6e-8e4e-4e93f0d0a005");
+   private static final UUID HEALTH_MODIFIER_ID = UUID.fromString("a9f38f5d-1908-4b6e-8e4e-4e93f0d0a006");
+   private static final UUID ATTACK_MODIFIER_ID = UUID.fromString("a9f38f5d-1908-4b6e-8e4e-4e93f0d0a007");
 
    private static final MobEffect[] AMBIENT = {
-      MobEffects.REGENERATION, MobEffects.MOVEMENT_SPEED, MobEffects.DAMAGE_BOOST, MobEffects.JUMP, MobEffects.FIRE_RESISTANCE
+      MobEffects.REGENERATION, MobEffects.MOVEMENT_SPEED, MobEffects.JUMP, MobEffects.FIRE_RESISTANCE
    };
-   private static final int[] AMBIENT_AMPLIFIER = {0, 1, 1, 1, 0};
+   private static final int[] AMBIENT_AMPLIFIER = {0, 1, 1, 0};
 
-   // Spec 11.2 madness set: Speed III / Strength III / Jump III / Regen I /
+   // Spec 11.2 madness set: Speed III / Jump III / Regen I /
    // Resistance I, granted only for the madness duration.
    private static final MobEffect[] MADNESS_EFFECTS = {
-      MobEffects.MOVEMENT_SPEED, MobEffects.DAMAGE_BOOST, MobEffects.JUMP, MobEffects.REGENERATION, MobEffects.DAMAGE_RESISTANCE
+      MobEffects.MOVEMENT_SPEED, MobEffects.JUMP, MobEffects.REGENERATION, MobEffects.DAMAGE_RESISTANCE
    };
-   private static final int[] MADNESS_AMPLIFIER = {2, 2, 2, 0, 0};
+   private static final int[] MADNESS_AMPLIFIER = {2, 2, 0, 0};
 
    private RegulusPassives() {
    }
 
    public static void apply(Player player) {
-      addModifier(player, Attributes.ARMOR, ARMOR_MODIFIER_ID, "Regulus armor", 70.0, Operation.ADDITION);
+      addModifier(player, Attributes.ARMOR, ARMOR_MODIFIER_ID, "Regulus armor", RegulusRules.BASE_ARMOR, Operation.ADDITION);
+      // Max health is a PERMANENT modifier: vanilla loads attributes before
+      // Health, so a relog keeps the triple pool instead of clamping to 20.
+      addPermanentModifier(player, Attributes.MAX_HEALTH, HEALTH_MODIFIER_ID, "Regulus vitality", RegulusRules.BONUS_MAX_HEALTH, Operation.ADDITION);
+      // Fist: vanilla 1 + 2 = 3 (was ~7 with Strength II), hearts scale on top.
+      addModifier(player, Attributes.ATTACK_DAMAGE, ATTACK_MODIFIER_ID, "Regulus strength", RegulusRules.BONUS_ATTACK, Operation.ADDITION);
       addModifier(player, Attributes.KNOCKBACK_RESISTANCE, KB_MODIFIER_ID, "Regulus knockback resistance", 1.0, Operation.ADDITION);
       refreshAmbient(player);
    }
@@ -85,6 +92,11 @@ public final class RegulusPassives {
    public static void remove(Player player) {
       removeModifier(player, Attributes.ARMOR, ARMOR_MODIFIER_ID);
       removeModifier(player, Attributes.KNOCKBACK_RESISTANCE, KB_MODIFIER_ID);
+      removeModifier(player, Attributes.MAX_HEALTH, HEALTH_MODIFIER_ID);
+      removeModifier(player, Attributes.ATTACK_DAMAGE, ATTACK_MODIFIER_ID);
+      if (player.getHealth() > player.getMaxHealth()) {
+         player.setHealth(player.getMaxHealth());
+      }
       removeMadness(player);
 
       for (MobEffect effect : AMBIENT) {
@@ -138,6 +150,15 @@ public final class RegulusPassives {
       }
 
       instance.addTransientModifier(new AttributeModifier(id, name, amount, operation));
+   }
+
+   private static void addPermanentModifier(LivingEntity entity, net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id, String name, double amount, Operation operation) {
+      AttributeInstance instance = entity.getAttribute(attribute);
+      if (instance == null || instance.getModifier(id) != null) {
+         return;
+      }
+
+      instance.addPermanentModifier(new AttributeModifier(id, name, amount, operation));
    }
 
    private static void removeModifier(LivingEntity entity, net.minecraft.world.entity.ai.attributes.Attribute attribute, UUID id) {

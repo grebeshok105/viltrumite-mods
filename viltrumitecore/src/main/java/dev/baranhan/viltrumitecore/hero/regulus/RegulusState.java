@@ -35,7 +35,6 @@ public final class RegulusState {
    // Per-action context (dome point, counter target...) written by abilities.
    public Vec3 actionPoint;
    public UUID actionTargetId;
-   @Nullable DebrisKick.Wave debrisWave;
 
    public final Map<String, Integer> cooldowns = new HashMap<>();
 
@@ -178,7 +177,6 @@ public final class RegulusState {
     * and inheritPersistent (respawn clone).
     */
    public void resetTransient(CleanupReason reason) {
-      this.debrisWave = null;
       if (reason == CleanupReason.HERO_CHANGE) {
          this.clearAction();
       }

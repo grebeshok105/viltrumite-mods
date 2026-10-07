@@ -1,6 +1,7 @@
 package dev.baranhan.viltrumitecore.hero.regulus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -65,13 +66,31 @@ class RegulusRulesTest {
    }
 
    @Test
-   void debrisDamageFallsLinearlyFromSevenToTwo() {
-      assertEquals(7.0F, RegulusRules.debrisDamage(4.0, 0), 1.0E-6);
-      assertEquals(7.0F, RegulusRules.debrisDamage(1.0, 0), 1.0E-6);
-      assertEquals(2.0F, RegulusRules.debrisDamage(8.0, 0), 1.0E-6);
-      assertEquals(4.5F, RegulusRules.debrisDamage(6.0, 0), 1.0E-6); // midpoint
-      // hearts scale once
-      assertEquals(4.5F * 1.24F, RegulusRules.debrisDamage(6.0, 12), 1.0E-5);
+   void debrisShardDamageIsFlatAndCappedPerTarget() {
+      assertEquals(2.0F, RegulusRules.debrisShardDamage(0, 0), 1.0E-6);
+      assertEquals(2.0F, RegulusRules.debrisShardDamage(3, 0), 1.0E-6);
+      assertEquals(0.0F, RegulusRules.debrisShardDamage(4, 0), 1.0E-6, "fifth shard on one target deals nothing");
+      assertEquals(2.0F * 1.24F, RegulusRules.debrisShardDamage(0, 12), 1.0E-5);
+   }
+
+   @Test
+   void overheatDrainsOncePerSecondAndLionStopsAfterThreeDrains() {
+      assertEquals(0.0F, RegulusRules.overheatDrain(1), 1.0E-6);
+      assertEquals(0.0F, RegulusRules.overheatDrain(19), 1.0E-6);
+      assertEquals(1.5F, RegulusRules.overheatDrain(20), 1.0E-6);
+      assertEquals(2.0F, RegulusRules.overheatDrain(40), 1.0E-6);
+      assertFalse(RegulusRules.overheatExhausted(59));
+      assertTrue(RegulusRules.overheatExhausted(60));
+   }
+
+   @Test
+   void heartLossLeavesAWarningGrace() {
+      // 2 hearts lost at elapsed 100 from a 140 window would cut to 60 (instant
+      // overheat); the grace keeps 40 ticks from now instead.
+      assertEquals(140, RegulusRules.windowAfterHeartLoss(220, 140, 100), "shrink above grace is kept");
+      assertEquals(140, RegulusRules.windowAfterHeartLoss(220, 60, 100), "grace = elapsed + 40");
+      assertEquals(110, RegulusRules.windowAfterHeartLoss(110, 30, 100), "grace never extends past the old window");
+      assertEquals(260, RegulusRules.windowAfterHeartLoss(220, 260, 100), "no loss, no change");
    }
 
    @Test

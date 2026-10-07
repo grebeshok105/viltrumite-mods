@@ -18,9 +18,7 @@ import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
 import dev.baranhan.viltrumitecore.hero.regulus.GreedsEmbrace;
-import dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities;
 import dev.baranhan.viltrumitecore.network.packet.HeroControlS2CPacket;
-import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -251,7 +249,9 @@ public class RegulusActionVFXManager {
       if (casting && snapshot.actionElapsed() >= RegulusRules.EMBRACE_APPEAR_TICK) {
          return;
       }
-      if (!casting && (player != Minecraft.getInstance().player || !embracePreviewReady(player, snapshot))) {
+      // The dome telegraph exists only while V is actually being cast — never
+      // as an idle aim preview whenever the ability is off cooldown.
+      if (!casting) {
          return;
       }
       Vec3 point = casting ? snapshot.actionTarget() : null;
@@ -262,26 +262,6 @@ public class RegulusActionVFXManager {
          RegulusPixelVfx.domeShell(buffer, cameraPos, camera, point, (float)RegulusRules.EMBRACE_RADIUS,
             timeSeconds, GOLD_R, GOLD_G, GOLD_B, 75);
       }
-   }
-
-   private static boolean embracePreviewReady(Player player, HeroPublicSnapshot snapshot) {
-      if (snapshot.actionBusy() || snapshot.lionActive() || snapshot.controlTargetId() >= 0 || snapshot.ritualTicks() >= 0) {
-         return false;
-      }
-      int cooldownSlot = RegulusAbilities.cooldownIndex(RegulusAbilities.GREEDS_EMBRACE);
-      if (cooldownSlot >= 0 && cooldownSlot < snapshot.cooldowns().length && snapshot.cooldowns()[cooldownSlot] > 0) {
-         return false;
-      }
-      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
-         return false;
-      }
-      int first = abilityUser.getActivePage() * 6;
-      for (int slot = first; slot < first + 6; slot++) {
-         if (RegulusAbilities.GREEDS_EMBRACE.equals(abilityUser.getAbilityInSlot(slot))) {
-            return true;
-         }
-      }
-      return false;
    }
 
    /** Gold tether from the channeling hand to the grabbed target. */

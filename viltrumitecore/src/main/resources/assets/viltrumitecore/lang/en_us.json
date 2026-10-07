@@ -167,7 +167,7 @@
   "ability.viltrumitecore.lions_heart.name": "<gold>Lion's Heart",
   "ability.viltrumitecore.lions_heart.desc": "<grey>Cooldown: <lime>5s / 30s\n<grey>Type: <yellow>Toggle\n\n<grey>Transform into an unbreakable lion. While the\n<grey>heart beats you take no damage, cannot be\n<grey>controlled, and freeze nearby projectiles.\n\n<red>Overheating burns your own health.\n\n<blue>Regulus",
   "ability.viltrumitecore.debris_kick.name": "<gold>Debris Kick",
-  "ability.viltrumitecore.debris_kick.desc": "<grey>Cooldown: <lime>20s\n<grey>Type: <yellow>Cast\n\n<grey>Kick the ground to send a debris wave about 8 blocks forward.\n<grey>Each target is hit once for 7 to 2 damage with distance.\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>Cooldown: <lime>20s\n<grey>Type: <yellow>Cast\n\n<grey>Kick the ground and blast a spray of shards forward.\n<grey>Shards fly instantly, hit for 2 each (up to 4 per target)\n<grey>and smash through blocks in their path.\n\n<blue>Regulus",
   "ability.viltrumitecore.mania.name": "<gold>Mania",
   "ability.viltrumitecore.mania.desc": "<grey>Cooldown: <lime>25s\n<grey>Type: <yellow>Channel\n\n<grey>Pull a target toward you for up to 6 seconds,\n<grey>then hold it frozen in place. Releasing early\n<grey>still applies the freeze.\n\n<blue>Regulus",
   "ability.viltrumitecore.greeds_embrace.name": "<gold>Greed's Embrace",
@@ -175,5 +175,8 @@
   "ability.viltrumitecore.counter.name": "<gold>Counter",
   "ability.viltrumitecore.counter.desc": "<grey>Cooldown: <lime>40s\n<grey>Type: <yellow>Cast\n\n<grey>Answer the last attacker: lift them, appear\n<grey>behind, and slam them into a crater.\n\n<blue>Regulus",
   "item.viltrumitecore.evangelium": "Evangelium",
-  "message.viltrumitecore.counter.no_target": "No one to answer."
+  "message.viltrumitecore.counter.no_target": "No one to answer.",
+  "key.viltrumitecore.assign_heart": "Regulus: Mark Heart Carrier",
+  "message.viltrumitecore.lion.overheat": "Lion's Heart is overheating! It will stop in 3 seconds.",
+  "message.viltrumitecore.lion.heart_lost": "A heart burned out — Lion's Heart window shortened."
 }

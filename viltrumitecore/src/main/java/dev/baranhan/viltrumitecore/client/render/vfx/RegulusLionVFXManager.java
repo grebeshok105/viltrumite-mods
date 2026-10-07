@@ -43,6 +43,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 public class RegulusLionVFXManager {
    private static final List<RegulusLionVFXManager.ChestPulse> PULSES = new ArrayList<>();
    private static final Map<UUID, Boolean> PREV_LION = new HashMap<>();
+   /** Lion aura sits this far off the body silhouette (user spec: ~0.5 block). */
+   private static final float AURA_MARGIN = 0.5F;
    private static ClientLevel lastLevel;
 
    @SubscribeEvent
@@ -138,8 +140,11 @@ public class RegulusLionVFXManager {
                HeroPublicSnapshot snapshot = ((HeroPlayer)lion).getHeroSnapshot();
                int green = snapshot.lionOverheat() ? 110 : 240;
                int blue = snapshot.lionOverheat() ? 90 : 230;
-               RegulusPixelVfx.sphereShell(buffer, cameraPos, camera, center, 4.0F, timeSeconds, 250, green, blue, 65);
-               drawSuspendedMotes(buffer, cameraPos, camera, center, lion.getUUID());
+               // Aura hugs the body: ~0.5 block off the silhouette.
+               float auraXZ = lion.getBbWidth() * 0.5F + AURA_MARGIN;
+               float auraY = lion.getBbHeight() * 0.5F + AURA_MARGIN;
+               RegulusPixelVfx.bodyShell(buffer, cameraPos, camera, center, auraXZ, auraY, timeSeconds, 250, green, blue, 80);
+               drawSuspendedMotes(buffer, cameraPos, camera, center, lion);
                RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, center, 0.08F, 255, green, blue, 180);
             }
 
@@ -185,16 +190,20 @@ public class RegulusLionVFXManager {
       return player == client.player && client.options.getCameraType().isFirstPerson();
    }
 
-   /** Dust motes hang frozen inside the dome — static hash positions, no drift. */
-   private static void drawSuspendedMotes(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Vec3 center, UUID ownerId) {
-      int seedBase = ownerId.hashCode() & 0x7FFF;
-      for (int i = 0; i < 48; i++) {
+   /** Dust motes hang frozen in the thin aura band — static hash positions, no drift. */
+   private static void drawSuspendedMotes(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Vec3 center, Player lion) {
+      int seedBase = lion.getUUID().hashCode() & 0x7FFF;
+      double bodyXZ = lion.getBbWidth() * 0.5;
+      double bodyY = lion.getBbHeight() * 0.5;
+      for (int i = 0; i < 28; i++) {
          double theta = RegulusVfxMath.hashOffset(seedBase + i, 0) * Math.PI * 2.0;
          double phi = (RegulusVfxMath.hashOffset(seedBase + i, 1) - 0.5) * Math.PI;
-         double radius = RegulusVfxMath.hashOffset(seedBase + i, 2) * 3.8;
-         Vec3 pos = center.add(Math.cos(theta) * Math.cos(phi) * radius, Math.sin(phi) * radius, Math.sin(theta) * Math.cos(phi) * radius);
+         double band = 0.15 + RegulusVfxMath.hashOffset(seedBase + i, 2) * (AURA_MARGIN - 0.15);
+         double rxz = bodyXZ + band;
+         double ry = bodyY + band;
+         Vec3 pos = center.add(Math.cos(theta) * Math.cos(phi) * rxz, Math.sin(phi) * ry, Math.sin(theta) * Math.cos(phi) * rxz);
          float twinkle = 0.4F + 0.6F * (float)Math.abs(Math.sin((double)(i * 1.3F) + center.x));
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.045F, 235, 240, 255, (int)(70.0F * twinkle));
+         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.03F, 235, 240, 255, (int)(80.0F * twinkle));
       }
    }
 

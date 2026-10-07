@@ -83,6 +83,26 @@ public final class RegulusPixelVfx {
       shell(buffer, cameraPos, camera, center, radius, timeSeconds, -7, r, g, b, alpha);
    }
 
+   /**
+    * Body-hugging ellipsoid of billboard dots (Lion's Heart aura): horizontal
+    * and vertical radii are given separately so the shell sits ~0.5 block
+    * off the player's silhouette instead of being a 4-block bubble.
+    */
+   public static void bodyShell(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Vec3 center, float radiusXZ, float radiusY, float timeSeconds, int r, int g, int b, int alpha) {
+      for (int band = -6; band <= 6; band++) {
+         double theta = (Math.PI / 2.0) * (double)band / 7.0;
+         double bandY = Math.sin(theta) * radiusY;
+         double bandRadius = Math.cos(theta) * radiusXZ;
+         int steps = Math.max(6, (int)(bandRadius * 18.0));
+         for (int i = 0; i < steps; i++) {
+            double az = (Math.PI * 2.0) * (double)i / (double)steps + band * 0.35;
+            Vec3 pos = new Vec3(center.x + Math.cos(az) * bandRadius, center.y + bandY, center.z + Math.sin(az) * bandRadius);
+            int fade = (int)(alpha * (0.7 + 0.3 * Math.sin(timeSeconds * 1.5 + band * 1.7 + i * 0.9)));
+            billboardPixel(buffer, cameraPos, camera, pos, 0.035F, r, g, b, fade);
+         }
+      }
+   }
+
    private static void shell(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Vec3 center, float radius, float timeSeconds, int firstBand, int r, int g, int b, int alpha) {
       for (int band = firstBand; band <= 7; band++) {
          double theta = (Math.PI / 2.0) * (double)band / 7.0;

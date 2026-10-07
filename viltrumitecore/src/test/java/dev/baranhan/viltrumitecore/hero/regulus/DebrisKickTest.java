@@ -10,47 +10,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
-/** Ground wave timing, unique hits and shared gaze collision. */
+/** Shard fan geometry, kick timing and shared gaze collision. */
 class DebrisKickTest {
-
-   @Test
-   void groundWaveAdvancesEightSlicesAndCannotHitOneTargetTwice() {
-      DebrisKick.Wave wave = new DebrisKick.Wave(new Vec3(0.0, 64.0, 0.0), new Vec3(0.0, 1.0, 1.0), 0,
-         new net.minecraft.resources.ResourceLocation("minecraft", "overworld"));
-      for (int i = 1; i <= 8; i++) {
-         assertEquals(new Vec3(0.0, 64.0, i), wave.nextSlice());
-      }
-      assertNull(wave.nextSlice());
-      java.util.UUID target = java.util.UUID.randomUUID();
-      assertTrue(wave.claim(target));
-      assertFalse(wave.claim(target));
-   }
-
-   @Test
-   void waveClimbsTwoBlockLedgesAndStopsAtTallerWalls() {
-      // Two-block ledge: solid through dy=+1, air above — the wave climbs it.
-      assertEquals(1, DebrisKick.pickSurfaceDy(d -> d <= 1, d -> d > 1), "two-block ledge stays a walkable surface");
-      // One-block step: surface at feet level.
-      assertEquals(0, DebrisKick.pickSurfaceDy(d -> d <= 0, d -> d > 0));
-      // Three-block wall: every probe is buried under the block above.
-      assertEquals(Integer.MIN_VALUE, DebrisKick.pickSurfaceDy(d -> d <= 2, d -> d > 2), "a 3-block wall kills the wave");
-   }
-
-   @Test
-   void waveFollowsDropsInsideTheWindowAndDiesOnSheerCliffs() {
-      assertEquals(-1, DebrisKick.pickSurfaceDy(d -> d <= -1, d -> true), "flat ground is one below feet");
-      assertEquals(-3, DebrisKick.pickSurfaceDy(d -> d <= -3, d -> true), "a three-block drop is still walkable");
-      assertEquals(Integer.MIN_VALUE, DebrisKick.pickSurfaceDy(d -> d <= -4, d -> true), "a sheer cliff has no surface");
-   }
-
-   @Test
-   void waveDamageFallsFromSevenToTwo() {
-      assertEquals(7.0F, RegulusRules.debrisDamage(0.0, 0), 1.0E-6);
-      assertEquals(7.0F, RegulusRules.debrisDamage(4.0, 0), 1.0E-6);
-      assertEquals(4.5F, RegulusRules.debrisDamage(6.0, 0), 1.0E-6);
-      assertEquals(2.0F, RegulusRules.debrisDamage(RegulusRules.DEBRIS_RANGE, 0), 1.0E-6);
-
-   }
 
    @Test
    void pointBlankEyeInsideTheTargetBoxStillHits() {
@@ -104,5 +65,25 @@ class DebrisKickTest {
 
       state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
       assertEquals(256, state.cooldownOf(RegulusAbilities.DEBRIS_KICK)); // ceil(400 * 0.64)
+   }
+
+   @Test
+   void shardsFanAcrossTheConeAndStayForward() {
+      assertEquals(-22.0, DebrisKick.shardYawOffset(0, 14), 1.0E-9);
+      assertEquals(22.0, DebrisKick.shardYawOffset(13, 14), 1.0E-9);
+      assertEquals(0.0, DebrisKick.shardYawOffset(0, 1), 1.0E-9);
+      // yaw 0 faces +Z in Minecraft; a flat shard goes straight forward.
+      Vec3 straight = DebrisKick.shardDirection(0.0F, 0.0F, 0.0, 0.0);
+      assertEquals(1.0, straight.z, 1.0E-9);
+      assertEquals(0.0, straight.y, 1.0E-9);
+      Vec3 rising = DebrisKick.shardDirection(0.0F, 0.0F, 0.0, 9.0);
+      assertTrue(rising.y > 0.0 && rising.z > 0.9, "positive elevation lifts the shard");
+   }
+
+   @Test
+   void kickPitchFollowsGazeOnlyMildly() {
+      assertEquals(0.0F, DebrisKick.aimPitch(0.0F), 1.0E-6);
+      assertEquals(15.0F, DebrisKick.aimPitch(80.0F), 1.0E-6, "looking at feet: clamped then halved");
+      assertEquals(-15.0F, DebrisKick.aimPitch(-90.0F), 1.0E-6);
    }
 }

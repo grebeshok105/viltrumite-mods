@@ -23,6 +23,8 @@ public class AbilityInputManager {
    public static KeyMapping abilityMenuKey;
    public static KeyMapping dashboardKey;
    public static KeyMapping abilitySwapKey;
+   /** Regulus: mark/unmark a heart carrier. Default MMB — wins over vanilla pick-block. */
+   public static KeyMapping assignHeartKey;
 
    public static void registerKeys(RegisterKeyMappingsEvent event) {
       abilityKey1 = new KeyMapping("key.viltrumitecore.ability_1", 82, "category.viltrumitecore.keys");
@@ -43,15 +45,32 @@ public class AbilityInputManager {
       event.register(abilityMenuKey);
       event.register(dashboardKey);
       event.register(abilitySwapKey);
+      assignHeartKey = new KeyMapping("key.viltrumitecore.assign_heart", net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
+         com.mojang.blaze3d.platform.InputConstants.Type.MOUSE, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE, "category.viltrumitecore.keys");
+      event.register(assignHeartKey);
+   }
+
+   /** True while a Regulus is playing and the heart key shares the given key with another mapping. */
+   public static boolean heartKeyOwns(Minecraft client, KeyMapping other) {
+      return assignHeartKey != null
+         && client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+         && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS
+         && !assignHeartKey.isUnbound()
+         && assignHeartKey.getKey().equals(other.getKey());
    }
 
    public static void tick(Minecraft client) {
-      // Regulus assigns hearts on ability_6 (N): his sixth panel slot is free,
-      // so the click is drained only while a Regulus is playing and never
-      // shadows another hero's slot-six ability.
+      // Regulus assigns hearts on the dedicated heart key (default MMB). The
+      // vanilla pick-block sharing that button is cancelled in
+      // RegulusInputPriority, so the heart key always wins for Regulus.
       if (client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
          && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
-         while (abilityKey6.consumeClick()) {
+         if (heartKeyOwns(client, client.options.keyPickItem)) {
+            // Drain stray pick-item clicks so a later tick never replays them.
+            while (client.options.keyPickItem.consumeClick()) {
+            }
+         }
+         while (assignHeartKey.consumeClick()) {
             if (client.screen == null) {
                CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(
                   dev.baranhan.viltrumitecore.hero.HeroAction.ASSIGN_HEART, true));

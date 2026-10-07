@@ -170,7 +170,9 @@ public final class HeroDamage {
          state.internalDamage += amount;
       }
 
-      applyCleanDamage(player, player.damageSources().generic(), amount);
+      // Self-inflicted drains (overheat, blood price, backlash) never flinch:
+      // no hurt animation, red flash or camera shake per drain tick.
+      applyCleanDamage(player, player.damageSources().generic(), amount, false);
    }
 
    /**
@@ -178,6 +180,11 @@ public final class HeroDamage {
     * boundary (hero totem) is handled here for every path uniformly.
     */
    public static void applyCleanDamage(LivingEntity target, DamageSource source, float amount) {
+      applyCleanDamage(target, source, amount, true);
+   }
+
+   /** Same as above; flinch=false skips the hurt animation (self-inflicted drains). */
+   public static void applyCleanDamage(LivingEntity target, DamageSource source, float amount, boolean flinch) {
       if (amount <= 0.0F || target.level().isClientSide()) {
          return;
       }
@@ -194,7 +201,9 @@ public final class HeroDamage {
       }
 
       target.setHealth(newHealth);
-      target.hurtTime = target.hurtDuration = 10;
+      if (flinch) {
+         target.hurtTime = target.hurtDuration = 10;
+      }
    }
 
    /**

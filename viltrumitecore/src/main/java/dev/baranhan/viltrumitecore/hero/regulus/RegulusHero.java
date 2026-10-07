@@ -237,6 +237,7 @@ public class RegulusHero implements HeroDefinition {
    public void enter(ServerPlayer player) {
       RegulusState state = ensureState(player);
       RegulusPassives.apply(player);
+      player.setHealth(player.getMaxHealth());
       Evangelium.grant(player);
       state.lastSeenHealth = player.getHealth();
    }

@@ -11,7 +11,18 @@ public final class RegulusRules {
    public static final int WEAKNESS_TICKS_ON_HEART_DEATH = 60;
    public static final String HEARTLESS_TAG = "heartless";
 
+   /** Base chassis (user balance pass): 60 HP total, 20 armor, fist ~3. */
+   public static final double BASE_ARMOR = 20.0;
+   public static final double BONUS_MAX_HEALTH = 40.0;
+   public static final double BONUS_ATTACK = 2.0;
+
    public static final int LION_WINDUP_TICKS = 14;
+   /** Overheat drains once per second, never per tick. */
+   public static final int LION_OVERHEAT_PERIOD = 20;
+   /** Lion switches itself off after this much overheat (3 drains). */
+   public static final int LION_OVERHEAT_MAX_TICKS = 60;
+   /** A burned/lost heart never cuts the window to less than this from now. */
+   public static final int LION_HEART_LOSS_GRACE = 40;
    public static final int LION_BASE_WINDOW = 60;
    public static final int LION_WINDOW_PER_HEART = 40;
    public static final int LION_MANUAL_COOLDOWN = 100;
@@ -24,7 +35,17 @@ public final class RegulusRules {
    public static final int DEBRIS_ANIM_TICKS = 44;
    public static final int DEBRIS_EVENT_TICK = 14;
    public static final int DEBRIS_RISE_TICK = 11;
-   public static final double DEBRIS_RANGE = 8.0;
+   public static final double DEBRIS_RANGE = 24.0;
+   public static final int DEBRIS_SHARDS = 14;
+   public static final double DEBRIS_CONE_DEGREES = 44.0;
+   public static final double DEBRIS_MIN_ELEVATION = -2.0;
+   public static final double DEBRIS_MAX_ELEVATION = 9.0;
+   public static final float DEBRIS_PITCH_UP_LIMIT = -30.0F;
+   public static final float DEBRIS_PITCH_DOWN_LIMIT = 30.0F;
+   public static final int DEBRIS_SHARD_PIERCE = 2;
+   public static final float DEBRIS_SHARD_DAMAGE = 2.0F;
+   public static final int DEBRIS_MAX_SHARDS_PER_TARGET = 4;
+   public static final double DEBRIS_KNOCKBACK = 1.3;
    public static final int DEBRIS_COOLDOWN = 400;
 
    public static final int MANIA_WINDUP_TICKS = 19;
@@ -143,6 +164,24 @@ public final class RegulusRules {
       return 1.5F + 0.5F * (float)(Math.max(0, overheatTicks) / 40);
    }
 
+   /** Overheat drain due this tick: one second worth, on every full period. */
+   public static float overheatDrain(int overheatTicks) {
+      return overheatTicks > 0 && overheatTicks % LION_OVERHEAT_PERIOD == 0 ? overheatDps(overheatTicks) : 0.0F;
+   }
+
+   public static boolean overheatExhausted(int overheatTicks) {
+      return overheatTicks >= LION_OVERHEAT_MAX_TICKS;
+   }
+
+   /** Heart loss shortens the window, but always leaves a short warning grace. */
+   public static int windowAfterHeartLoss(int previousWindow, int shrunkWindow, int elapsed) {
+      if (shrunkWindow >= previousWindow) {
+         return shrunkWindow;
+      }
+
+      return Math.max(shrunkWindow, Math.min(previousWindow, elapsed + LION_HEART_LOSS_GRACE));
+   }
+
    public static boolean lionForcedOff(float health) {
       return health <= LION_FORCED_OFF_HP;
    }
@@ -151,18 +190,16 @@ public final class RegulusRules {
       return forced ? LION_FORCED_COOLDOWN : LION_MANUAL_COOLDOWN;
    }
 
-   /** 7 -> 2 linear falloff between d=4 and d=8, flat 7 inside 4. */
-   public static float debrisDamage(double distance, int hearts) {
-      float base;
-      if (distance <= 4.0) {
-         base = 7.0F;
-      } else if (distance >= DEBRIS_RANGE) {
-         base = 2.0F;
-      } else {
-         base = 7.0F - 5.0F * (float)(distance - 4.0) / 4.0F;
+   /**
+    * Damage of the n-th shard (0-based) that lands on one target in one kick:
+    * flat per shard, capped at DEBRIS_MAX_SHARDS_PER_TARGET, hearts scale it.
+    */
+   public static float debrisShardDamage(int shardsAlreadyLanded, int hearts) {
+      if (shardsAlreadyLanded < 0 || shardsAlreadyLanded >= DEBRIS_MAX_SHARDS_PER_TARGET) {
+         return 0.0F;
       }
 
-      return base * heartBonus(hearts);
+      return DEBRIS_SHARD_DAMAGE * heartBonus(hearts);
    }
 
    /** min(45, 15 + 15% maxHP) * (1 + 0.02H) */

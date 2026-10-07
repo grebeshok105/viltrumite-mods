@@ -232,6 +232,9 @@ public final class HeroEvents {
          // The bound Evangelium returns on respawn when it is missing (spec 11.2).
          if (player instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.REGULUS) {
             Evangelium.grant(player);
+            // Respawn is a fresh body: re-apply the chassis and start full.
+            dev.baranhan.viltrumitecore.hero.regulus.RegulusPassives.apply(player);
+            player.setHealth(player.getMaxHealth());
          }
       }
    }

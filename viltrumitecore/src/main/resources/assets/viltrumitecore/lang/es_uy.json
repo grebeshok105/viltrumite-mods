@@ -167,7 +167,7 @@
   "ability.viltrumitecore.lions_heart.name": "<gold>Corazón de León",
   "ability.viltrumitecore.lions_heart.desc": "<grey>Reutilización: <lime>5s / 30s\n<grey>Tipo: <yellow>Alternar\n\n<grey>Transfórmate en un león irrompible: no recibes\n<grey>daño ni control y congelas proyectiles.\n\n<red>El sobrecalentamiento quema tu vida.\n\n<blue>Regulus",
   "ability.viltrumitecore.debris_kick.name": "<gold>Patada de Escombros",
-  "ability.viltrumitecore.debris_kick.desc": "<grey>Reutilización: <lime>20s\n<grey>Tipo: <yellow>Lanzar\n\n<grey>Patea el suelo y lanza una onda de escombros unos 8 bloques hacia delante.\n<grey>Cada objetivo recibe un solo impacto de 7 a 2 de daño según la distancia.\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>Cooldown: <lime>20s\n<grey>Type: <yellow>Cast\n\n<grey>Kick the ground and blast a spray of shards forward.\n<grey>Shards fly instantly, hit for 2 each (up to 4 per target)\n<grey>and smash through blocks in their path.\n\n<blue>Regulus",
   "ability.viltrumitecore.mania.name": "<gold>Manía",
   "ability.viltrumitecore.mania.desc": "<grey>Reutilización: <lime>25s\n<grey>Tipo: <yellow>Canal\n\n<grey>Atrae al objetivo hasta 6 segundos y luego\n<grey>congélalo en el lugar.\n\n<blue>Regulus",
   "ability.viltrumitecore.greeds_embrace.name": "<gold>Abrazo de la Avaricia",
@@ -175,5 +175,8 @@
   "ability.viltrumitecore.counter.name": "<gold>Contraataque",
   "ability.viltrumitecore.counter.desc": "<grey>Reutilización: <lime>40s\n<grey>Tipo: <yellow>Lanzar\n\n<grey>Responde al último atacante: levántalo,\n<grey>aparece detrás y estampalo en un cráter.\n\n<blue>Regulus",
   "item.viltrumitecore.evangelium": "Evangelium",
-  "message.viltrumitecore.counter.no_target": "Nadie responde."
+  "message.viltrumitecore.counter.no_target": "Nadie responde.",
+  "key.viltrumitecore.assign_heart": "Regulus: Mark Heart Carrier",
+  "message.viltrumitecore.lion.overheat": "Lion's Heart is overheating! It will stop in 3 seconds.",
+  "message.viltrumitecore.lion.heart_lost": "A heart burned out — Lion's Heart window shortened."
 }
