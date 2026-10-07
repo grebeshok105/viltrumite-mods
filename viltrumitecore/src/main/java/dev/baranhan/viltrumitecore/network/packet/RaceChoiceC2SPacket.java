@@ -23,7 +23,7 @@ public class RaceChoiceC2SPacket {
    public void handle(Supplier<Context> supplier) {
       Context context = supplier.get();
       context.enqueueWork(() -> {
-         if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer) {
+         if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer && !corePlayer.hasChosenRace()) {
             corePlayer.setViltrumite(this.choseViltrumite);
             corePlayer.setChosenRace(true);
          }

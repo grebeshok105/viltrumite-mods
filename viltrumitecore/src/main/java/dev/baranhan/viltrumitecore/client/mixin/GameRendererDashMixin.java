@@ -3,11 +3,16 @@ package dev.baranhan.viltrumitecore.client.mixin;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.baranhan.viltrumitecore.client.TargetLockManager;
+import dev.baranhan.viltrumitecore.client.regulus.RegulusClientFx;
+import dev.baranhan.viltrumitecore.client.regulus.RegulusVfxMath;
 import dev.baranhan.viltrumitecore.client.render.ViltrumiteShaders;
 import dev.baranhan.viltrumitecore.client.render.vfx.BlockVFXManager;
 import dev.baranhan.viltrumitecore.client.render.vfx.MeteorImpactVFXManager;
 import dev.baranhan.viltrumitecore.config.ViltrumitePostProcessingConfig;
 import dev.baranhan.viltrumitecore.effect.ViltrumiteEffects;
+import dev.baranhan.viltrumitecore.hero.HeroId;
+import dev.baranhan.viltrumitecore.hero.HeroPlayer;
+import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.item.InfinityGunItem;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import dev.baranhan.viltrumiteflight.client.mixin.PostChainAccessor;
@@ -47,6 +52,10 @@ public abstract class GameRendererDashMixin {
    private float prevCamYaw = Float.NaN;
    @Unique
    private float prevCamPitch = Float.NaN;
+   @Unique
+   private float currentRegulusOverheat = 0.0F;
+   @Unique
+   private float currentRegulusMadness = 0.0F;
 
    @Inject(
       method = {"renderLevel"},
@@ -267,6 +276,36 @@ public abstract class GameRendererDashMixin {
          }
 
          this.currentScourgeIntensity = Mth.lerp(0.08F, this.currentScourgeIntensity, targetScourge);
+         float regulusHeartFlash = 0.0F;
+         float regulusPulse = 0.0F;
+         if (minecraft.player instanceof HeroPlayer heroPlayer) {
+            HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
+            if (snapshot != null && snapshot.heroId() == HeroId.REGULUS) {
+               float overheatTarget = snapshot.lionOverheat() ? 1.0F : 0.0F;
+               this.currentRegulusOverheat = Mth.lerp(0.12F, this.currentRegulusOverheat, overheatTarget);
+               float madnessTarget = snapshot.madness() ? 1.0F : 0.0F;
+               this.currentRegulusMadness = Mth.lerp(0.06F, this.currentRegulusMadness, madnessTarget);
+               if (minecraft.level != null) {
+                  float beatPhase = ((float)(minecraft.level.getGameTime() % RegulusVfxMath.HEARTBEAT_PERIOD_TICKS) + partialTicks) / (float)RegulusVfxMath.HEARTBEAT_PERIOD_TICKS;
+                  regulusPulse = snapshot.madness() ? RegulusVfxMath.madnessPulse(beatPhase) : 0.0F;
+               }
+            } else {
+               this.currentRegulusOverheat = Mth.lerp(0.12F, this.currentRegulusOverheat, 0.0F);
+               this.currentRegulusMadness = Mth.lerp(0.06F, this.currentRegulusMadness, 0.0F);
+            }
+         }
+
+         if (RegulusClientFx.heartFlashTicks > 0) {
+            regulusHeartFlash = RegulusVfxMath.heartFlashFactor((float)RegulusVfxMath.HEART_FLASH_TICKS - (float)RegulusClientFx.heartFlashTicks + partialTicks);
+         }
+
+         if (RegulusClientFx.debrisShakeTicks > 0) {
+            float debrisShake = RegulusClientFx.debrisShakePower
+               * ViltrumitePostProcessingConfig.INSTANCE.punchShakeMultiplier
+               * (RegulusClientFx.debrisShakeTicks / 10.0F);
+            shakeIntensity = Math.max(shakeIntensity, debrisShake);
+         }
+
          boolean anyEffect = dashProgress > 0.0F
             || punchIntensity > 0.0F
             || shakeIntensity > 0.0F
@@ -274,7 +313,10 @@ public abstract class GameRendererDashMixin {
             || currentGrabIntensity > 0.01F
             || chopIntensity > 0.01F
             || barrageIntensity > 0.01F
-            || this.currentScourgeIntensity > 0.005F;
+            || this.currentScourgeIntensity > 0.005F
+            || this.currentRegulusOverheat > 0.01F
+            || this.currentRegulusMadness > 0.01F
+            || regulusHeartFlash > 0.01F;
          if (anyEffect) {
             PostChain chain = ViltrumiteShaders.get();
             if (chain != null) {
@@ -342,6 +384,26 @@ public abstract class GameRendererDashMixin {
                   Uniform scourgeTurnUnif = pass.getEffect().getUniform("ScourgeTurn");
                   if (scourgeTurnUnif != null) {
                      scourgeTurnUnif.set(this.scourgeTurn);
+                  }
+
+                  Uniform regulusOverheatUnif = pass.getEffect().getUniform("RegulusOverheat");
+                  if (regulusOverheatUnif != null) {
+                     regulusOverheatUnif.set(Math.max(0.0F, Math.min(1.0F, this.currentRegulusOverheat)));
+                  }
+
+                  Uniform regulusHeartFlashUnif = pass.getEffect().getUniform("RegulusHeartFlash");
+                  if (regulusHeartFlashUnif != null) {
+                     regulusHeartFlashUnif.set(Math.max(0.0F, Math.min(1.0F, regulusHeartFlash)));
+                  }
+
+                  Uniform regulusMadnessUnif = pass.getEffect().getUniform("RegulusMadness");
+                  if (regulusMadnessUnif != null) {
+                     regulusMadnessUnif.set(Math.max(0.0F, Math.min(1.0F, this.currentRegulusMadness)));
+                  }
+
+                  Uniform regulusPulseUnif = pass.getEffect().getUniform("RegulusPulse");
+                  if (regulusPulseUnif != null) {
+                     regulusPulseUnif.set(Math.max(0.0F, Math.min(1.0F, regulusPulse)));
                   }
                }
 

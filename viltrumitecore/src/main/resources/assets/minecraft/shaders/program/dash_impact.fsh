@@ -22,6 +22,12 @@ uniform float BarrageIsLeft;
 uniform float ScourgeIntensity;   // 0..1 (amplifier ile 1.5'e kadar)
 uniform float ScourgeTurn;        // 0..1, kamera ne kadar hızlı dönüyor
 
+// REGULUS: Lion overheat cracks+noise, heart-loss flash, madness bands/glitch/zoom
+uniform float RegulusOverheat;    // 0..1
+uniform float RegulusHeartFlash;  // 0..1
+uniform float RegulusMadness;     // 0..1
+uniform float RegulusPulse;       // 0..1 heartbeat pulse synced with HUD/sound
+
 in vec2 texCoord;
 out vec4 fragColor;
 
@@ -38,9 +44,13 @@ void main() {
     float safeBarrage = clamp(BarrageIntensity, 0.0, 1.0);
     float safeScourge = clamp(ScourgeIntensity, 0.0, 1.5);
     float safeTurn = clamp(ScourgeTurn, 0.0, 1.0);
+    float safeOverheat = clamp(RegulusOverheat, 0.0, 1.0);
+    float safeHeartFlash = clamp(RegulusHeartFlash, 0.0, 1.0);
+    float safeMadness = clamp(RegulusMadness, 0.0, 1.0);
+    float safePulse = clamp(RegulusPulse, 0.0, 1.0);
 
     // Hiçbir efekt yoksa boş döndür (Performans)
-    if (safeDash <= 0.001 && safePunch <= 0.001 && safeShake <= 0.001 && safeGrab <= 0.001 && safeLock <= 0.001 && safeChop <= 0.001 && safeBarrage <= 0.001 && safeScourge <= 0.001) {
+    if (safeDash <= 0.001 && safePunch <= 0.001 && safeShake <= 0.001 && safeGrab <= 0.001 && safeLock <= 0.001 && safeChop <= 0.001 && safeBarrage <= 0.001 && safeScourge <= 0.001 && safeOverheat <= 0.001 && safeHeartFlash <= 0.001 && safeMadness <= 0.001) {
         vec4 defaultColor = texture(DiffuseSampler, baseUv);
         defaultColor.a = 1.0;
         fragColor = defaultColor;
@@ -78,6 +88,20 @@ void main() {
 
     baseUv.x += shakeX;
     baseUv.y += shakeY;
+
+    // ==========================================
+    // REGULUS MADNESS: light zoom + glitch slices (pre-sampling UV work)
+    // ==========================================
+    if (safeMadness > 0.0) {
+        float zoom = 1.0 - 0.06 * safeMadness * (0.55 + 0.45 * safePulse);
+        baseUv = center + (baseUv - center) * zoom;
+
+        float glitchRow = floor(baseUv.y * 36.0);
+        float glitchSeed = fract(sin(glitchRow * 7.31 + floor(Time * 6.0) * 13.7) * 43758.5453);
+        float slice = step(0.972, glitchSeed);
+        float sliceDir = (fract(sin(glitchRow * 3.3 + floor(Time * 6.0)) * 24634.6345) - 0.5) * 2.0;
+        baseUv.x += slice * sliceDir * 0.018 * safeMadness;
+    }
 
     float dist = distance(baseUv, center);
     float effectRadius = smoothstep(0.1, 0.8, dist);
@@ -203,6 +227,44 @@ void main() {
         // --- Grenli titreşim ---
         float grain = fract(sin(dot(baseUv * 512.0 + Time * 3.0, vec2(12.9898, 78.233))) * 43758.5453);
         finalColor.rgb += (grain - 0.5) * 0.02 * s;
+    }
+
+    // ==========================================
+    // 6. REGULUS LION OVERHEAT: white noise + screen-edge cracks
+    // ==========================================
+    if (safeOverheat > 0.0) {
+        float noise = fract(sin(dot(baseUv * 731.0 + Time * 29.0, vec2(12.9898, 78.233))) * 43758.5453);
+        finalColor.rgb += vec3(noise * 0.20 * safeOverheat);
+
+        // Cell-based crack pattern near the screen edges.
+        vec2 cell = floor(baseUv * vec2(18.0, 11.0));
+        float crackSeed = fract(sin(dot(cell + floor(Time * 1.5) * 0.37, vec2(26.65, 114.5))) * 24634.6345);
+        float crack = step(0.935, crackSeed) * smoothstep(0.35, 0.9, dist);
+        finalColor.rgb += vec3(0.75, 0.85, 1.0) * crack * 0.55 * safeOverheat;
+    }
+
+    // ==========================================
+    // 7. REGULUS HEART LOSS: short red edge flash
+    // ==========================================
+    if (safeHeartFlash > 0.0) {
+        float edge = smoothstep(0.2, 0.85, dist);
+        finalColor.rgb = mix(finalColor.rgb, vec3(0.62, 0.04, 0.02), safeHeartFlash * (0.25 + 0.55 * edge));
+    }
+
+    // ==========================================
+    // 8. REGULUS MADNESS: black bands + heartbeat vignette
+    // (zoom + glitch are applied on baseUv before the colour chain)
+    // ==========================================
+    if (safeMadness > 0.0) {
+        float bandEdge = 0.085 * safeMadness;
+        if (baseUv.y < bandEdge || baseUv.y > 1.0 - bandEdge) {
+            finalColor.rgb *= 0.06 + 0.08 * safeMadness;
+        }
+
+        float vig = smoothstep(0.95, 0.35, dist);
+        vec3 bloodTint = vec3(0.10, 0.01, 0.01) + finalColor.rgb * vec3(0.9, 0.3, 0.3);
+        finalColor.rgb = mix(finalColor.rgb, bloodTint, safeMadness * 0.30 * (0.45 + 0.55 * safePulse));
+        finalColor.rgb *= mix(1.0, 0.72 + 0.28 * vig, safeMadness * 0.35 * (0.6 + 0.4 * safePulse));
     }
 
     finalColor.a = 1.0;

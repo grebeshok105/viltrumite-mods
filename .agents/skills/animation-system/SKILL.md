@@ -167,6 +167,14 @@ Two driver types:
 
 For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use per-frame `age++`: it depends on FPS.
 
+### Regulus pose and world-space helpers
+
+- Use `RegulusAnimationManager.actionTime(entity, snapshot, partialTick)` in both views. It uses client game time and limits extrapolation to six ticks and the action length. Do not use raw snapshot ticks for one view and the shared clock for the other.
+- Use `calculateWeight` for third person. Use `calculateFirstPersonWeight` for first person. For a held-book pose, pass the fourth `mainHand` argument so each hand has its own weight. Tick inactive weights too, so they fade out.
+- Call `RegulusAnimationManager.reset(entity)` when the hero changes. It clears third-person weights, both first-person hands, and the action clock.
+- `RegulusPoseTiming.keyedAngle` recovers to the supplied base rotation. End transient keys at zero. Add head/body offsets to vanilla aim and crouch. Mirror action limbs and yaw/roll for the main arm. Restore position offsets at `setupAnim` HEAD before vanilla uses the model again. Copy hat, jacket, sleeves and pants; do not copy body pivots to the cloak.
+- `RegulusPixelVfx` emits camera-relative vertices. Call `rotateCamera` once per render pass. Do not translate by the camera again. Use `billboardPixel`, `domeShell` or `sphereShell` for floating points. Shell shimmer changes alpha, not position. Apply owner-only carrier filtering and local first-person aura filtering in the managers, not in the shape helper.
+
 ## 9. Screen effects
 
 Core shader: `viltrumitecore:shaders/post/dash_impact.json`, set in `GameRendererDashMixin` (`renderLevel` TAIL).

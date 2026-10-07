@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.network.packet;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -28,6 +29,11 @@ public class BlockToggleC2SPacket {
             }
 
             boolean newState = !corePlayer.isBlocking();
+            // Anchored victims cannot engage the block; disengaging stays allowed.
+            if (newState && HeroDamage.isAnchored(context.getSender())) {
+               return;
+            }
+
             corePlayer.setBlocking(newState);
          }
       });

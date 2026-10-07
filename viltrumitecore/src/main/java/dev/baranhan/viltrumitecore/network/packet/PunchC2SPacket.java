@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.network.packet;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -24,7 +25,9 @@ public class PunchC2SPacket {
       Context context = supplier.get();
       context.enqueueWork(() -> {
          if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer) {
-            if (!corePlayer.isViltrumite()) {
+            boolean regulus = dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.stateOf(context.getSender()) != null;
+            if (regulus ? !dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.canPunch(context.getSender()) || !dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.punchEquipped(context.getSender())
+               : !corePlayer.isViltrumite() || HeroDamage.isAnchored(context.getSender())) {
                return;
             }
 

@@ -18,7 +18,8 @@ public class SwapAbilityBarC2SPacket {
    public void handle(Supplier<Context> supplier) {
       Context context = supplier.get();
       context.enqueueWork(() -> {
-         if (context.getSender() instanceof ViltrumiteAbilityUser abilityUser) {
+         net.minecraft.server.level.ServerPlayer player = context.getSender();
+         if (player instanceof ViltrumiteAbilityUser abilityUser && dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).allowsAbilityPages(player)) {
             int currentPage = abilityUser.getActivePage();
             int nextPage = (currentPage + 1) % 3;
             abilityUser.setActivePage(nextPage);

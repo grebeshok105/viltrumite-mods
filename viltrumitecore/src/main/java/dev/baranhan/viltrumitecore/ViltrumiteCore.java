@@ -6,6 +6,7 @@ import dev.baranhan.viltrumitecore.command.CoreCommands;
 import dev.baranhan.viltrumitecore.config.ViltrumiteCoreConfig;
 import dev.baranhan.viltrumitecore.effect.ViltrumiteEffects;
 import dev.baranhan.viltrumitecore.entity.ViltrumiteEntities;
+import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.item.ViltrumiteCreativeTabs;
 import dev.baranhan.viltrumitecore.item.ViltrumiteItems;
 import dev.baranhan.viltrumitecore.network.CoreMessages;
@@ -40,6 +41,25 @@ public class ViltrumiteCore {
       "infinity_gun_shoot", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "infinity_gun_shoot"))
    );
 
+   public static final RegistryObject<SoundEvent> REGULUS_SHARD_WHIZ = SOUND_EVENTS.register(
+      "regulus_shard_whiz", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_shard_whiz"))
+   );
+   public static final RegistryObject<SoundEvent> REGULUS_IMPACT_HEAVY = SOUND_EVENTS.register(
+      "regulus_impact_heavy", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_impact_heavy"))
+   );
+   public static final RegistryObject<SoundEvent> REGULUS_KICK_CRACK = SOUND_EVENTS.register(
+      "regulus_kick_crack", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_kick_crack"))
+   );
+   public static final RegistryObject<SoundEvent> REGULUS_AIR_BLADE = SOUND_EVENTS.register(
+      "regulus_air_blade", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_air_blade"))
+   );
+   public static final RegistryObject<SoundEvent> REGULUS_PUNCH_HIT = SOUND_EVENTS.register(
+      "regulus_punch_hit", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_punch_hit"))
+   );
+   public static final RegistryObject<SoundEvent> REGULUS_JUMP_CHARGE = SOUND_EVENTS.register(
+      "regulus_jump_charge", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_jump_charge"))
+   );
+
    public ViltrumiteCore() {
       IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
       ViltrumiteCoreConfig.load();
@@ -59,6 +79,7 @@ public class ViltrumiteCore {
       event.enqueueWork(() -> {
          CoreMessages.register();
          ViltrumiteAbilities.registerAll();
+         HeroRegistry.registerDefaults();
       });
    }
 

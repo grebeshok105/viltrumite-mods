@@ -14,6 +14,10 @@ import dev.baranhan.viltrumitecore.network.packet.FlightConfigSyncC2SPacket;
 import dev.baranhan.viltrumitecore.network.packet.GrabToggleC2SPacket;
 import dev.baranhan.viltrumitecore.network.packet.GrabbedPosSyncS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.HandPosSyncC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.HeroChoiceC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.HeroControlS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket;
+import dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.MeltedBlocksS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.OpenRaceScreenS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.PlayerGrabStateSyncS2CPacket;
@@ -161,6 +165,34 @@ public class CoreMessages {
          .encoder(BarrageHitS2CPacket::encode)
          .consumerMainThread(BarrageHitS2CPacket::handle)
          .add();
+      // Appended hero packets: wire ids of every earlier packet stay unchanged.
+      net.messageBuilder(HeroChoiceC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(HeroChoiceC2SPacket::new)
+         .encoder(HeroChoiceC2SPacket::toBytes)
+         .consumerMainThread(HeroChoiceC2SPacket::handle)
+         .add();
+      net.messageBuilder(HeroInputC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(HeroInputC2SPacket::new)
+         .encoder(HeroInputC2SPacket::toBytes)
+         .consumerMainThread(HeroInputC2SPacket::handle)
+         .add();
+      net.messageBuilder(HeroOwnerSnapshotS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(HeroOwnerSnapshotS2CPacket::new)
+         .encoder(HeroOwnerSnapshotS2CPacket::toBytes)
+         .consumerMainThread(HeroOwnerSnapshotS2CPacket::handle)
+         .add();
+
+      net.messageBuilder(HeroControlS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(HeroControlS2CPacket::new)
+         .encoder(HeroControlS2CPacket::toBytes)
+         .consumerMainThread(HeroControlS2CPacket::handle)
+         .add();
+
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::encode)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::handle)
+         .add();
    }
 
    public static <MSG> void sendToServer(MSG message) {
@@ -173,6 +205,10 @@ public class CoreMessages {
 
    public static <MSG> void sendToTracking(MSG message, Entity entity) {
       INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+   }
+
+   public static <MSG> void sendToTrackingAndSelf(MSG message, Entity entity) {
+      INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
    }
 
    public static <MSG> void sendToAll(MSG message) {

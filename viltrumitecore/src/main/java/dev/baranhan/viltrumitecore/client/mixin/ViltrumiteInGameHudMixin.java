@@ -31,7 +31,7 @@ public class ViltrumiteInGameHudMixin {
       Player player = client.player;
       if (player != null && !client.options.hideGui) {
          if (player instanceof ViltrumiteAbilityUser abilityUser) {
-            if (player instanceof ViltrumiteCorePlayer corePlayer && !corePlayer.isViltrumite()) {
+            if (!dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).hasAbilityPanel(player)) {
                return;
             }
 

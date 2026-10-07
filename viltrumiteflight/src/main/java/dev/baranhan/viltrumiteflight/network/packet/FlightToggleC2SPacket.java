@@ -3,6 +3,7 @@ package dev.baranhan.viltrumiteflight.network.packet;
 import dev.baranhan.viltrumiteflight.config.ViltrumiteConfig;
 import dev.baranhan.viltrumiteflight.mixin.FallingBlockEntityInvoker;
 import dev.baranhan.viltrumiteflight.registry.ModSounds;
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.function.Supplier;
@@ -34,9 +35,14 @@ public class FlightToggleC2SPacket {
          () -> {
             ServerPlayer player = context.getSender();
             if (player != null) {
+               if (!FlightPermissions.allowsModFlight(player)) {
+                  FlightPermissions.resetModFlight(player);
+                  return;
+               }
+
                ViltrumiteFlightPlayer viltrumiteFlightPlayer = (ViltrumiteFlightPlayer)player;
                FlightState currentState = viltrumiteFlightPlayer.getFlightState();
-               if (currentState != FlightState.NONE || player.getAbilities().mayfly) {
+               if (FlightPermissions.allowsModFlight(player)) {
                   FlightState newState = currentState == FlightState.NONE ? FlightState.HOVER : FlightState.NONE;
                   viltrumiteFlightPlayer.setFlightState(newState);
                   if (newState == FlightState.HOVER && player.isCrouching()) {
@@ -107,7 +113,11 @@ public class FlightToggleC2SPacket {
                      }
                   }
 
-                  player.getAbilities().flying = newState == FlightState.HOVER;
+                  if (newState == FlightState.HOVER) {
+                     player.getAbilities().flying = true;
+                  } else if (!player.isCreative() && !player.isSpectator() && !player.getTags().contains("ViltrumiteGrabbed")) {
+                     player.getAbilities().flying = false;
+                  }
                   player.onUpdateAbilities();
                }
             }

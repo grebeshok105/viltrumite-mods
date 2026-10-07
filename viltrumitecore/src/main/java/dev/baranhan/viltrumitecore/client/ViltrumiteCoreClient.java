@@ -1,6 +1,7 @@
 package dev.baranhan.viltrumitecore.client;
 
 import dev.baranhan.viltrumitecore.client.gui.ViltrumiteAbilityScreen;
+import dev.baranhan.viltrumitecore.client.regulus.RegulusClient;
 import dev.baranhan.viltrumitecore.config.ViltrumiteCameraConfig;
 import dev.baranhan.viltrumitecore.config.ViltrumiteClientConfig;
 import dev.baranhan.viltrumitecore.config.ViltrumitePostProcessingConfig;
@@ -46,10 +47,12 @@ public class ViltrumiteCoreClient {
    public static Vec3 prevHandPos = null;
    public static Vec3 currentHandPos = null;
    public static CameraType preGrabPerspective = null;
+   public static boolean[] regulusKeyDown = new boolean[6];
 
    @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
       event.enqueueWork(() -> {
+         RegulusClient.registerSkins();
          CosmeticLoader.init();
          ViltrumiteCameraConfig.load();
          ViltrumitePostProcessingConfig.load();
@@ -228,8 +231,47 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.abilityMenuKey.consumeClick()) {
-                  if (corePlayer.isViltrumite() && client.screen == null) {
+                  if (dev.baranhan.viltrumitecore.hero.HeroRegistry.get(client.player).hasAbilityPanel(client.player) && client.screen == null) {
                      client.setScreen(new ViltrumiteAbilityScreen());
+                  }
+               }
+            }
+
+            if (client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+               && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
+               String[] regulusAbilities = dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.slotIds();
+               for (int i = 0; i < regulusAbilities.length; i++) {
+                  dev.baranhan.viltrumitecore.hero.HeroAction action = dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.actionFor(regulusAbilities[i]);
+                  if (action == null) {
+                     continue;
+                  }
+
+                  boolean down = AbilityInputManager.isAbilityKeyDown(client.player, regulusAbilities[i]);
+                  if (down != ViltrumiteCoreClient.regulusKeyDown[i]) {
+                     ViltrumiteCoreClient.regulusKeyDown[i] = down;
+                     CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(action, down));
+                  }
+               }
+
+               // The Viltrumite fist, recoloured for Regulus: same client start
+               // (local punch timer for the animation) and the same packet.
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.PUNCH)) {
+                  dev.baranhan.viltrumitecore.ability.ViltrumiteAbility punch = dev.baranhan.viltrumitecore.ability.ViltrumiteAbilities.get(dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.PUNCH);
+                  if (client.player instanceof ViltrumiteCorePlayer regulusCore
+                     && (punch == null || !punch.isGrey(client.player))
+                     && regulusCore.getChopTicks() <= 0
+                     && ViltrumiteCoreClient.iAmBeingGrabbedBy == null) {
+                     boolean isLeft = client.level.random.nextBoolean();
+                     regulusCore.setLeftArmPunch(isLeft);
+                     regulusCore.setPunchTicks(20);
+                     CoreMessages.sendToServer(new PunchC2SPacket(isLeft));
+                  }
+               }
+
+               // Super jump: one press of G, instant launch ~20 blocks up.
+               while (AbilityInputManager.superJumpKey.consumeClick()) {
+                  if (dev.baranhan.viltrumitecore.client.regulus.RegulusJumpClient.tryLaunch(client.player)) {
+                     CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(dev.baranhan.viltrumitecore.hero.HeroAction.JUMP, true));
                   }
                }
             }

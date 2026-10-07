@@ -8,7 +8,7 @@ plugins {
 // core uses classes from viltrumiteflight
 evaluationDependsOn(':viltrumiteflight')
 
-version = '1.10.3'
+version = '1.13.0'
 group = 'dev.baranhan.viltrumitecore'
 base { archivesName = 'viltrumitecore-forge' }
 
@@ -55,6 +55,18 @@ dependencies {
     compileOnly files(project(':viltrumiteflight').sourceSets.main.output)
     // optional integration: only needed to compile, not bundled
     compileOnly fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+    testImplementation sourceSets.main.output
+    testImplementation files(project(':viltrumiteflight').sourceSets.main.output)
+    testImplementation files(configurations.minecraft)
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+    }
 }
 
 processResources {
@@ -63,6 +75,29 @@ processResources {
         filter { line -> line.replace('@MOD_VERSION@', project.version.toString()) }
     }
 }
+
+// Binary assets (sounds, textures) are stored as base64 text under
+// src/main/binassets/<resource path>.b64 and decoded into generated resources.
+def binAssetsSrc = file('src/main/binassets')
+def binAssetsOut = layout.buildDirectory.dir('generated/binassets')
+def decodeBinaryAssets = tasks.register('decodeBinaryAssets') {
+    inputs.dir(binAssetsSrc)
+    outputs.dir(binAssetsOut)
+    doLast {
+        def out = binAssetsOut.get().asFile
+        project.delete(out)
+        out.mkdirs()
+        binAssetsSrc.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+            if (f.name.endsWith('.b64')) {
+                def rel = binAssetsSrc.toPath().relativize(f.toPath()).toString()
+                def target = new File(out, rel.substring(0, rel.length() - 4))
+                target.parentFile.mkdirs()
+                target.bytes = Base64.mimeDecoder.decode(f.getText('US-ASCII').trim())
+            }
+        }
+    }
+}
+sourceSets.main.resources.srcDir(decodeBinaryAssets)
 
 jar {
     manifest {

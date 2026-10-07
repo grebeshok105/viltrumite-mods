@@ -1,4 +1,15 @@
 {
+  "message.viltrumitecore.hearts.no_target": "20 blok içindeki barışçıl veya sakin nötr bir canlıya bak.",
+  "message.viltrumitecore.hearts.invalid": "Bu yaratık kalbini taşıyamaz.",
+  "message.viltrumitecore.hearts.full": "12 kalbin hepsi atanmış. Önce birini kaldır.",
+  "message.viltrumitecore.hearts.assigned": "Kalp atandı.",
+  "message.viltrumitecore.hearts.removed": "Kalp kaldırıldı.",
+  "message.viltrumitecore.hearts.locked": "Kalp atamadan önce mevcut eylemini bitir.",
+  "message.viltrumitecore.evangelium.cancelled": "Evangelium iptal edildi: kitap bırakıldı.",
+  "message.viltrumitecore.evangelium.complete": "Evangelium tamamlandı. Delilik uyandı.",
+  "message.viltrumitecore.embrace.active": "Önceki kubben hâlâ aktif.",
+  "message.viltrumitecore.embrace.no_surface": "Kubbe için ulaşılabilir bir yüzey yok.",
+  "message.viltrumitecore.debris.no_ground": "Enkaz Tekmesi için ayaklarının altında zemin olmalı.",
   "itemgroup.viltrumitecore.main_tab": "Viltrumite Core",
   "item.viltrumitecore.infinity_gun": "Sonsuzluk Silahı",
   "item.viltrumitecore.infinity_gun_handle": "Sonsuzluk Silahı Kabzası",
@@ -17,7 +28,6 @@
   "item.minecraft.tipped_arrow.effect.scourge_virus": "Scourge Virüslü Ok",
   "tooltip.viltrumitecore.scourge_culture": "Garip İksir ile demleyin",
   "tooltip.viltrumitecore.scourge_viltrumites_only": "Yalnızca Viltrumite'ları etkiler",
-
   "category.viltrumitecore.keys": "Viltrumite Core",
   "key.viltrumitecore.ability_1": "Yetenek 1",
   "key.viltrumitecore.ability_2": "Yetenek 2",
@@ -28,7 +38,6 @@
   "key.viltrumitecore.ability_menu": "Yetenek Menüsü",
   "key.viltrumitecore.ability_swap": "Yetenek Değiştir",
   "key.viltrumitecore.dashboard": "Kontrol Paneli",
-
   "gui.viltrumitecore.npc_spawner.title": "NPC Oluşturucu",
   "gui.viltrumitecore.npc_spawner.spawn": "Oluştur",
   "gui.viltrumitecore.npc_spawner.name": "İsim",
@@ -49,14 +58,11 @@
   "gui.viltrumitecore.target_mode.hostile_aggressive": "Yaratıklara Agresif",
   "gui.viltrumitecore.target_mode.aggressive": "Agresif (Herkese)",
   "gui.viltrumitecore.target_mode.aggressive_no_allies": "Agresif (Müttefikler Hariç)",
-
   "gui.viltrumitecore.race_selection.title": "Kaderini Seç",
   "gui.viltrumitecore.race_selection.become_viltrumite": "Viltrumlu Ol",
   "gui.viltrumitecore.race_selection.remain_human": "İnsan Kal",
   "gui.viltrumitecore.race_selection.question": "Hangi ırk olarak oynamak istersin?",
-
   "gui.viltrumitecore.abilities.title": "Viltrumite Yetenekleri",
-
   "gui.viltrumitecore.config.title": "Viltrumite Mod Yapılandırması",
   "gui.viltrumitecore.config.camera": "Kamera Ayarları",
   "gui.viltrumitecore.config.post_process": "Post-Processing Ayarları",
@@ -66,21 +72,17 @@
   "gui.viltrumitecore.config.flight_client": "Uçuş İstemci Ayarları",
   "gui.viltrumitecore.config.flight_camera": "Uçuş Kamera Ayarları",
   "gui.viltrumitecore.config.done": "Tamam",
-
   "gui.viltrumitecore.config.generic.on": "AÇIK",
   "gui.viltrumitecore.config.generic.off": "KAPALI",
   "gui.viltrumitecore.config.generic.save_back": "Kaydet ve Geri Dön",
-
   "gui.viltrumitecore.config.camera.title": "Kamera Ayarları (İstemci Taraflı)",
   "gui.viltrumitecore.config.camera.offset_x": "Kamera Ofseti X",
   "gui.viltrumitecore.config.camera.offset_y": "Kamera Ofseti Y",
   "gui.viltrumitecore.config.camera.offset_z": "Kamera Ofseti Z",
   "gui.viltrumitecore.config.camera.custom": "Özel Kamera: %s",
   "gui.viltrumitecore.config.camera.crosshair": "3. Şahıs Nişangahı: %s",
-
   "gui.viltrumitecore.config.client.title": "İstemci Ayarları (İstemci Taraflı)",
   "gui.viltrumitecore.config.client.render_offhand": "Sol Eli Her Zaman Göster: %s",
-
   "gui.viltrumitecore.config.core.title": "Core Ayarları (Sunucu Taraflı)",
   "gui.viltrumitecore.config.core.base_damage": "Temel Hasar (Kendin)",
   "gui.viltrumitecore.config.core.damage_reduction": "Hasar Azaltma (%) (Kendin)",
@@ -98,13 +100,11 @@
   "gui.viltrumitecore.config.core.enable_world_events": "Rastgele Dünya Olayları: %s",
   "gui.viltrumitecore.config.core.blood_enabled": "Kan Efektleri: %s",
   "gui.viltrumitecore.config.core.humans_bleed": "İnsanlar Kanasın: %s",
-
   "gui.viltrumitecore.config.flight_camera.title": "Uçuş Kamera Ayarları",
   "gui.viltrumitecore.config.flight_camera.max_roll": "Maksimum Kamera Eğimi (Roll)",
   "gui.viltrumitecore.config.flight_camera.roll_mult": "Kamera Eğimi Çarpanı",
   "gui.viltrumitecore.config.flight_camera.roll_roughness": "Kamera Eğimi Sertliği",
   "gui.viltrumitecore.config.flight_camera.roll_enable": "Kamera Eğimi: %s",
-
   "gui.viltrumitecore.config.flight_client.title": "Uçuş Ayarları (İstemci Taraflı)",
   "gui.viltrumitecore.config.flight_client.fov_mult": "Görüş Alanı (FOV) Çarpanı",
   "gui.viltrumitecore.config.flight_client.smooth_fov": "Yumuşak FOV Geçişi",
@@ -115,61 +115,45 @@
   "gui.viltrumitecore.config.flight_client.fov_effect": "FOV Efekti: %s",
   "gui.viltrumitecore.config.flight_client.wind_sound": "Rüzgar Sesi Döngüsü: %s",
   "gui.viltrumitecore.config.flight_client.sonic_boom_sound": "Sonik Patlama Sesi: %s",
-
   "gui.viltrumitecore.config.flight_server.title": "Uçuş Ayarları (Sunucu Taraflı)",
   "gui.viltrumitecore.config.flight_server.max_speed": "Maksimum Uçuş Hızı (Kendin)",
   "gui.viltrumitecore.config.flight_server.throttle": "İvmelenme Hızı (Kendin)",
   "gui.viltrumitecore.config.flight_server.heat": "Isınma Mekaniği: %s",
   "gui.viltrumitecore.config.flight_server.break_blocks": "Kalkışta Blokları Kır: %s",
-
   "gui.viltrumitecore.config.post_process.title": "Post-Processing Ayarları (İstemci Taraflı)",
   "gui.viltrumitecore.config.post_process.punch_shake": "Yumruk Sarsıntısı Çarpanı",
   "gui.viltrumitecore.config.post_process.punch_effect": "Yumruk Efekti Çarpanı",
   "gui.viltrumitecore.config.post_process.lock_vignette": "Kilitlenme Vinyet Çarpanı",
-
   "gui.viltrumitecore.dashboard.title": "Viltrumite Kontrol Paneli",
   "gui.viltrumitecore.dashboard.abilities": "YETENEKLER",
   "gui.viltrumitecore.dashboard.abilities.tooltip": "Viltrumite güçlerini yönet.",
   "gui.viltrumitecore.dashboard.configuration": "YAPILANDIRMA",
   "gui.viltrumitecore.dashboard.configuration.tooltip": "Mod ayarlarını ve görsellerini düzenle.",
   "gui.viltrumitecore.dashboard.soldier": "VILTRUMITE ASKERİ",
-
   "ability.viltrumitecore.block.name": "<lime>Blok",
   "ability.viltrumitecore.block.desc": "<grey>Bekleme Süresi: <lime>3s\n<grey>Süre: <lime>2s (Maks)\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Önden gelen saldırılara karşı savunmaya geç.\n<grey>Baktığın yönden alınan tüm hasarın\n<lime>%70'ini<grey> emer.\n\n<red>Yakalamaya çalışırken, atılırken, yumruk atarken veya kesme yaparken kullanılamaz.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.grab.name": "<yellow>Yakala ve Taşı",
   "ability.viltrumitecore.grab.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Tam önünde duran canlı bir varlığı boğazından\n<grey>yakala ve havada taşı.\n\n<grey>Hedefi serbest bırakmak için yeteneği tekrar kullan.\n<grey>Eğer hedef sana hasar verirse veya sen ona\n<grey>hasar verirsen tutuşun otomatik olarak bozulur.\n\n<red>Blok yaparken etkinleştirilemez.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.lock.name": "<yellow>Hedefe Kilitlenme",
   "ability.viltrumitecore.lock.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Odak noktanı canlı bir hedefe kilitle ve gözünü\n<grey>ondan ayırmadan her hareketini takip et.\n\n<grey>Hedef çok uzağa giderse veya bir duvarın arkasına geçip\n<grey>görüş alanından çıkarsa kilit otomatik olarak kapanır.\n<grey>Şu anda yakaladığın bir varlığa kilitlenemezsin.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.chop.name": "<yellow>Ölümcül Kesme",
   "ability.viltrumitecore.chop.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <aqua>Bas-Çek\n\n<grey>Düşmanlarını kesmek için kollarını keskin bir bıçak gibi kullan.\n<grey>Bu vuruş anında temel saldırı hasarının <lime>%175'ini<grey> verir.\n\n<grey>Derin yara, hedefi <lime>4 saniye<grey> boyunca kanatır.\n<grey>Zamanla ek olarak <lime>%175<grey> hasar alırlar\n<grey>bu da saniyede <lime>%43.75<grey> hasara eşittir.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.punch.name": "<yellow>Sonik Yumruk",
   "ability.viltrumitecore.punch.desc": "<grey>Bekleme Süresi: <lime>1s\n<grey>Tür: <aqua>Bas-Çek\n\n<grey>Temel saldırı hasarının <lime>%200'ünü<grey> veren güçlü bir yumruk at.\n<grey>Uçarken vurursan bu hasar <lime>%500'e<grey> kadar çıkabilir.\n\n<grey>Yumruğun kuvveti, önündeki devasa bir koni alanındaki\n<grey>blokları anında kıran yıkıcı bir şok dalgası yaratır.\n<grey>Patlamaya yakalanan herhangi bir düşman meteor gibi fırlatılır.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.thunderclap.name": "<yellow>Gök Gürültüsü Çarpması",
   "ability.viltrumitecore.thunderclap.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <aqua>Bas-Çek\n\n<grey>Ellerini yıkıcı bir güçle birbirine çarparak\n<grey>devasa koni şeklinde bir şok dalgası yarat.\n\n<grey>Şok dalgası yeri parçalayarak geçer ve\n<grey>içinde kalan hedefleri havaya fırlatır.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.barrage.name": "<yellow>Yumruk Yağmuru",
   "ability.viltrumitecore.barrage.desc": "<grey>Bekleme Süresi: <lime>4s\n<grey>Süre: <lime>4s (Maks)\n<grey>Tür: <red>Basılı Tut\n\n<grey>Düşmanlarına acımasız ve seri bir yumruk yağmuru\n<grey>başlatmak için tuşa basılı tut.\n\n<red>Blok yaparken kullanılamaz.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.speed_lock.name": "<blue>Hız Kilidi",
   "ability.viltrumitecore.speed_lock.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Seyir uçuşundayken mevcut uçuş hızını\n<grey>kilitlemek için eğilme (sneak) tuşuna bas.\n\n<grey>Bu yeteneği etkinleştirmek için maksimum hızının\n<lime>%20'sinden<grey> daha hızlı uçuyor olmalısın.\n\n<grey>Bu, ek tuşlara basılı tutmana gerek kalmadan\n<grey>sabit bir hızı korumanı sağlar.\n\n<blue>Viltrumite Flight",
-
   "ability.viltrumitecore.fast_takeoff.name": "<blue>Hızlı Kalkış",
   "ability.viltrumitecore.fast_takeoff.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <aqua>Bas-Çek\n\n<grey>Kendini anında gökyüzüne fırlatmak için\n<grey>Eğilme (Sneak) ve Çift Zıplama tuşlarına bas.\n\n<blue>Viltrumite Flight",
-
   "ability.viltrumitecore.supersonic_flight.name": "<blue>Seyir Uçuşu",
   "ability.viltrumitecore.supersonic_flight.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <red>Basılı Tut\n\n<grey>Havada asılıyken hızlı ve yatay bir uçuşa\n<grey>geçmek için koşma (sprint) tuşuna basılı tut.\n\n<grey>Maksimum hızının <lime>%60'ına<grey> ulaştığında,\n<grey>yoluna çıkan blokların içinden uçup geçmeni sağlar.\n<grey>Çok uzun süre uçmak aşırı ısınmana neden olur.\n\n<grey>Eğer <blue>Atılma<grey> yeteneğinden hemen sonra kullanılırsa, anında\n<yellow>Süpersonik Uçuşa<grey> geçersin.\n\n<blue>Viltrumite Flight",
-
   "ability.viltrumitecore.dash.name": "<blue>Atılma",
   "ability.viltrumitecore.dash.desc": "<grey>Bekleme Süresi: <lime>1s\n<grey>Tür: <aqua>Bas-Çek\n\n<grey>Aşırı hızla ileri atıl ve yoluna çıkan\n<grey>blokları ve düşmanları parçalayarak geç.\n\n<blue>Viltrumite Core",
-
   "ability.viltrumitecore.speed.name": "<blue>Süper Hız",
   "ability.viltrumitecore.speed.desc": "<grey>Bekleme Süresi: <lime>-\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Yerdeyken muazzam bir hareket hızı kazan.\n\n<red>Uçarken etkinleştirilemez veya kullanılamaz.\n\n<blue>Viltrumite Core",
-
   "event.viltrumitecore.time.seconds": "%s saniye",
   "event.viltrumitecore.time.minutes": "%s dakika",
   "event.viltrumitecore.conquest.warn": "Conquest %s içinde gelecek...",
@@ -178,5 +162,24 @@
   "event.viltrumitecore.trio.warn": "Bir Viltrumite mangası %s içinde gelecek...",
   "event.viltrumitecore.trio.start": "Lucan, Vidor ve Thula geldi.",
   "event.viltrumitecore.trio.remaining": "%s Viltrumite kaldı.",
-  "event.viltrumitecore.trio.end": "Viltrumite mangası yok edildi."
+  "event.viltrumitecore.trio.end": "Viltrumite mangası yok edildi.",
+  "gui.viltrumitecore.race_selection.become_regulus": "Regulus ol",
+  "ability.viltrumitecore.lions_heart.name": "<gold>Aslanın Kalbi",
+  "ability.viltrumitecore.lions_heart.desc": "<grey>Bekleme: <lime>5sn / 30sn\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Kırılmaz bir aslana dönüş. Kalp atarken hasar\n<grey>almazsın ve yakındaki mermiler donar.\n\n<red>Aşırı ısınma canını yakar.\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.name": "<gold>Enkaz Tekmesi",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>Bekleme: <lime>20sn\n<grey>Tür: <yellow>Atış\n\n<grey>Yere tekme at: önündeki toprak sökülür ve uçan bloklar\n<grey>olarak ileri fırlar, ayrıca saçma gibi parçalar\n<grey>(her biri 2 hasar, hedef başına en fazla 4).\n\n<red>Delilik: <grey>daha büyük krater, 1,5x parça, daha fazla delme.\n\n<blue>Regulus",
+  "ability.viltrumitecore.mania.name": "<gold>Mania",
+  "ability.viltrumitecore.mania.desc": "<grey>Bekleme: <lime>25sn\n<grey>Tür: <yellow>Kanal\n\n<grey>Hedefi 6 saniyeye kadar kendine çek, sonra\n<grey>yerinde dondur.\n\n<blue>Regulus",
+  "ability.viltrumitecore.greeds_embrace.name": "<gold>Açgözlülüğün Kucaklaması",
+  "ability.viltrumitecore.greeds_embrace.desc": "<grey>Bekleme: <lime>35sn\n<grey>Tür: <yellow>Atış\n\n<grey>Kurbanları 4 saniye hapseden bir kubbe çağır;\n<grey>hasarları geri ödenir.\n\n<blue>Regulus",
+  "ability.viltrumitecore.counter.name": "<gold>Karşılık",
+  "ability.viltrumitecore.counter.desc": "<grey>Bekleme: <lime>40sn\n<grey>Tür: <yellow>Atış\n\n<grey>Sadece delilikte. Saldırana (veya baktığın canlıya)\n<grey>cevap ver: aparkatla göğe fırlat, havada arkasında\n<grey>belir ve bir kratere çak.\n\n<blue>Regulus",
+  "item.viltrumitecore.evangelium": "Evangelium",
+  "message.viltrumitecore.counter.no_target": "Cevap verecek kimse yok.",
+  "key.viltrumitecore.assign_heart": "Regulus: Kalp Taşıyıcısını İşaretle",
+  "message.viltrumitecore.lion.overheat": "Aslanın Kalbi aşırı ısınıyor! 3 saniye içinde duracak.",
+  "message.viltrumitecore.lion.heart_lost": "Bir kalp söndü — Aslanın Kalbi süresi kısaldı.",
+  "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus Yumruğu",
+  "ability.viltrumitecore.regulus_punch.desc": "<grey>Bekleme: <lime>1sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Kalplerinle güçlenen Viltrumit yumruğu.\n<grey>Blokları kırar ve düşmanları fırlatır.\n\n<red>Delilik: <grey>1,5x hasar ve önündeki her şeyi\n<grey>kesen donmuş hava bıçağı.\n\n<blue>Regulus",
+  "key.viltrumitecore.regulus_super_jump": "Regulus: Süper Zıplama"
 }

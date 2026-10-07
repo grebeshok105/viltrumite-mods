@@ -24,6 +24,7 @@ public class ViltrumiteCreativeTabs {
                output.accept((ItemLike)ViltrumiteItems.VILTRUMITE_BLOOD_SAMPLE.get());
                output.accept((ItemLike)ViltrumiteItems.HUMAN_BLOOD_SAMPLE.get());
                output.accept((ItemLike)ViltrumiteItems.SCOURGE_CULTURE.get());
+               output.accept((ItemLike)ViltrumiteItems.EVANGELIUM.get());
             })
             .build()
    );

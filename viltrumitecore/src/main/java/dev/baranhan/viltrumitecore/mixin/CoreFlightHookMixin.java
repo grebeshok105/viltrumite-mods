@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.mixin;
 
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Dynamic;
@@ -22,7 +23,8 @@ public abstract class CoreFlightHookMixin {
    @Dynamic("ViltrumiteFlight mod\u00fcl\u00fc taraf\u0131ndan runtime'da eklenecek")
    private void overrideFlightCollision(CallbackInfo ci) {
       Player player = (Player)(Object)this;
-      if (player instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightThrottle() >= 0.6F) {
+      if (FlightPermissions.allowsModFlight(player)
+         && player instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightThrottle() >= 0.6F) {
          ci.cancel();
       }
    }

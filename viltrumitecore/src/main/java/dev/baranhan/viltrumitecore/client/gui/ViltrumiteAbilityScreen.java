@@ -108,6 +108,10 @@ public class ViltrumiteAbilityScreen extends Screen {
             equippedId = "viltrumite:supersonic_flight";
          }
 
+         if (!equippedId.isEmpty() && !dev.baranhan.viltrumitecore.hero.HeroRegistry.get(this.minecraft.player).ownsAbility(equippedId)) {
+            equippedId = "";
+         }
+
          boolean isHovered = this.isPointWithinBounds(slotX - 1, slotY - 1, 18, 18, (double)mouseX, (double)mouseY);
          if (isHovered) {
             guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, -2130706433);
@@ -138,7 +142,12 @@ public class ViltrumiteAbilityScreen extends Screen {
          }
       }
 
-      List<ViltrumiteAbility> allAbilities = new ArrayList<>(ViltrumiteAbilities.REGISTRY.values());
+      List<ViltrumiteAbility> allAbilities = new ArrayList<>();
+      for (ViltrumiteAbility ability : ViltrumiteAbilities.REGISTRY.values()) {
+         if (dev.baranhan.viltrumitecore.hero.HeroRegistry.get(this.minecraft.player).ownsAbility(ability.getId())) {
+            allAbilities.add(ability);
+         }
+      }
 
       for (int i = 0; i < 35; i++) {
          int col = i % 7;
@@ -196,7 +205,12 @@ public class ViltrumiteAbilityScreen extends Screen {
             }
          }
 
-         List<ViltrumiteAbility> allAbilities = new ArrayList<>(ViltrumiteAbilities.REGISTRY.values());
+         List<ViltrumiteAbility> allAbilities = new ArrayList<>();
+         for (ViltrumiteAbility ability : ViltrumiteAbilities.REGISTRY.values()) {
+            if (dev.baranhan.viltrumitecore.hero.HeroRegistry.get(this.minecraft.player).ownsAbility(ability.getId())) {
+               allAbilities.add(ability);
+            }
+         }
 
          for (int i = 0; i < allAbilities.size(); i++) {
             int col = i % 7;

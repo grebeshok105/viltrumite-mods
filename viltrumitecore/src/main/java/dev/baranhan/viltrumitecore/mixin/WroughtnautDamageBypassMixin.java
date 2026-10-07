@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.mixin;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -30,6 +31,14 @@ public abstract class WroughtnautDamageBypassMixin {
       if (amount > 0.0F && attacker instanceof Player && attacker instanceof ViltrumiteCorePlayer corePlayer) {
          LivingEntity me = (LivingEntity)(Object)this;
          if (!corePlayer.isViltrumite()) {
+            return;
+         }
+
+         // Shared control guard first (plan §76): an anchored Wroughtnaut takes
+         // no immediate health write — the hit queues against the deferred cap.
+         HeroDamage.DamageResult result = HeroDamage.route(me, source, amount, HeroDamage.DamageKind.EXTERNAL);
+         if (result != HeroDamage.DamageResult.PASS) {
+            cir.setReturnValue(result == HeroDamage.DamageResult.APPLIED);
             return;
          }
 

@@ -9,6 +9,8 @@ import dev.baranhan.viltrumitecore.network.packet.BarrageHitS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.GrabbedPosSyncS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.MeltedBlocksS2CPacket;
 import dev.baranhan.viltrumitecore.network.packet.PlayerGrabStateSyncS2CPacket;
+import dev.baranhan.viltrumitecore.hero.HeroId;
+import dev.baranhan.viltrumitecore.hero.HeroPlayer;
 import dev.baranhan.viltrumitecore.util.ChopImpactManager;
 import dev.baranhan.viltrumitecore.util.PunchImpactManager;
 import dev.baranhan.viltrumitecore.util.ThunderClapManager;
@@ -59,8 +61,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
    priority = 1200
 )
 public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
-   @Unique
-   private static final EntityDataAccessor<Boolean> IS_VILTRUMITE = SynchedEntityData.defineId(Player.class, EntityDataSerializers.BOOLEAN);
    @Unique
    private static final EntityDataAccessor<Boolean> HAS_CHOSEN_RACE = SynchedEntityData.defineId(Player.class, EntityDataSerializers.BOOLEAN);
    @Unique
@@ -166,7 +166,6 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
    )
    protected void onInitDataTracker(CallbackInfo ci) {
       Player player = (Player)(Object)this;
-      player.getEntityData().define(IS_VILTRUMITE, ViltrumiteCoreConfig.INSTANCE.isViltrumiteByDefault);
       player.getEntityData().define(HAS_CHOSEN_RACE, false);
       player.getEntityData().define(IS_DASHING, false);
       player.getEntityData().define(DASH_TICKS, 0);
@@ -215,12 +214,16 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public boolean isViltrumite() {
-      return (Boolean)((Player)(Object)this).getEntityData().get(IS_VILTRUMITE);
+      return (Object)this instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.VILTRUMITE;
    }
 
    @Override
    public void setViltrumite(boolean isViltrumite) {
-      ((Player)(Object)this).getEntityData().set(IS_VILTRUMITE, isViltrumite);
+      // Legacy adapter: the boolean only ever toggles HUMAN<->VILTRUMITE and
+      // can never convert or clear another hero identity.
+      if ((Object)this instanceof HeroPlayer heroPlayer) {
+         heroPlayer.viltrumitecore$setHeroId(HeroId.legacySet(heroPlayer.getHeroId(), isViltrumite));
+      }
    }
 
    @Override
@@ -236,6 +239,14 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
    @Override
    public boolean isDashing() {
       return this.isViltrumiteLocal() ? this.localIsDashing : (Boolean)((Player)(Object)this).getEntityData().get(IS_DASHING);
+   }
+
+   @Override
+   public void setDashing(boolean dashing) {
+      this.setInternalDashing(dashing);
+      if (!dashing) {
+         this.setInternalDashTicks(0);
+      }
    }
 
    @Override
@@ -990,9 +1001,11 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
                         LivingEntity living = (LivingEntity)entity;
                         if (entity != this.getGrabbedTarget()) {
                            living.hurt(player.damageSources().playerAttack(player), 5.0F + throttle * maxFlightSpeed);
-                           Vec3 pushDir = living.position().subtract(player.position()).normalize();
-                           living.setDeltaMovement(living.getDeltaMovement().add(pushDir.x * 2.0, 0.5, pushDir.z * 2.0));
-                           living.hasImpulse = true;
+                           if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(living, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+                              Vec3 pushDir = living.position().subtract(player.position()).normalize();
+                              living.setDeltaMovement(living.getDeltaMovement().add(pushDir.x * 2.0, 0.5, pushDir.z * 2.0));
+                              living.hasImpulse = true;
+                           }
                         }
                      }
                   }
@@ -1057,6 +1070,17 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
                       if (targetCore.isTryingToGrab()) {
                          targetCore.setTryingToGrab(false);
                       }
+                   }
+
+                   // Control precedence: anchored victims can't be grabbed, and a
+                   // hero policy may refuse the grab outright (Lion's Heart).
+                   if (player.level() instanceof ServerLevel serverLevel
+                      && dev.baranhan.viltrumitecore.hero.control.ControlManager.get(serverLevel).isAnchored(target)) {
+                      continue;
+                   }
+
+                   if (!dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.VILTRUMITE_GRAB)) {
+                      continue;
                    }
 
                   this.setGrabbedTarget(target);
@@ -1145,7 +1169,9 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
                if (brokenBlockCount > 0) {
                   float grindDamage = (float)brokenBlockCount * 1.0F;
-                  currentTarget.hurt(player.damageSources().flyIntoWall(), grindDamage);
+                  // Same fly_into_wall type, but the grabber is the cause so a
+                  // hero victim can arm its Counter on the grind.
+                  currentTarget.hurt(new net.minecraft.world.damagesource.DamageSource(player.damageSources().flyIntoWall().typeHolder(), null, player), grindDamage);
                   if (!currentTarget.isAlive()) {
                      this.releaseTarget();
                   }

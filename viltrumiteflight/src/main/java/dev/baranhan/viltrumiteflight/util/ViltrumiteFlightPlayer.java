@@ -37,6 +37,8 @@ public interface ViltrumiteFlightPlayer {
 
    void stopFlight();
 
+   void resetModFlight();
+
    void handleFlightCollision();
 
    int getFlightTicks();

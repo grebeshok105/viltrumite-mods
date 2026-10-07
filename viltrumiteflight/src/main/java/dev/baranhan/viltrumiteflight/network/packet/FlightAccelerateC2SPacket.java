@@ -1,5 +1,7 @@
 package dev.baranhan.viltrumiteflight.network.packet;
 
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
+import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -26,7 +28,15 @@ public class FlightAccelerateC2SPacket {
       context.enqueueWork(() -> {
          ServerPlayer player = context.getSender();
          if (player != null) {
-            ((ViltrumiteFlightPlayer)player).setFlightAccelerating(this.isAccelerating);
+            if (!FlightPermissions.allowsModFlight(player)) {
+               FlightPermissions.resetModFlight(player);
+               return;
+            }
+
+            ViltrumiteFlightPlayer flightPlayer = (ViltrumiteFlightPlayer)player;
+            if (flightPlayer.getFlightState() != FlightState.NONE) {
+               flightPlayer.setFlightAccelerating(this.isAccelerating);
+            }
          }
       });
       return true;

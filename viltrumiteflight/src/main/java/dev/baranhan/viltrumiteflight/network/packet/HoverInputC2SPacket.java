@@ -1,5 +1,7 @@
 package dev.baranhan.viltrumiteflight.network.packet;
 
+import dev.baranhan.viltrumiteflight.util.FlightPermissions;
+import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -30,9 +32,18 @@ public class HoverInputC2SPacket {
       context.enqueueWork(() -> {
          ServerPlayer player = context.getSender();
          if (player != null) {
+            if (!FlightPermissions.allowsModFlight(player)) {
+               FlightPermissions.resetModFlight(player);
+               return;
+            }
+
             ViltrumiteFlightPlayer omniPlayer = (ViltrumiteFlightPlayer)player;
-            omniPlayer.setHoverForward(this.forward);
-            omniPlayer.setHoverSideways(this.sideways);
+            if (omniPlayer.getFlightState() != FlightState.NONE
+               && Float.isFinite(this.forward) && Float.isFinite(this.sideways)
+               && Math.abs(this.forward) <= 1.0F && Math.abs(this.sideways) <= 1.0F) {
+               omniPlayer.setHoverForward(this.forward);
+               omniPlayer.setHoverSideways(this.sideways);
+            }
          }
       });
       return true;

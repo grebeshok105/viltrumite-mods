@@ -1,11 +1,13 @@
 package dev.baranhan.viltrumitecore.ability;
 
+import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
 public class ViltrumiteAbilities {
    public static final Map<String, ViltrumiteAbility> REGISTRY = new LinkedHashMap<>();
@@ -238,6 +240,81 @@ public class ViltrumiteAbilities {
             }
          )
       );
+      registerRegulusAbility("regulus:lions_heart", "lions_heart", 0, HeroAction.LIONS_HEART);
+      registerRegulusAbility("regulus:debris_kick", "debris_kick", 1, HeroAction.DEBRIS_KICK);
+      registerRegulusAbility("regulus:mania", "mania", 2, HeroAction.MANIA);
+      registerRegulusAbility("regulus:greeds_embrace", "greeds_embrace", 3, HeroAction.GREEDS_EMBRACE);
+      registerRegulusAbility("regulus:counter", "counter", 4, HeroAction.COUNTER);
+      register(
+         new ViltrumiteAbility(
+            "regulus:punch",
+            new ResourceLocation("viltrumitecore", "textures/gui/ability/regulus/punch.png"),
+            "ability.viltrumitecore.regulus_punch.name",
+            "ability.viltrumitecore.regulus_punch.desc",
+            0,
+            ViltrumiteAbilities::regulusPunchGrey
+         )
+      );
+   }
+
+   private static void registerRegulusAbility(String id, String name, int cooldownIndex, HeroAction action) {
+      register(
+         new ViltrumiteAbility(
+            id,
+            new ResourceLocation("viltrumitecore", "textures/gui/ability/regulus/" + name + ".png"),
+            "ability.viltrumitecore." + name + ".name",
+            "ability.viltrumitecore." + name + ".desc",
+            0,
+            player -> regulusSlotGrey(player, cooldownIndex, action)
+         )
+      );
+   }
+
+   /**
+    * Panel grey-out mirrors RegulusHero.actionPermitted for the five ability
+    * slots: while Lion's Heart runs only the heart toggle and the ritual stay
+    * lit, a busy cast, an open Mania channel or a running ritual greys every
+    * slot, Counter exists only inside madness and the ritual cannot re-enter
+    * mid-madness. Resolved effects — the freeze, a standing dome and madness
+    * itself — occupy no slot (spec 1.2.5/13.2).
+    */
+   private static boolean regulusSlotGrey(Player player, int cooldownIndex, HeroAction action) {
+      if (!(player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer)) {
+         return false;
+      }
+
+      dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
+      if (snapshot == null || snapshot.heroId() != dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
+         return false;
+      }
+
+      int[] cooldowns = snapshot.cooldowns();
+      if (cooldownIndex >= 0 && cooldownIndex < cooldowns.length && cooldowns[cooldownIndex] > 0) {
+         return true;
+      }
+
+      if (snapshot.lionActive()) {
+         return action != HeroAction.LIONS_HEART && action != HeroAction.RITUAL;
+      }
+
+      if (snapshot.actionBusy() || snapshot.controlTargetId() >= 0 || snapshot.ritualTicks() >= 0) {
+         return true;
+      }
+
+      if (action == HeroAction.COUNTER) {
+         return !snapshot.madness();
+      }
+
+      return action == HeroAction.RITUAL && snapshot.madness();
+   }
+
+   /** The Regulus fist greys like a free cast, plus the shared punch timers. */
+   private static boolean regulusPunchGrey(Player player) {
+      if (player instanceof ViltrumiteCorePlayer corePlayer && (corePlayer.getPunchTicks() > 0 || corePlayer.getPunchCooldown() > 0)) {
+         return true;
+      }
+
+      return regulusSlotGrey(player, -1, HeroAction.DEBRIS_KICK);
    }
 
    private static void register(ViltrumiteAbility ability) {

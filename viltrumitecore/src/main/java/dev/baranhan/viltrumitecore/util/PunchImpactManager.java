@@ -49,6 +49,13 @@ public class PunchImpactManager {
 
       float finalDamage = damage * 2.0F + punchStr * damage * 3.0F;
       float launchForce = 4.5F + punchStr * 5.5F;
+      // Regulus throws the same fist with his own numbers (hearts, madness).
+      dev.baranhan.viltrumitecore.hero.regulus.RegulusState regulus = dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.stateOf(player);
+      if (regulus != null) {
+         finalDamage = dev.baranhan.viltrumitecore.hero.regulus.RegulusRules.punchDamage(regulus.hearts(), regulus.madnessTicksLeft > 0);
+         launchForce = regulus.madnessTicksLeft > 0 ? 3.2F : 2.4F;
+         dev.baranhan.viltrumitecore.hero.regulus.RegulusAirBlade.onPunch(player, regulus);
+      }
       double scale = 1.0 + (double)punchStr * 1.5;
       double rOut = 9.0 * scale;
       double rBase = 9.0 * scale;
@@ -102,26 +109,29 @@ public class PunchImpactManager {
                   }
                }
 
-               if (successfulBlock) {
-                  Vec3 blockKnockback = direction.scale(1.5).add(0.0, 0.2, 0.0);
-                  livingTarget.setDeltaMovement(blockKnockback);
-                  livingTarget.hasImpulse = true;
-                  if (livingTarget instanceof ServerPlayer serverTarget) {
-                     serverTarget.connection.send(new ClientboundSetEntityMotionPacket(serverTarget));
-                  }
-               } else {
-                  if (isTargetBlocking) {
-                     ((ViltrumiteCorePlayer)livingTarget).setBlocking(false);
-                  }
+               // Hero policy: an active Lion's Heart cannot be knocked back or launched.
+               if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(livingTarget, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+                  if (successfulBlock) {
+                     Vec3 blockKnockback = direction.scale(1.5).add(0.0, 0.2, 0.0);
+                     livingTarget.setDeltaMovement(blockKnockback);
+                     livingTarget.hasImpulse = true;
+                     if (livingTarget instanceof ServerPlayer serverTarget) {
+                        serverTarget.connection.send(new ClientboundSetEntityMotionPacket(serverTarget));
+                     }
+                  } else {
+                     if (isTargetBlocking) {
+                        ((ViltrumiteCorePlayer)livingTarget).setBlocking(false);
+                     }
 
-                  Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
-                  livingTarget.setDeltaMovement(launchVelocity);
-                  livingTarget.hasImpulse = true;
-                  if (livingTarget instanceof ViltrumiteFlightPlayer flightTarget) {
-                     flightTarget.stopFlight();
-                  }
+                     Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
+                     livingTarget.setDeltaMovement(launchVelocity);
+                     livingTarget.hasImpulse = true;
+                     if (livingTarget instanceof ViltrumiteFlightPlayer flightTarget) {
+                        flightTarget.stopFlight();
+                     }
 
-                  LAUNCHED_ENTITIES.put(livingTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+                     LAUNCHED_ENTITIES.put(livingTarget, new PunchImpactManager.MeteorData(launchVelocity, 30, player.getUUID()));
+                  }
                }
             }
          }
@@ -133,14 +143,16 @@ public class PunchImpactManager {
          }
 
          grabbedTarget.hurt(player.damageSources().playerAttack(player), finalDamage);
-         Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
-         grabbedTarget.setDeltaMovement(launchVelocity);
-         grabbedTarget.hasImpulse = true;
-         if (grabbedTarget instanceof ViltrumiteFlightPlayer flightTarget) {
-            flightTarget.stopFlight();
-         }
+         if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(grabbedTarget, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
+            Vec3 launchVelocity = direction.scale((double)launchForce).add(0.0, 0.5, 0.0);
+            grabbedTarget.setDeltaMovement(launchVelocity);
+            grabbedTarget.hasImpulse = true;
+            if (grabbedTarget instanceof ViltrumiteFlightPlayer flightTarget) {
+               flightTarget.stopFlight();
+            }
 
-         LAUNCHED_ENTITIES.put(grabbedTarget, new PunchImpactManager.MeteorData(launchVelocity, 30));
+            LAUNCHED_ENTITIES.put(grabbedTarget, new PunchImpactManager.MeteorData(launchVelocity, 30, player.getUUID()));
+         }
       }
 
       int searchRad = (int)Math.ceil(9.0 * scale);
@@ -253,7 +265,10 @@ public class PunchImpactManager {
                if (hitUnbreakable || (double)blocksBroken > dynamicThreshold) {
                   float explosionPower = (float)Math.max(3.0, speed);
                   world.explode(entity, entity.getX(), entity.getY(), entity.getZ(), explosionPower, ExplosionInteraction.BLOCK);
-                  entity.hurt(world.damageSources().flyIntoWall(), (float)speed * 10.0F);
+                  // Keep the fly_into_wall type but name the launcher as the
+                  // cause so a hero target can arm its Counter on the hit.
+                  Entity launcher = data.attackerId != null ? world.getEntity(data.attackerId) : null;
+                  entity.hurt(new net.minecraft.world.damagesource.DamageSource(world.damageSources().flyIntoWall().typeHolder(), null, launcher), (float)speed * 10.0F);
                   it.remove();
                } else if (blocksBroken > 0) {
                   double brakeForce = 0.85;
@@ -281,10 +296,14 @@ public class PunchImpactManager {
    public static class MeteorData {
       public Vec3 velocity;
       public int ticksLeft;
+      // The launcher: credit for the eventual wall hit (Counter attribution).
+      @javax.annotation.Nullable
+      public final java.util.UUID attackerId;
 
-      public MeteorData(Vec3 velocity, int ticksLeft) {
+      public MeteorData(Vec3 velocity, int ticksLeft, @javax.annotation.Nullable java.util.UUID attackerId) {
          this.velocity = velocity;
          this.ticksLeft = ticksLeft;
+         this.attackerId = attackerId;
       }
    }
 }

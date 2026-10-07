@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.network.packet;
 
+import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -23,7 +24,8 @@ public class ThunderclapC2SPacket {
                && corePlayer.getThunderclapTicks() <= 0
                && corePlayer.getPunchTicks() <= 0
                && corePlayer.getChopTicks() <= 0
-               && !corePlayer.isBlocking()) {
+               && !corePlayer.isBlocking()
+               && !HeroDamage.isAnchored(context.getSender())) {
                corePlayer.setThunderclapTicks(20);
             }
          }
