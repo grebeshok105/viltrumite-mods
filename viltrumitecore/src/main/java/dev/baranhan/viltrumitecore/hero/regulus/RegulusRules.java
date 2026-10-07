@@ -24,15 +24,9 @@ public final class RegulusRules {
    public static final int DEBRIS_ANIM_TICKS = 44;
    public static final int DEBRIS_EVENT_TICK = 14;
    public static final int DEBRIS_RISE_TICK = 11;
-   public static final int DEBRIS_RAYS = 9;
    public static final double DEBRIS_CONE_DEGREES = 35.0;
-   public static final double DEBRIS_RANGE = 16.0;
-   public static final int DEBRIS_BLOCK_QUOTA = 3;
+   public static final double DEBRIS_RANGE = 8.0;
    public static final int DEBRIS_COOLDOWN = 400;
-   // Ray path cell kinds for debrisRayTraversal.
-   public static final int DEBRIS_BLOCK_AIR = 0;
-   public static final int DEBRIS_BLOCK_BREAKABLE = 1;
-   public static final int DEBRIS_BLOCK_UNBREAKABLE = 2;
 
    public static final int MANIA_WINDUP_TICKS = 19;
    public static final double MANIA_TARGET_RANGE = 100.0;
@@ -159,7 +153,7 @@ public final class RegulusRules {
       return forced ? LION_FORCED_COOLDOWN : LION_MANUAL_COOLDOWN;
    }
 
-   /** 7 -> 2 linear falloff between d=4 and d=16, flat 7 inside 4. */
+   /** 7 -> 2 linear falloff between d=4 and d=8, flat 7 inside 4. */
    public static float debrisDamage(double distance, int hearts) {
       float base;
       if (distance <= 4.0) {
@@ -167,56 +161,10 @@ public final class RegulusRules {
       } else if (distance >= DEBRIS_RANGE) {
          base = 2.0F;
       } else {
-         base = 7.0F - 5.0F * (float)(distance - 4.0) / 12.0F;
+         base = 7.0F - 5.0F * (float)(distance - 4.0) / 4.0F;
       }
 
       return base * heartBonus(hearts);
-   }
-
-   /**
-    * Ray fan offsets (spec 7.2): returns DEBRIS_RAYS [yawDeg, pitchDeg] pairs.
-    * Index 0 is the center ray along the view; the other eight sit on the
-    * cone edge at half the cone angle, spaced evenly around it.
-    */
-   public static double[][] debrisRayOffsets() {
-      double[][] offsets = new double[DEBRIS_RAYS][2];
-      double half = DEBRIS_CONE_DEGREES / 2.0;
-      for (int i = 1; i < DEBRIS_RAYS; i++) {
-         double azimuth = Math.toRadians((i - 1) * 360.0 / (DEBRIS_RAYS - 1));
-         offsets[i][0] = half * Math.cos(azimuth);
-         offsets[i][1] = half * Math.sin(azimuth);
-      }
-
-      return offsets;
-   }
-
-   /**
-    * How far a ray travels through an ordered list of solid blocks on its
-    * path. Each breakable cell consumes one of DEBRIS_BLOCK_QUOTA; an
-    * unbreakable cell or the (quota+1)-th solid stops the ray before it.
-    * hitIndex bounds the walk: it is the count of solid cells in front of the
-    * first living target (cells behind the target are not on the path).
-    * Returns the number of leading cells the ray passes — those are the cells
-    * to destroy. The entity is hit iff the return equals hitIndex.
-    */
-   public static int debrisRayTraversal(int[] solidCells, int hitIndex) {
-      int bound = Math.min(solidCells.length, Math.max(0, hitIndex));
-      int broken = 0;
-      for (int i = 0; i < bound; i++) {
-         if (solidCells[i] == DEBRIS_BLOCK_UNBREAKABLE) {
-            return i;
-         }
-
-         if (solidCells[i] == DEBRIS_BLOCK_BREAKABLE) {
-            if (broken >= DEBRIS_BLOCK_QUOTA) {
-               return i;
-            }
-
-            broken++;
-         }
-      }
-
-      return bound;
    }
 
    /** min(45, 15 + 15% maxHP) * (1 + 0.02H) */

@@ -68,10 +68,10 @@ class RegulusRulesTest {
    void debrisDamageFallsLinearlyFromSevenToTwo() {
       assertEquals(7.0F, RegulusRules.debrisDamage(4.0, 0), 1.0E-6);
       assertEquals(7.0F, RegulusRules.debrisDamage(1.0, 0), 1.0E-6);
-      assertEquals(2.0F, RegulusRules.debrisDamage(16.0, 0), 1.0E-6);
-      assertEquals(4.5F, RegulusRules.debrisDamage(10.0, 0), 1.0E-6); // midpoint
+      assertEquals(2.0F, RegulusRules.debrisDamage(8.0, 0), 1.0E-6);
+      assertEquals(4.5F, RegulusRules.debrisDamage(6.0, 0), 1.0E-6); // midpoint
       // hearts scale once
-      assertEquals(4.5F * 1.24F, RegulusRules.debrisDamage(10.0, 12), 1.0E-5);
+      assertEquals(4.5F * 1.24F, RegulusRules.debrisDamage(6.0, 12), 1.0E-5);
    }
 
    @Test

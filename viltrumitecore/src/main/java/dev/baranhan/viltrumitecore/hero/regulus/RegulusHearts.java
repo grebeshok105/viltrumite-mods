@@ -63,10 +63,9 @@ public final class RegulusHearts {
       Vec3 clipped = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getLocation();
       LivingEntity target = null;
       double nearest = eye.distanceTo(clipped);
-      AABB area = player.getBoundingBox().expandTowards(clipped.subtract(eye)).inflate(1.0);
+      AABB area = new AABB(eye, clipped).inflate(1.0);
       for (LivingEntity entity : player.serverLevel().getEntitiesOfClass(LivingEntity.class, area, e -> e != player)) {
-         double distance = entity.getBoundingBox().inflate(0.1).contains(eye) ? 0.0
-            : entity.getBoundingBox().inflate(0.1).clip(eye, clipped).map(eye::distanceTo).orElse(-1.0);
+         double distance = DebrisKick.rayDistance(eye, clipped, entity.getBoundingBox().inflate(0.1));
          if (distance >= 0.0 && distance < nearest) {
             nearest = distance;
             target = entity;

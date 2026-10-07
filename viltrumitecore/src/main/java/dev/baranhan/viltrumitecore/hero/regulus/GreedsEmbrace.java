@@ -18,6 +18,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import javax.annotation.Nullable;
 
 /**
  * Greed's Embrace (spec 9): the point locks at 13 ticks into the cast, the
@@ -31,6 +32,10 @@ public final class GreedsEmbrace {
 
    /** Cast lock: event at 18 (dome appears), pose unlock at 32 (hand lowers). */
    public static void start(ServerPlayer player, RegulusState state) {
+      if (ControlManager.get(player.serverLevel()).hasDomeFrom(player.getUUID())) {
+         feedback(player, "active");
+         return;
+      }
       state.beginAction(RegulusHero.ACTION_EMBRACE, RegulusRules.EMBRACE_RECOVER_TICK + 1, RegulusRules.EMBRACE_APPEAR_TICK, RegulusRules.EMBRACE_RECOVER_TICK);
    }
 
@@ -40,7 +45,12 @@ public final class GreedsEmbrace {
       }
 
       if (shouldLock(state)) {
-         state.actionPoint = lockPoint(player);
+         state.actionPoint = aimPoint(player);
+         if (state.actionPoint == null) {
+            state.clearAction();
+            feedback(player, "no_surface");
+            return;
+         }
       }
 
       if (shouldAppear(state)) {
@@ -58,11 +68,30 @@ public final class GreedsEmbrace {
    }
 
    /** Look-ray point, block-clipped at 40 blocks (spec 9.1). */
-   private static Vec3 lockPoint(ServerPlayer player) {
+   static Vec3 nearAimPoint(Vec3 feet, float yaw) {
+      double angle = Math.toRadians(yaw);
+      return feet.add(-Math.sin(angle) * 12.0, 2.0, Math.cos(angle) * 12.0);
+   }
+
+   @Nullable public static Vec3 aimPoint(Player player) {
       Vec3 eye = player.getEyePosition();
       Vec3 end = eye.add(player.getLookAngle().scale(RegulusRules.EMBRACE_RANGE));
       BlockHitResult hit = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
-      return hit.getType() == HitResult.Type.MISS ? end : hit.getLocation();
+      if (hit.getType() != HitResult.Type.MISS) {
+         return hit.getLocation();
+      }
+      Vec3 probe = nearAimPoint(player.position(), player.getYRot());
+      BlockHitResult ground = player.level().clip(new ClipContext(probe, probe.add(0.0, -24.0, 0.0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+      if (ground.getType() != HitResult.Type.MISS) {
+         return ground.getLocation();
+      }
+      Vec3 near = player.position().lerp(probe.subtract(0.0, 2.0, 0.0), 0.25).add(0.0, 2.0, 0.0);
+      ground = player.level().clip(new ClipContext(near, near.add(0.0, -6.0, 0.0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+      return ground.getType() == HitResult.Type.MISS ? null : ground.getLocation();
+   }
+
+   private static void feedback(ServerPlayer player, String reason) {
+      player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.viltrumitecore.embrace." + reason), true);
    }
 
    /**
@@ -77,12 +106,17 @@ public final class GreedsEmbrace {
          // for free — the event never fires, so no cooldown is charged and the
          // cast simply unwinds (spec 9.2/12).
          state.clearAction();
+         feedback(player, "active");
          return;
       }
 
       state.eventFired = true;
 
-      Vec3 center = state.actionPoint == null ? player.position() : state.actionPoint;
+      Vec3 center = state.actionPoint;
+      if (center == null) {
+         feedback(player, "no_surface");
+         return;
+      }
       long now = level.getGameTime();
       DomeRecord dome = DomeRecord.create(player.getUUID(), level.dimension(), center, RegulusRules.EMBRACE_RADIUS, now, RegulusRules.EMBRACE_DURATION_TICKS, java.util.Set.of());
       manager.addDome(dome);

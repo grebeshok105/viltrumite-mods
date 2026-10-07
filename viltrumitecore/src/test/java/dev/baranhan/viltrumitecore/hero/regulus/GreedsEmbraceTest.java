@@ -8,6 +8,16 @@ import org.junit.jupiter.api.Test;
 
 class GreedsEmbraceTest {
 
+   @Test
+   void skyFallbackProbesNearGroundInFacingDirection() {
+      net.minecraft.world.phys.Vec3 feet = new net.minecraft.world.phys.Vec3(2.0, 64.0, 3.0);
+      assertEquals(new net.minecraft.world.phys.Vec3(2.0, 66.0, 15.0), GreedsEmbrace.nearAimPoint(feet, 0.0F));
+      net.minecraft.world.phys.Vec3 west = GreedsEmbrace.nearAimPoint(feet, 90.0F);
+      assertEquals(-10.0, west.x, 0.00001);
+      assertEquals(66.0, west.y, 0.00001);
+      assertEquals(3.0, west.z, 0.00001);
+   }
+
    private static RegulusState embraceState() {
       RegulusState state = new RegulusState();
       state.beginAction(RegulusHero.ACTION_EMBRACE, RegulusRules.EMBRACE_RECOVER_TICK + 1, RegulusRules.EMBRACE_APPEAR_TICK, RegulusRules.EMBRACE_RECOVER_TICK);
