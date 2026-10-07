@@ -60,6 +60,11 @@ public final class RegulusState {
    public UUID attackerId;
    public long attackerTick = Long.MIN_VALUE;
    public Vec3 attackerLastPos;
+   // Counter sequence: the thrown target, its launch start/apex and the dive.
+   public Vec3 counterLiftStart;
+   public double counterApexY;
+   public UUID counterDiveTargetId;
+   public int counterDiveTicks = -1;
 
    // Evangelium / madness.
    public int ritualTicks = -1;
@@ -195,6 +200,10 @@ public final class RegulusState {
       this.attackerId = null;
       this.attackerTick = Long.MIN_VALUE;
       this.attackerLastPos = null;
+      this.counterLiftStart = null;
+      this.counterApexY = 0.0;
+      this.counterDiveTargetId = null;
+      this.counterDiveTicks = -1;
 
       this.ritualTicks = -1;
       this.madnessTicksLeft = 0;

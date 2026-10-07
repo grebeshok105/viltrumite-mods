@@ -38,9 +38,9 @@ public final class HeroEvents {
    }
 
    /**
-    * Clone (respawn / end-return): restore the SAME hero session — identity,
-    * session id and consumed totem — and copy all 18 ability slots. Restore is
-    * never a new session, so the totem does not refresh on respawn.
+    * Clone (respawn / end-return): restore the SAME hero session — identity
+    * and session id — and copy all 18 ability slots. The hero totem refreshes
+    * on a death respawn (one second life per life), never on an End return.
     */
    @SubscribeEvent
    public static void onPlayerClone(PlayerEvent.Clone event) {
@@ -50,7 +50,10 @@ public final class HeroEvents {
          return;
       }
 
-      HeroRegistry.restoreHero(newPlayer, originalHero.getHeroSession());
+      // Same session across respawns; the hero totem is a second life per
+      // life, so dying refreshes it (a dimension return does not).
+      HeroSession session = originalHero.getHeroSession();
+      HeroRegistry.restoreHero(newPlayer, event.isWasDeath() && session != null ? session.refreshTotem() : session);
       // The hero decides what carries over to the clone (Regulus: cooldowns).
       HeroRegistry.get(newPlayer).cloneHeroState(original, newPlayer);
 
@@ -252,6 +255,11 @@ public final class HeroEvents {
    public static void onLivingFall(LivingFallEvent event) {
       LivingEntity entity = event.getEntity();
       if (entity instanceof Player player && RegulusHero.stateOf(player) != null) {
+         // The only place the real landing distance is still known: vanilla
+         // resets fallDistance on this same tick, before the hero tick runs.
+         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer && !player.level().isClientSide()) {
+            dev.baranhan.viltrumitecore.hero.regulus.RegulusMovement.onLanding(serverPlayer, RegulusHero.stateOf(player), event.getDistance());
+         }
          event.setCanceled(true);
       }
    }

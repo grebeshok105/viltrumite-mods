@@ -76,6 +76,29 @@ processResources {
     }
 }
 
+// Binary assets (sounds, textures) are stored as base64 text under
+// src/main/binassets/<resource path>.b64 and decoded into generated resources.
+def binAssetsSrc = file('src/main/binassets')
+def binAssetsOut = layout.buildDirectory.dir('generated/binassets')
+def decodeBinaryAssets = tasks.register('decodeBinaryAssets') {
+    inputs.dir(binAssetsSrc)
+    outputs.dir(binAssetsOut)
+    doLast {
+        def out = binAssetsOut.get().asFile
+        project.delete(out)
+        out.mkdirs()
+        binAssetsSrc.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+            if (f.name.endsWith('.b64')) {
+                def rel = binAssetsSrc.toPath().relativize(f.toPath()).toString()
+                def target = new File(out, rel.substring(0, rel.length() - 4))
+                target.parentFile.mkdirs()
+                target.bytes = Base64.mimeDecoder.decode(f.getText('US-ASCII').trim())
+            }
+        }
+    }
+}
+sourceSets.main.resources.srcDir(decodeBinaryAssets)
+
 jar {
     manifest {
         attributes([

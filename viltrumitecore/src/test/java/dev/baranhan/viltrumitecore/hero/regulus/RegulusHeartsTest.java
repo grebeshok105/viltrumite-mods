@@ -33,14 +33,14 @@ class RegulusHeartsTest {
 
    @Test
    void carrierEligibilityMatchesSpec() {
-      // Spec 5.1: vanilla namespace, real creature, non-player, non-Enemy, no heartless tag.
+      // Vanilla namespace, real creature, non-player, no heartless tag (hostiles allowed).
       assertTrue(RegulusRules.carrierEligible(true, false, false, false, true));
       // Modded-namespace entities are not carriers.
       assertFalse(RegulusRules.carrierEligible(false, false, false, false, true));
       // Players are never carriers.
       assertFalse(RegulusRules.carrierEligible(true, true, false, false, true));
-      // Hostile entities (Enemy marker) are never carriers.
-      assertFalse(RegulusRules.carrierEligible(true, false, true, false, true));
+      // Hostile mobs can carry hearts too.
+      assertTrue(RegulusRules.carrierEligible(true, false, true, false, true));
       // The heartless tag opts an entity out.
       assertFalse(RegulusRules.carrierEligible(true, false, false, true, true));
       // Every disqualifier alone is enough.

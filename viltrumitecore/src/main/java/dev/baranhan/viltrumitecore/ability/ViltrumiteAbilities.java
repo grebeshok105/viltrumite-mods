@@ -245,6 +245,16 @@ public class ViltrumiteAbilities {
       registerRegulusAbility("regulus:mania", "mania", 2, HeroAction.MANIA);
       registerRegulusAbility("regulus:greeds_embrace", "greeds_embrace", 3, HeroAction.GREEDS_EMBRACE);
       registerRegulusAbility("regulus:counter", "counter", 4, HeroAction.COUNTER);
+      register(
+         new ViltrumiteAbility(
+            "regulus:punch",
+            new ResourceLocation("viltrumitecore", "textures/gui/ability/regulus/punch.png"),
+            "ability.viltrumitecore.regulus_punch.name",
+            "ability.viltrumitecore.regulus_punch.desc",
+            0,
+            ViltrumiteAbilities::regulusPunchGrey
+         )
+      );
    }
 
    private static void registerRegulusAbility(String id, String name, int cooldownIndex, HeroAction action) {
@@ -279,7 +289,7 @@ public class ViltrumiteAbilities {
       }
 
       int[] cooldowns = snapshot.cooldowns();
-      if (cooldownIndex < cooldowns.length && cooldowns[cooldownIndex] > 0) {
+      if (cooldownIndex >= 0 && cooldownIndex < cooldowns.length && cooldowns[cooldownIndex] > 0) {
          return true;
       }
 
@@ -291,11 +301,16 @@ public class ViltrumiteAbilities {
          return true;
       }
 
-      if (action == HeroAction.COUNTER) {
-         return !snapshot.madness() || !snapshot.actionAvailable(action);
+      return action == HeroAction.RITUAL && snapshot.madness();
+   }
+
+   /** The Regulus fist greys like a free cast, plus the shared punch timers. */
+   private static boolean regulusPunchGrey(Player player) {
+      if (player instanceof ViltrumiteCorePlayer corePlayer && (corePlayer.getPunchTicks() > 0 || corePlayer.getPunchCooldown() > 0)) {
+         return true;
       }
 
-      return action == HeroAction.RITUAL && snapshot.madness();
+      return regulusSlotGrey(player, -1, HeroAction.DEBRIS_KICK);
    }
 
    private static void register(ViltrumiteAbility ability) {

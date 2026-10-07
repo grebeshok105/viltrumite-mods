@@ -14,6 +14,8 @@ public final class RegulusAbilities {
    public static final String GREEDS_EMBRACE = "regulus:greeds_embrace";
    public static final String COUNTER = "regulus:counter";
    public static final String EVANGELIUM = "regulus:evangelium";
+   /** The Viltrumite fist on Regulus: runs the shared punch pipeline, not a HeroAction. */
+   public static final String PUNCH = "regulus:punch";
 
    private static final String[] IDS = {LIONS_HEART, DEBRIS_KICK, MANIA, GREEDS_EMBRACE, COUNTER, EVANGELIUM};
    private static final HeroAction[] ACTIONS = {
@@ -24,7 +26,7 @@ public final class RegulusAbilities {
    }
 
    public static String[] slotIds() {
-      return new String[]{LIONS_HEART, DEBRIS_KICK, MANIA, GREEDS_EMBRACE, COUNTER};
+      return new String[]{LIONS_HEART, DEBRIS_KICK, MANIA, GREEDS_EMBRACE, COUNTER, PUNCH};
    }
 
    public static boolean isRegulusAbility(@Nullable String abilityId) {

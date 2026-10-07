@@ -45,7 +45,7 @@ public abstract class SilhouetteRendererMixin<T extends LivingEntity, M extends 
    private void renderSilhouettes(
       T livingEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight, CallbackInfo ci
    ) {
-      this.renderCarrierSilhouette(livingEntity, poseStack, buffer, packedLight);
+      // Carriers are marked by a small beating heart inside the body (RegulusActionVFXManager), not a silhouette.
       if (livingEntity instanceof ViltrumiteCorePlayer corePlayer) {
          boolean isFlying = false;
          if (livingEntity instanceof ViltrumiteFlightPlayer flightPlayer) {

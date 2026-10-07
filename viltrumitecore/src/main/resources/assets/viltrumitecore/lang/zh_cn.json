@@ -1,5 +1,5 @@
 {
-  "message.viltrumitecore.hearts.no_target": "请注视20格内的一只和平生物。",
+  "message.viltrumitecore.hearts.no_target": "看向20格内的一个生物。",
   "message.viltrumitecore.hearts.invalid": "该生物无法承载你的心脏。",
   "message.viltrumitecore.hearts.full": "12颗心脏已全部分配。请先移除一颗。",
   "message.viltrumitecore.hearts.assigned": "心脏已分配。",
@@ -167,16 +167,18 @@
   "ability.viltrumitecore.lions_heart.name": "<gold>狮之心",
   "ability.viltrumitecore.lions_heart.desc": "<grey>冷却: <lime>5秒 / 30秒\n<grey>类型: <yellow>开关\n\n<grey>化身坚不可摧的狮子。心脏跳动期间你免疫\n<grey>伤害与控制,并冻结附近的弹射物。\n\n<red>过热会燃烧自己的生命。\n\n<blue>Regulus",
   "ability.viltrumitecore.debris_kick.name": "<gold>碎石踢",
-  "ability.viltrumitecore.debris_kick.desc": "<grey>冷却: <lime>20秒\n<grey>类型: <yellow>施放\n\n<grey>踢击地面,向前方喷射大量碎片。\n<grey>碎片瞬间飞出,每片造成2点伤害(每个目标最多4片),\n<grey>并击穿路径上的方块。\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>冷却: <lime>20秒\n<grey>类型: <yellow>施放\n\n<grey>踢击地面,像霰弹枪一样向前喷射碎片。\n<grey>碎片瞬间命中,每片造成2点伤害\n<grey>(每个目标最多4片)并击穿方块。\n\n<red>疯狂: <grey>碎片数量1.5倍,穿透更强。\n\n<blue>Regulus",
   "ability.viltrumitecore.mania.name": "<gold>狂热",
   "ability.viltrumitecore.mania.desc": "<grey>冷却: <lime>25秒\n<grey>类型: <yellow>引导\n\n<grey>将目标拉向自己最多6秒,随后将其冻结在原地。\n\n<blue>Regulus",
   "ability.viltrumitecore.greeds_embrace.name": "<gold>贪婪之拥",
   "ability.viltrumitecore.greeds_embrace.desc": "<grey>冷却: <lime>35秒\n<grey>类型: <yellow>施放\n\n<grey>召唤一个将受害者禁锢4秒的穹顶,他们的伤害\n<grey>会在穹顶解除时返还。\n\n<blue>Regulus",
   "ability.viltrumitecore.counter.name": "<gold>反击",
-  "ability.viltrumitecore.counter.desc": "<grey>冷却: <lime>40秒\n<grey>类型: <yellow>施放\n\n<grey>回应最后一个攻击者:将其举起,闪现到身后\n<grey>砸入弹坑。\n\n<blue>Regulus",
+  "ability.viltrumitecore.counter.desc": "<grey>冷却: <lime>40秒\n<grey>类型: <yellow>施放\n\n<grey>回应攻击者(或你注视的生物):\n<grey>一记上勾拳将其打上天空,在空中闪现到其身后,\n<grey>再将其砸入弹坑。\n\n<blue>Regulus",
   "item.viltrumitecore.evangelium": "福音书",
   "message.viltrumitecore.counter.no_target": "无人回应。",
   "key.viltrumitecore.assign_heart": "Regulus:标记心脏携带者",
   "message.viltrumitecore.lion.overheat": "狮之心正在过热!将在3秒后停止。",
-  "message.viltrumitecore.lion.heart_lost": "一颗心脏熄灭了——狮之心的持续窗口缩短。"
+  "message.viltrumitecore.lion.heart_lost": "一颗心脏熄灭了——狮之心的持续窗口缩短。",
+  "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus之拳",
+  "ability.viltrumitecore.regulus_punch.desc": "<grey>冷却: <lime>1秒\n<grey>类型: <aqua>瞬发\n\n<grey>由心脏强化的维尔特鲁姆之拳。\n<grey>击碎方块并击飞敌人。\n\n<red>疯狂: <grey>1.5倍伤害,并释放一道冻结空气之刃,\n<grey>切开前方的一切。\n\n<blue>Regulus"
 }

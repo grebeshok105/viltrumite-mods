@@ -33,5 +33,56 @@
     "sounds": [
       "viltrumitecore:infinity_gun_shoot"
     ]
+  },
+  "regulus_shard_whiz": {
+    "category": "player",
+    "subtitle": "Shard whizzes past",
+    "sounds": [
+      "viltrumitecore:regulus/shard_whiz0",
+      "viltrumitecore:regulus/shard_whiz1",
+      "viltrumitecore:regulus/shard_whiz2"
+    ]
+  },
+  "regulus_impact_heavy": {
+    "category": "player",
+    "subtitle": "Heavy impact",
+    "sounds": [
+      "viltrumitecore:regulus/impact_heavy0",
+      "viltrumitecore:regulus/impact_heavy1",
+      "viltrumitecore:regulus/impact_heavy2"
+    ]
+  },
+  "regulus_kick_crack": {
+    "category": "player",
+    "subtitle": "Ground cracks",
+    "sounds": [
+      "viltrumitecore:regulus/kick_crack0",
+      "viltrumitecore:regulus/kick_crack1",
+      "viltrumitecore:regulus/kick_crack2"
+    ]
+  },
+  "regulus_air_blade": {
+    "category": "player",
+    "subtitle": "Frozen air slices",
+    "sounds": [
+      "viltrumitecore:regulus/air_blade0",
+      "viltrumitecore:regulus/air_blade1"
+    ]
+  },
+  "regulus_punch_hit": {
+    "category": "player",
+    "subtitle": "Regulus punch",
+    "sounds": [
+      "viltrumitecore:regulus/punch_hit0",
+      "viltrumitecore:regulus/punch_hit1",
+      "viltrumitecore:regulus/punch_hit2"
+    ]
+  },
+  "regulus_jump_charge": {
+    "category": "player",
+    "subtitle": "Regulus gathers strength",
+    "sounds": [
+      "viltrumitecore:regulus/jump_charge"
+    ]
   }
 }

@@ -47,7 +47,7 @@ public class ViltrumiteCoreClient {
    public static Vec3 prevHandPos = null;
    public static Vec3 currentHandPos = null;
    public static CameraType preGrabPerspective = null;
-   public static boolean[] regulusKeyDown = new boolean[5];
+   public static boolean[] regulusKeyDown = new boolean[6];
    public static boolean regulusJumpDown = false;
 
    @SubscribeEvent
@@ -251,6 +251,21 @@ public class ViltrumiteCoreClient {
                   if (down != ViltrumiteCoreClient.regulusKeyDown[i]) {
                      ViltrumiteCoreClient.regulusKeyDown[i] = down;
                      CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(action, down));
+                  }
+               }
+
+               // The Viltrumite fist, recoloured for Regulus: same client start
+               // (local punch timer for the animation) and the same packet.
+               while (AbilityInputManager.consumeAbilityKeyPress(client.player, dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.PUNCH)) {
+                  dev.baranhan.viltrumitecore.ability.ViltrumiteAbility punch = dev.baranhan.viltrumitecore.ability.ViltrumiteAbilities.get(dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.PUNCH);
+                  if (client.player instanceof ViltrumiteCorePlayer regulusCore
+                     && (punch == null || !punch.isGrey(client.player))
+                     && regulusCore.getChopTicks() <= 0
+                     && ViltrumiteCoreClient.iAmBeingGrabbedBy == null) {
+                     boolean isLeft = client.level.random.nextBoolean();
+                     regulusCore.setLeftArmPunch(isLeft);
+                     regulusCore.setPunchTicks(20);
+                     CoreMessages.sendToServer(new PunchC2SPacket(isLeft));
                   }
                }
 

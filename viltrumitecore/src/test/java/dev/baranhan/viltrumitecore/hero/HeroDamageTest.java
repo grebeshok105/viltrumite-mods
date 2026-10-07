@@ -64,6 +64,6 @@ class HeroDamageTest {
       assertTrue(HeroDamage.totemEligible(true, false, false), "regulus survives a normal lethal hit");
       assertFalse(HeroDamage.totemEligible(false, false, false), "non-regulus never consumes the hero totem");
       assertFalse(HeroDamage.totemEligible(true, true, false), "void and /kill bypass the totem");
-      assertFalse(HeroDamage.totemEligible(true, false, true), "consumed once per session, never renewed");
+      assertFalse(HeroDamage.totemEligible(true, false, true), "consumed once per life");
    }
 }

@@ -16,6 +16,11 @@ public record HeroSession(HeroId heroId, UUID sessionId, boolean totemConsumed) 
       return new HeroSession(this.heroId, this.sessionId, true);
    }
 
+   /** A new life: same session, the second-life totem is available again. */
+   public HeroSession refreshTotem() {
+      return this.totemConsumed ? new HeroSession(this.heroId, this.sessionId, false) : this;
+   }
+
    public void save(CompoundTag nbt) {
       CompoundTag data = new CompoundTag();
       data.putString("Id", this.heroId.key());

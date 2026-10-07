@@ -45,9 +45,9 @@ class InputPolicyTest {
    }
 
    @Test
-   void counterRequiresMadness() {
-      assertFalse(RegulusHero.actionPermitted(HeroAction.COUNTER, false, false, false, false, false), "no madness = grey slot");
-      assertTrue(RegulusHero.actionPermitted(HeroAction.COUNTER, false, false, false, false, true), "madness unlocks the counter");
+   void counterWorksWithOrWithoutMadness() {
+      assertTrue(RegulusHero.actionPermitted(HeroAction.COUNTER, false, false, false, false, false), "counter is free outside madness");
+      assertTrue(RegulusHero.actionPermitted(HeroAction.COUNTER, false, false, false, false, true));
    }
 
    @Test

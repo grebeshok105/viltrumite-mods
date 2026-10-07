@@ -68,6 +68,7 @@ public class RegulusHudMixin {
       this.renderLionBar(guiGraphics, snapshot, baseX, baseY - 14, partialTick, client);
       this.renderMadnessTimer(guiGraphics, client, snapshot, baseX, baseY - 26);
       this.renderBloodOverlay(guiGraphics, snapshot, width, height, partialTick, client);
+      this.renderJumpCharge(guiGraphics, width, height);
 
       RenderSystem.disableBlend();
    }
@@ -120,22 +121,27 @@ public class RegulusHudMixin {
 
    @Unique
    private void renderBloodOverlay(GuiGraphics guiGraphics, HeroPublicSnapshot snapshot, int width, int height, float partialTick, Minecraft client) {
-      if (!snapshot.madness() || client.level == null) {
+      if (client.level == null) {
          return;
       }
 
       float beatPhase = ((float)(client.level.getGameTime() % RegulusVfxMath.HEARTBEAT_PERIOD_TICKS) + partialTick) / (float)RegulusVfxMath.HEARTBEAT_PERIOD_TICKS;
-      float alpha = 0.30F + 0.45F * RegulusVfxMath.madnessPulse(beatPhase);
-      RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
-      guiGraphics.blit(BLOOD_0, 0, 0, 0.0F, 0.0F, 96, 96, 96, 96);
-      guiGraphics.blit(BLOOD_1, 0, height - 96, 0.0F, 0.0F, 96, 96, 96, 96);
-      // Mirrored corner copies via pose flip (negative blit width is not portable).
-      guiGraphics.pose().pushPose();
-      guiGraphics.pose().translate((float)width, 0.0F, 0.0F);
-      guiGraphics.pose().scale(-1.0F, 1.0F, 1.0F);
-      guiGraphics.blit(BLOOD_0, 0, 0, 0.0F, 0.0F, 96, 96, 96, 96);
-      guiGraphics.blit(BLOOD_1, 0, height - 96, 0.0F, 0.0F, 96, 96, 96, 96);
-      guiGraphics.pose().popPose();
-      RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+      dev.baranhan.viltrumitecore.client.regulus.RegulusBloodRain.render(guiGraphics, width, height, snapshot.madness(), RegulusVfxMath.madnessPulse(beatPhase));
+   }
+
+   @Unique
+   private void renderJumpCharge(GuiGraphics guiGraphics, int width, int height) {
+      float charge = dev.baranhan.viltrumitecore.client.regulus.RegulusJumpClient.chargeFraction();
+      if (charge <= 0.0F) {
+         return;
+      }
+
+      int barWidth = 40;
+      int x = (width - barWidth) / 2;
+      int y = height / 2 + 12;
+      guiGraphics.fill(x - 1, y - 1, x + barWidth + 1, y + 3, 0x90000000);
+      int fill = (int)(barWidth * charge);
+      int color = charge >= 1.0F ? 0xFFFFF2B0 : 0xFFFFD25C;
+      guiGraphics.fill(x, y, x + fill, y + 2, color);
    }
 }

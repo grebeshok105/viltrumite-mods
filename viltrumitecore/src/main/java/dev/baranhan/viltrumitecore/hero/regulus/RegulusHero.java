@@ -141,10 +141,6 @@ public class RegulusHero implements HeroDefinition {
          return false;
       }
 
-      if (action == HeroAction.COUNTER) {
-         return madnessActive;
-      }
-
       if (action == HeroAction.RITUAL) {
          return !madnessActive;
       }
@@ -157,7 +153,11 @@ public class RegulusHero implements HeroDefinition {
       RegulusState state = ensureState(player);
       if (action == HeroAction.JUMP) {
          // An anchored (frozen/stasis) Regulus can never charge a jump.
-         state.jumpHeld = pressed && !HeroDamage.isAnchored(player);
+         boolean held = pressed && !HeroDamage.isAnchored(player);
+         if (!held && state.jumpHeld) {
+            RegulusMovement.onJumpReleased(player, state);
+         }
+         state.jumpHeld = held;
          return;
       }
 
@@ -218,6 +218,35 @@ public class RegulusHero implements HeroDefinition {
       }
    }
 
+   /**
+    * The fist joined the kit after release: an existing loadout with an empty
+    * sixth slot (the old heart key) gets the punch there once.
+    */
+   private static void ensurePunchSlot(ServerPlayer player) {
+      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
+         return;
+      }
+
+      String current = abilityUser.getAbilityInSlot(5);
+      if (current == null || current.isEmpty()) {
+         abilityUser.setAbilityInSlot(5, RegulusAbilities.PUNCH);
+      }
+   }
+
+   /** The fist uses the free-cast policy of a normal ability (no Lion, cast, channel or ritual). */
+   public static boolean canPunch(ServerPlayer player) {
+      RegulusState state = stateOf(player);
+      if (state == null || HeroDamage.isAnchored(player)) {
+         return false;
+      }
+
+      return actionPermitted(HeroAction.DEBRIS_KICK, state.lionActive, state.busy(), state.channelTargetId != null, state.ritualTicks >= 0, state.madnessTicksLeft > 0);
+   }
+
+   public static boolean punchEquipped(ServerPlayer player) {
+      return isEquippedOnActivePage(player, RegulusAbilities.PUNCH);
+   }
+
    private static boolean isEquippedOnActivePage(Player player, String abilityId) {
       if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
          return false;
@@ -245,7 +274,12 @@ public class RegulusHero implements HeroDefinition {
    @Override
    public void tick(ServerPlayer player) {
       RegulusState state = ensureState(player);
-      state.tickCooldowns();
+      // Madness: the authority runs wild — every cooldown runs at double speed.
+      int cooldownRate = state.madnessTicksLeft > 0 ? RegulusRules.MADNESS_COOLDOWN_RATE : 1;
+      for (int i = 0; i < cooldownRate; i++) {
+         state.tickCooldowns();
+      }
+      ensurePunchSlot(player);
       this.tickActionLock(player, state);
       this.tickDamageBookkeeping(player, state);
       // Base passives are transient modifiers — vanilla never serializes them,
@@ -295,7 +329,8 @@ public class RegulusHero implements HeroDefinition {
       }
 
       // A real hit before the action's event cancels the cast for free.
-      if (state.busy() && !state.eventFired) {
+      // The Counter is the answer to a hit: it can never be knocked out of.
+      if (state.busy() && !state.eventFired && !ACTION_COUNTER.equals(state.actionId)) {
          state.clearAction();
       }
    }
@@ -387,7 +422,7 @@ public class RegulusHero implements HeroDefinition {
          controlTargetId,
          cooldowns,
          state.busy(),
-         player instanceof ServerPlayer serverPlayer && Counter.ready(serverPlayer, state) ? -1 : ~(1 << HeroAction.COUNTER.ordinal()),
+         -1,
          state.actionPoint
       );
    }

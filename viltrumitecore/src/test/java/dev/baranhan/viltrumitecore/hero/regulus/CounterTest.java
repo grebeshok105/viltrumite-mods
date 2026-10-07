@@ -10,22 +10,29 @@ import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 /**
- * Spec 10: the Counter press is only legal during madness, arms from the last
- * living attacker record (fresh 240t, in range 40), latches its target and
- * spends the 800t cooldown when the slam lands.
+ * Counter: usable at any time (no madness gate), arms from the last living
+ * attacker record or the gaze target, latches its target and spends the 800t
+ * cooldown when the slam lands.
  */
 class CounterTest {
 
    @Test
-   void pressRequiresActiveMadness() {
+   void pressNoLongerNeedsMadness() {
       RegulusState state = new RegulusState();
       state.attackerId = UUID.randomUUID();
       state.attackerTick = 100L;
 
-      assertFalse(Counter.canActivate(state, true, true, true), "no counter outside madness");
+      assertTrue(Counter.canActivate(state, true, true, true), "counter works outside madness");
+   }
 
-      state.madnessTicksLeft = RegulusRules.MADNESS_TICKS;
-      assertTrue(Counter.canActivate(state, true, true, true));
+   @Test
+   void liftEasesOutFromLaunchToApex() {
+      assertEquals(0.0, Counter.liftProgress(0), 1.0E-9);
+      assertEquals(0.0, Counter.liftProgress(RegulusRules.COUNTER_LAUNCH_TICK), 1.0E-9);
+      assertEquals(1.0, Counter.liftProgress(RegulusRules.COUNTER_LIFT_TICKS), 1.0E-9);
+      assertEquals(1.0, Counter.liftProgress(RegulusRules.COUNTER_LIFT_TICKS + 5), 1.0E-9);
+      int mid = (RegulusRules.COUNTER_LAUNCH_TICK + RegulusRules.COUNTER_LIFT_TICKS) / 2;
+      assertTrue(Counter.liftProgress(mid) > 0.6, "ease-out covers most height early");
    }
 
    @Test
@@ -48,9 +55,9 @@ class CounterTest {
       RegulusState state = new RegulusState();
       UUID attacker = UUID.randomUUID();
       state.attackerId = attacker;
-      state.attackerLastPos = new Vec3(3.0, 64.0, 3.0);
+      Vec3 pos = new Vec3(3.0, 64.0, 3.0);
 
-      Counter.beginCast(state);
+      Counter.beginCast(state, attacker, pos);
 
       int slamTick = RegulusRules.COUNTER_LIFT_TICKS + RegulusRules.COUNTER_SLAM_TICKS;
       assertEquals(RegulusHero.ACTION_COUNTER, state.actionId);
@@ -58,7 +65,8 @@ class CounterTest {
       assertEquals(slamTick, state.actionEventTick, "slam fires 7t after the teleport");
       assertEquals(slamTick, state.actionUnlockTick);
       assertEquals(attacker, state.actionTargetId, "the offender is latched at cast time");
-      assertEquals(state.attackerLastPos, state.actionPoint, "last known position starts at the record");
+      assertEquals(pos, state.actionPoint, "last known position starts at the target");
+      assertEquals(64.0, state.counterApexY, 1.0E-9);
    }
 
    @Test

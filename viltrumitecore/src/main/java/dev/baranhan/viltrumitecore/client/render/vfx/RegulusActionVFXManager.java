@@ -142,35 +142,11 @@ public class RegulusActionVFXManager {
       HeroAction prevAction = HeroAction.byId(prev.actionId);
       int elapsed = snapshot.actionElapsed();
 
-      if (action == HeroAction.DEBRIS_KICK && player == client.player
-         && (prevAction != action || prev.elapsed < RegulusRules.DEBRIS_EVENT_TICK)
-         && elapsed >= RegulusRules.DEBRIS_EVENT_TICK) {
-         float impact = RegulusVfxMath.debrisImpactEnvelope(elapsed);
-         RegulusClientFx.debrisShakeTicks = 10;
-         RegulusClientFx.debrisShakePower = impact * 0.25F;
-      }
-
       if (action == HeroAction.COUNTER) {
          if ((prevAction != action || prev.elapsed < RegulusRules.COUNTER_LIFT_TICKS) && elapsed >= RegulusRules.COUNTER_LIFT_TICKS) {
             FLASHES.add(new FlashVFX(player.position().add(0.0, 1.2, 0.0)));
          }
 
-         int slamTick = RegulusRules.COUNTER_LIFT_TICKS + RegulusRules.COUNTER_SLAM_TICKS;
-         if ((prevAction != action || prev.elapsed < slamTick) && elapsed >= slamTick) {
-            Vec3 impact = snapshot.actionTarget() != null ? snapshot.actionTarget() : player.position();
-            for (int i = 0; i < 10; i++) {
-               double az = Math.PI * 2.0 * (double)i / 10.0;
-               SPARKS.add(new SparkVFX(impact.add(Math.cos(az) * 1.2, 0.1, Math.sin(az) * 1.2), (float)(Math.cos(az) * 0.5), 1.4F, (float)(Math.sin(az) * 0.5)));
-            }
-         }
-      }
-
-      // Landing fragments follow the existing radial knockback.
-      if (prev.fallDistance >= RegulusRules.SHOCKWAVE_MIN_FALL && player.onGround() && !prev.onGround) {
-         for (int i = 0; i < 12; i++) {
-            double az = Math.PI * 2.0 * (double)i / 12.0;
-            SPARKS.add(new SparkVFX(player.position().add(Math.cos(az) * 0.8, 0.1, Math.sin(az) * 0.8), (float)(Math.cos(az) * 0.9), 0.8F + (float)RegulusVfxMath.hashOffset(i, 0), (float)(Math.sin(az) * 0.9)));
-         }
       }
 
       prev.actionId = snapshot.actionId();
@@ -233,6 +209,18 @@ public class RegulusActionVFXManager {
          drawActiveEffects(buffer, cameraPos, camera, partialTick);
 
          tessellator.end();
+
+         // Carrier hearts: a small heart beating inside the creature's body.
+         // Drawn through the creature's own skin (depth off) but only when no
+         // block stands between the camera and the heart.
+         if (ClientHeroData.carriers().length > 0) {
+            RenderSystem.disableDepthTest();
+            RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+            buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            drawCarrierHearts(level, buffer, cameraPos, camera, partialTick);
+            tessellator.end();
+            RenderSystem.enableDepthTest();
+         }
       } finally {
          RenderSystem.depthMask(true);
          RenderSystem.enableCull();
@@ -400,6 +388,53 @@ public class RegulusActionVFXManager {
          int alpha = (int)(240.0F * (1.0F - progress));
          if (alpha > 0) {
             RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, spark.pos, 0.06F, 200, 30, 24, alpha);
+         }
+      }
+   }
+
+   /** 7x6 heart glyph, rows top to bottom, bit 0 = leftmost column. */
+   private static final int[] HEART_ROWS = {0b0110110, 0b1111111, 0b1111111, 0b0111110, 0b0011100, 0b0001000};
+
+   private static void drawCarrierHearts(ClientLevel level, BufferBuilder buffer, Vec3 cameraPos, Camera camera, float partialTick) {
+      float time = (float)(level.getGameTime() % 24000L) + partialTick;
+      float beatPhase = (time % 20.0F) / 20.0F;
+      // Lub-dub: two quick swells per second.
+      float beat = (float)(Math.exp(-Math.pow((beatPhase - 0.08) * 22.0, 2.0)) + 0.6 * Math.exp(-Math.pow((beatPhase - 0.28) * 22.0, 2.0)));
+      org.joml.Vector3f left = camera.getLeftVector();
+      org.joml.Vector3f up = camera.getUpVector();
+      for (int id : ClientHeroData.carriers()) {
+         Entity carrier = level.getEntity(id);
+         if (carrier == null || !carrier.isAlive()) {
+            continue;
+         }
+
+         Vec3 center = carrier.getPosition(partialTick).add(0.0, carrier.getBbHeight() * 0.6, 0.0);
+         if (center.distanceToSqr(cameraPos) > 64.0 * 64.0) {
+            continue;
+         }
+
+         net.minecraft.world.phys.HitResult wall = level.clip(new net.minecraft.world.level.ClipContext(
+            cameraPos, center, net.minecraft.world.level.ClipContext.Block.VISUAL, net.minecraft.world.level.ClipContext.Fluid.NONE, Minecraft.getInstance().player));
+         if (wall.getType() != net.minecraft.world.phys.HitResult.Type.MISS) {
+            continue;
+         }
+
+         float cell = 0.032F * (1.0F + 0.22F * beat);
+         for (int row = 0; row < HEART_ROWS.length; row++) {
+            for (int col = 0; col < 7; col++) {
+               if ((HEART_ROWS[row] >> (6 - col) & 1) == 0) {
+                  continue;
+               }
+
+               float dx = (3.0F - col) * cell * 2.0F;
+               float dy = (2.5F - row) * cell * 2.0F;
+               Vec3 p = center.add(left.x * dx + up.x * dy, left.y * dx + up.y * dy, left.z * dx + up.z * dy);
+               boolean highlight = row == 1 && (col == 1 || col == 2);
+               int r = highlight ? 255 : 205 + (int)(50 * beat);
+               int g = highlight ? 170 : 18;
+               int b = highlight ? 170 : 38;
+               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p, cell, r, g, b, 225);
+            }
          }
       }
    }

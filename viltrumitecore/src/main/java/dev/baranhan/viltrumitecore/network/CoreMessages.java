@@ -187,6 +187,12 @@ public class CoreMessages {
          .encoder(HeroControlS2CPacket::toBytes)
          .consumerMainThread(HeroControlS2CPacket::handle)
          .add();
+
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::encode)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket::handle)
+         .add();
    }
 
    public static <MSG> void sendToServer(MSG message) {
@@ -199,6 +205,10 @@ public class CoreMessages {
 
    public static <MSG> void sendToTracking(MSG message, Entity entity) {
       INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+   }
+
+   public static <MSG> void sendToTrackingAndSelf(MSG message, Entity entity) {
+      INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
    }
 
    public static <MSG> void sendToAll(MSG message) {

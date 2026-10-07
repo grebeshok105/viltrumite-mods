@@ -69,9 +69,14 @@ class DebrisKickTest {
 
    @Test
    void shardsFanAcrossTheConeAndStayForward() {
-      assertEquals(-22.0, DebrisKick.shardYawOffset(0, 14), 1.0E-9);
-      assertEquals(22.0, DebrisKick.shardYawOffset(13, 14), 1.0E-9);
-      assertEquals(0.0, DebrisKick.shardYawOffset(0, 1), 1.0E-9);
+      assertEquals(0.0, RegulusRules.clampedSpread(0.0, RegulusRules.DEBRIS_YAW_SIGMA, 25.0), 1.0E-9);
+      assertEquals(25.0, RegulusRules.clampedSpread(10.0, RegulusRules.DEBRIS_YAW_SIGMA, 25.0), 1.0E-9, "outliers clamp to the cone");
+      assertEquals(-25.0, RegulusRules.clampedSpread(-10.0, RegulusRules.DEBRIS_YAW_SIGMA, 25.0), 1.0E-9);
+      assertEquals(RegulusRules.DEBRIS_MIN_ELEVATION, RegulusRules.shardElevation(-50.0), 1.0E-9);
+      assertEquals(RegulusRules.DEBRIS_MAX_ELEVATION, RegulusRules.shardElevation(50.0), 1.0E-9);
+      assertEquals(20, RegulusRules.debrisShardCount(false));
+      assertEquals(30, RegulusRules.debrisShardCount(true), "madness throws 1.5x shards");
+      assertEquals(RegulusRules.MADNESS_SHARD_PIERCE, RegulusRules.debrisPierce(true));
       // yaw 0 faces +Z in Minecraft; a flat shard goes straight forward.
       Vec3 straight = DebrisKick.shardDirection(0.0F, 0.0F, 0.0, 0.0);
       assertEquals(1.0, straight.z, 1.0E-9);
