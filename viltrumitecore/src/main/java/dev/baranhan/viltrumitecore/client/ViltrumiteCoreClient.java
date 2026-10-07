@@ -48,7 +48,6 @@ public class ViltrumiteCoreClient {
    public static Vec3 currentHandPos = null;
    public static CameraType preGrabPerspective = null;
    public static boolean[] regulusKeyDown = new boolean[6];
-   public static boolean regulusJumpDown = false;
 
    @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
@@ -269,10 +268,11 @@ public class ViltrumiteCoreClient {
                   }
                }
 
-               boolean jumpDown = client.options.keyJump.isDown();
-               if (jumpDown != ViltrumiteCoreClient.regulusJumpDown) {
-                  ViltrumiteCoreClient.regulusJumpDown = jumpDown;
-                  CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(dev.baranhan.viltrumitecore.hero.HeroAction.JUMP, jumpDown));
+               // Super jump: one press of G, instant launch ~20 blocks up.
+               while (AbilityInputManager.superJumpKey.consumeClick()) {
+                  if (dev.baranhan.viltrumitecore.client.regulus.RegulusJumpClient.tryLaunch(client.player)) {
+                     CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(dev.baranhan.viltrumitecore.hero.HeroAction.JUMP, true));
+                  }
                }
             }
 

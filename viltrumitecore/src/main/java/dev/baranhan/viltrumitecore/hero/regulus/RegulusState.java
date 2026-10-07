@@ -76,8 +76,6 @@ public final class RegulusState {
    public int channelTicks;
 
    // Super jump / landing.
-   public boolean jumpHeld;
-   public int jumpCharge;
    public boolean wasOnGround = true;
    public float lastFallDistance;
 
@@ -212,8 +210,6 @@ public final class RegulusState {
       this.channelEffectId = null;
       this.channelTicks = 0;
 
-      this.jumpHeld = false;
-      this.jumpCharge = 0;
       this.wasOnGround = true;
       this.lastFallDistance = 0.0F;
 

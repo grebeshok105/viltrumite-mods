@@ -104,10 +104,9 @@ public final class RegulusRules {
    public static final float BLOOD_PRICE_PER_20_TICKS = 0.6F;
    public static final int EVANGELIUM_COOLDOWN = 1800;
 
-   public static final int JUMP_CHARGE_TICKS = 60;
-   public static final float JUMP_MAX_VELOCITY = 1.32F;
-   /** Holding jump shorter than this is a normal hop, not a charged launch. */
-   public static final int JUMP_MIN_CHARGE_TICKS = 5;
+   /** One press, instant: v0 = 2.0 with vanilla gravity/drag peaks ~20 blocks up. */
+   public static final float SUPER_JUMP_VELOCITY = 2.0F;
+   public static final double SUPER_JUMP_FORWARD = 0.35;
    public static final float SHOCKWAVE_MIN_FALL = 8.0F;
    public static final double SHOCKWAVE_RADIUS = 5.0;
    public static final double SHOCKWAVE_MAX_RADIUS = 12.0;
@@ -363,9 +362,16 @@ public final class RegulusRules {
       return 0.1F * maxHealth;
    }
 
-   public static float jumpVelocity(int chargeTicks) {
-      float charge = Math.min(chargeTicks, JUMP_CHARGE_TICKS) / (float)JUMP_CHARGE_TICKS;
-      return 0.42F + (JUMP_MAX_VELOCITY - 0.42F) * charge;
+   /** Pure: peak height of a launch with vanilla player gravity (0.08) and drag (0.98). */
+   public static double jumpApex(double velocity) {
+      double y = 0.0;
+      double v = velocity;
+      while (v > 0.0) {
+         y += v;
+         v = (v - 0.08) * 0.98;
+      }
+
+      return y;
    }
 
    public static boolean attackerValid(long attackerTick, long nowTick) {

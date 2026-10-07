@@ -156,12 +156,11 @@ public class RegulusHero implements HeroDefinition {
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       RegulusState state = ensureState(player);
       if (action == HeroAction.JUMP) {
-         // An anchored (frozen/stasis) Regulus can never charge a jump.
-         boolean held = pressed && !HeroDamage.isAnchored(player);
-         if (!held && state.jumpHeld) {
-            RegulusMovement.onJumpReleased(player, state);
+         // The client already launched; an anchored Regulus or one grounded by
+         // a Mania channel gets no launch FX.
+         if (pressed && !HeroDamage.isAnchored(player) && state.channelTargetId == null) {
+            RegulusMovement.onSuperJump(player);
          }
-         state.jumpHeld = held;
          return;
       }
 

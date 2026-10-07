@@ -85,8 +85,6 @@ class HeroLifecycleTest {
       state.madnessTicksLeft = 500;
       state.channelTargetId = UUID.randomUUID();
       state.channelTicks = 66;
-      state.jumpHeld = true;
-      state.jumpCharge = 40;
       state.lastFallDistance = 12.5F;
       state.lastSeenHealth = 17.0F;
       state.internalDamage = 3.0F;
@@ -110,8 +108,6 @@ class HeroLifecycleTest {
       assertEquals(0, state.madnessTicksLeft);
       assertNull(state.channelTargetId);
       assertEquals(0, state.channelTicks);
-      assertFalse(state.jumpHeld);
-      assertEquals(0, state.jumpCharge);
       assertTrue(state.wasOnGround);
       assertEquals(0.0F, state.lastFallDistance);
       assertEquals(-1.0F, state.lastSeenHealth);

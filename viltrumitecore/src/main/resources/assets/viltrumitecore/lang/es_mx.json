@@ -180,5 +180,6 @@
   "message.viltrumitecore.lion.overheat": "¡El Corazón de León se está sobrecalentando! Se detendrá en 3 segundos.",
   "message.viltrumitecore.lion.heart_lost": "Un corazón se ha extinguido: la ventana del Corazón de León se acorta.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Puñetazo de Regulus",
-  "ability.viltrumitecore.regulus_punch.desc": "<grey>Reutilización: <lime>1s\n<grey>Tipo: <aqua>Instantáneo\n\n<grey>Un puñetazo viltrumita potenciado por tus corazones.\n<grey>Rompe bloques y lanza enemigos.\n\n<red>Locura: <grey>1,5x daño y una hoja de aire congelado\n<grey>que corta todo lo que hay delante.\n\n<blue>Regulus"
+  "ability.viltrumitecore.regulus_punch.desc": "<grey>Reutilización: <lime>1s\n<grey>Tipo: <aqua>Instantáneo\n\n<grey>Un puñetazo viltrumita potenciado por tus corazones.\n<grey>Rompe bloques y lanza enemigos.\n\n<red>Locura: <grey>1,5x daño y una hoja de aire congelado\n<grey>que corta todo lo que hay delante.\n\n<blue>Regulus",
+  "key.viltrumitecore.regulus_super_jump": "Regulus: Supersalto"
 }

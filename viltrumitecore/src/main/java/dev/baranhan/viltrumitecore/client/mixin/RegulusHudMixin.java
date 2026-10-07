@@ -68,7 +68,6 @@ public class RegulusHudMixin {
       this.renderLionBar(guiGraphics, snapshot, baseX, baseY - 14, partialTick, client);
       this.renderMadnessTimer(guiGraphics, client, snapshot, baseX, baseY - 26);
       this.renderBloodOverlay(guiGraphics, snapshot, width, height, partialTick, client);
-      this.renderJumpCharge(guiGraphics, width, height);
 
       RenderSystem.disableBlend();
    }
@@ -127,21 +126,5 @@ public class RegulusHudMixin {
 
       float beatPhase = ((float)(client.level.getGameTime() % RegulusVfxMath.HEARTBEAT_PERIOD_TICKS) + partialTick) / (float)RegulusVfxMath.HEARTBEAT_PERIOD_TICKS;
       dev.baranhan.viltrumitecore.client.regulus.RegulusBloodRain.render(guiGraphics, width, height, snapshot.madness(), RegulusVfxMath.madnessPulse(beatPhase));
-   }
-
-   @Unique
-   private void renderJumpCharge(GuiGraphics guiGraphics, int width, int height) {
-      float charge = dev.baranhan.viltrumitecore.client.regulus.RegulusJumpClient.chargeFraction();
-      if (charge <= 0.0F) {
-         return;
-      }
-
-      int barWidth = 40;
-      int x = (width - barWidth) / 2;
-      int y = height / 2 + 12;
-      guiGraphics.fill(x - 1, y - 1, x + barWidth + 1, y + 3, 0x90000000);
-      int fill = (int)(barWidth * charge);
-      int color = charge >= 1.0F ? 0xFFFFF2B0 : 0xFFFFD25C;
-      guiGraphics.fill(x, y, x + fill, y + 2, color);
    }
 }

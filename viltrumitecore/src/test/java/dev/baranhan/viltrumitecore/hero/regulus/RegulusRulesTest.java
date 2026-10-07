@@ -132,13 +132,10 @@ class RegulusRulesTest {
    }
 
    @Test
-   void jumpVelocityReachesTenBlocksAtFullCharge() {
-      float full = RegulusRules.jumpVelocity(RegulusRules.JUMP_CHARGE_TICKS);
-      float partial = RegulusRules.jumpVelocity(RegulusRules.JUMP_CHARGE_TICKS / 2);
-      assertTrue(partial > 0.0F && partial < full);
-      // h ~= v^2 / (2*g), g=0.08: v >= 1.26 -> ~10 blocks
-      assertTrue(full >= 1.26F && full <= 1.40F, "full charge should give ~10 blocks: " + full);
-      assertEquals(full, RegulusRules.jumpVelocity(RegulusRules.JUMP_CHARGE_TICKS * 4), 1.0E-6);
+   void superJumpReachesTwentyBlocks() {
+      double apex = RegulusRules.jumpApex(RegulusRules.SUPER_JUMP_VELOCITY);
+      assertTrue(apex >= 19.5 && apex <= 21.5, "super jump should peak ~20 blocks: " + apex);
+      assertEquals(1.25, RegulusRules.jumpApex(0.42), 0.1, "vanilla hop sanity check");
    }
 
    @Test

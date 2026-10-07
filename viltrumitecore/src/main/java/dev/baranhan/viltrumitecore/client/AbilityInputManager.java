@@ -25,6 +25,7 @@ public class AbilityInputManager {
    public static KeyMapping abilitySwapKey;
    /** Regulus: mark/unmark a heart carrier. Default MMB — wins over vanilla pick-block. */
    public static KeyMapping assignHeartKey;
+   public static KeyMapping superJumpKey;
 
    public static void registerKeys(RegisterKeyMappingsEvent event) {
       abilityKey1 = new KeyMapping("key.viltrumitecore.ability_1", 82, "category.viltrumitecore.keys");
@@ -48,6 +49,9 @@ public class AbilityInputManager {
       assignHeartKey = new KeyMapping("key.viltrumitecore.assign_heart", net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
          com.mojang.blaze3d.platform.InputConstants.Type.MOUSE, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE, "category.viltrumitecore.keys");
       event.register(assignHeartKey);
+      superJumpKey = new KeyMapping("key.viltrumitecore.regulus_super_jump", net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
+         com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_G, "category.viltrumitecore.keys");
+      event.register(superJumpKey);
    }
 
    /** True while a Regulus is playing and the heart key shares the given key with another mapping. */

@@ -22,13 +22,11 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Regulus movement: charged super-jump and the landing shockwave.
+ * Regulus movement: instant super jump (G) and the landing shockwave.
  *
  * <p>The jump is client-authoritative like all player movement: the client
- * suppresses the vanilla hop while jump is held on the ground, counts the
- * charge and applies the launch velocity itself on release (see
- * RegulusJumpClient). The server mirrors the charge from the held-key input
- * only for the launch sound/FX.
+ * applies the launch velocity itself on the key press (see RegulusJumpClient);
+ * the server only plays the launch sound/FX.
  *
  * <p>The landing shockwave hangs off LivingFallEvent: that is the one place
  * the real fall distance is still known (vanilla resets fallDistance on the
@@ -39,25 +37,16 @@ public final class RegulusMovement {
    }
 
    public static void tick(Player player, RegulusState state) {
-      // A Mania channel grounds the caster for its duration (spec 8.2).
-      if (state.jumpHeld && state.channelTargetId == null && player.onGround()) {
-         state.jumpCharge = Math.min(state.jumpCharge + 1, RegulusRules.JUMP_CHARGE_TICKS);
-      } else if (!state.jumpHeld && !player.onGround()) {
-         state.jumpCharge = 0;
-      }
-
       state.wasOnGround = player.onGround();
    }
 
-   /** Jump key released: the client already launched; play the launch for everyone. */
-   public static void onJumpReleased(ServerPlayer player, RegulusState state) {
-      int charge = state.jumpCharge;
-      state.jumpCharge = 0;
-      if (charge < RegulusRules.JUMP_MIN_CHARGE_TICKS || !(player.level() instanceof ServerLevel level)) {
+   /** Super-jump key pressed: the client already launched; play the launch for everyone. */
+   public static void onSuperJump(ServerPlayer player) {
+      if (!(player.level() instanceof ServerLevel level)) {
          return;
       }
 
-      float power = charge / (float)RegulusRules.JUMP_CHARGE_TICKS;
+      float power = 1.0F;
       Vec3 feet = player.position();
       BlockState ground = groundUnder(level, player);
       level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, ground), feet.x, feet.y + 0.1, feet.z, 30 + (int)(50 * power), 0.6, 0.05, 0.6, 0.3);
@@ -65,6 +54,7 @@ public final class RegulusMovement {
       level.sendParticles(ParticleTypes.POOF, feet.x, feet.y + 0.1, feet.z, 12, 0.5, 0.05, 0.5, 0.12);
       level.playSound(null, player.blockPosition(), ViltrumiteCore.REGULUS_KICK_CRACK.get(), SoundSource.PLAYERS, 1.2F + power, 0.7F);
       level.playSound(null, player.blockPosition(), SoundEvents.IRON_GOLEM_ATTACK, SoundSource.PLAYERS, 0.8F, 0.8F);
+      level.playSound(null, player.blockPosition(), ViltrumiteCore.REGULUS_JUMP_CHARGE.get(), SoundSource.PLAYERS, 1.0F, 1.4F);
       RegulusFx.send(player, RegulusFxS2CPacket.JUMP_LAUNCH, feet, power, ground, null);
    }
 

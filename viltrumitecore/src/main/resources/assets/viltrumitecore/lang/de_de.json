@@ -180,5 +180,6 @@
   "message.viltrumitecore.lion.overheat": "Das Herz des Löwen überhitzt! Es endet in 3 Sekunden.",
   "message.viltrumitecore.lion.heart_lost": "Ein Herz ist erloschen — das Fenster des Herzens des Löwen wird kürzer.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus-Schlag",
-  "ability.viltrumitecore.regulus_punch.desc": "<grey>Abklingzeit: <lime>1s\n<grey>Typ: <aqua>Sofort\n\n<grey>Ein Viltrumiten-Schlag, verstärkt durch deine Herzen.\n<grey>Zerbricht Blöcke und schleudert Gegner weg.\n\n<red>Wahnsinn: <grey>1,5x Schaden und eine Klinge aus\n<grey>gefrorener Luft, die alles vor dir zerschneidet.\n\n<blue>Regulus"
+  "ability.viltrumitecore.regulus_punch.desc": "<grey>Abklingzeit: <lime>1s\n<grey>Typ: <aqua>Sofort\n\n<grey>Ein Viltrumiten-Schlag, verstärkt durch deine Herzen.\n<grey>Zerbricht Blöcke und schleudert Gegner weg.\n\n<red>Wahnsinn: <grey>1,5x Schaden und eine Klinge aus\n<grey>gefrorener Luft, die alles vor dir zerschneidet.\n\n<blue>Regulus",
+  "key.viltrumitecore.regulus_super_jump": "Regulus: Supersprung"
 }

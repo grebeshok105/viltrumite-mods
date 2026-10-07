@@ -180,5 +180,6 @@
   "message.viltrumitecore.lion.overheat": "Aslanın Kalbi aşırı ısınıyor! 3 saniye içinde duracak.",
   "message.viltrumitecore.lion.heart_lost": "Bir kalp söndü — Aslanın Kalbi süresi kısaldı.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus Yumruğu",
-  "ability.viltrumitecore.regulus_punch.desc": "<grey>Bekleme: <lime>1sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Kalplerinle güçlenen Viltrumit yumruğu.\n<grey>Blokları kırar ve düşmanları fırlatır.\n\n<red>Delilik: <grey>1,5x hasar ve önündeki her şeyi\n<grey>kesen donmuş hava bıçağı.\n\n<blue>Regulus"
+  "ability.viltrumitecore.regulus_punch.desc": "<grey>Bekleme: <lime>1sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Kalplerinle güçlenen Viltrumit yumruğu.\n<grey>Blokları kırar ve düşmanları fırlatır.\n\n<red>Delilik: <grey>1,5x hasar ve önündeki her şeyi\n<grey>kesen donmuş hava bıçağı.\n\n<blue>Regulus",
+  "key.viltrumitecore.regulus_super_jump": "Regulus: Süper Zıplama"
 }
