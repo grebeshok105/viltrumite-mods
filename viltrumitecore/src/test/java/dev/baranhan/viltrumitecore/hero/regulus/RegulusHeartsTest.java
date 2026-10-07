@@ -15,6 +15,23 @@ import org.junit.jupiter.api.Test;
 class RegulusHeartsTest {
 
    @Test
+   void manualToggleRemovesOwnCarrierEvenWhenFull() {
+      RegulusState state = new RegulusState();
+      for (int i = 0; i < 12; i++) {
+         state.carriers.add(UUID.randomUUID());
+      }
+      UUID owned = state.carriers.iterator().next();
+      assertEquals(RegulusHearts.Assignment.FULL, RegulusHearts.toggleCarrier(state, UUID.randomUUID(), true));
+      assertEquals(RegulusHearts.Assignment.REMOVED, RegulusHearts.toggleCarrier(state, owned, true));
+      assertEquals(11, state.hearts());
+      UUID peaceful = UUID.randomUUID();
+      assertEquals(RegulusHearts.Assignment.INVALID, RegulusHearts.toggleCarrier(state, peaceful, false));
+      assertFalse(state.carriers.contains(peaceful));
+      assertEquals(RegulusHearts.Assignment.ASSIGNED, RegulusHearts.toggleCarrier(state, peaceful, true));
+      assertEquals(12, state.hearts());
+   }
+
+   @Test
    void carrierEligibilityMatchesSpec() {
       // Spec 5.1: vanilla namespace, real creature, non-player, non-Enemy, no heartless tag.
       assertTrue(RegulusRules.carrierEligible(true, false, false, false, true));

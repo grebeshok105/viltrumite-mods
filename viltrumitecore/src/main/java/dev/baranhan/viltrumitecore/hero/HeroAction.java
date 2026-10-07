@@ -11,7 +11,8 @@ public enum HeroAction {
    GREEDS_EMBRACE,
    COUNTER,
    JUMP,
-   RITUAL;
+   RITUAL,
+   ASSIGN_HEART;
 
    public static HeroAction byId(int ordinal) {
       HeroAction[] values = values();

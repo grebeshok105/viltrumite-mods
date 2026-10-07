@@ -66,7 +66,7 @@ public class EvangeliumItem extends Item {
    @Override
    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
       if (entity instanceof ServerPlayer serverPlayer) {
-         Evangelium.completeRitual(serverPlayer);
+         Evangelium.finishBookUse(serverPlayer);
       }
 
       return stack;

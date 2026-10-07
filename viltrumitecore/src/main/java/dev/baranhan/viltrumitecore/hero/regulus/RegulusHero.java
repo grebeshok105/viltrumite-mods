@@ -169,6 +169,14 @@ public class RegulusHero implements HeroDefinition {
    }
 
    private void tryStart(ServerPlayer player, RegulusState state, HeroAction action) {
+      if (action == HeroAction.ASSIGN_HEART) {
+         if (player.isAlive() && this.canAct(player, action)) {
+            RegulusHearts.assignLookedAt(player, state);
+         } else {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.viltrumitecore.hearts.locked"), true);
+         }
+         return;
+      }
       if (!this.canAct(player, action)) {
          return;
       }
@@ -277,16 +285,12 @@ public class RegulusHero implements HeroDefinition {
          return;
       }
 
-      float hit = state.maxHitLoss;
       state.maxHitLoss = 0.0F;
       float lost = RegulusRules.externalHealthLoss(state.lastSeenHealth, health, state.internalDamage);
       state.lastSeenHealth = health;
       state.internalDamage = 0.0F;
 
-      // Spec 11.1 is per hit (за один удар): two stacked sub-4 HP hits must not
-      // interrupt, and same-tick healing must not mask a qualifying hit.
-      if (state.ritualTicks >= 0 && RegulusRules.ritualDamageInterrupts(hit, state.lionActive)) {
-         Evangelium.interrupt(player, state);
+      if (state.ritualTicks >= 0 && !RegulusRules.ritualDamageInterrupts(lost, state.lionActive)) {
          return;
       }
 
@@ -386,7 +390,9 @@ public class RegulusHero implements HeroDefinition {
          state.ritualTicks,
          controlTargetId,
          cooldowns,
-         state.busy()
+         state.busy(),
+         player instanceof ServerPlayer serverPlayer && Counter.ready(serverPlayer, state) ? -1 : ~(1 << HeroAction.COUNTER.ordinal()),
+         state.actionPoint
       );
    }
 

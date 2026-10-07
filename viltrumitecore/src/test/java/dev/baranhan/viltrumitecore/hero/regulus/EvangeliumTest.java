@@ -17,6 +17,15 @@ import org.junit.jupiter.api.Test;
 class EvangeliumTest {
 
    @Test
+   void incompleteRitualCannotGrantMadness() {
+      RegulusState state = new RegulusState();
+      state.ritualTicks = 59;
+      assertFalse(Evangelium.beginMadnessState(state));
+      assertEquals(0, state.madnessTicksLeft);
+      assertEquals(59, state.ritualTicks);
+   }
+
+   @Test
    void ritualOccupiesSixtyTicks() {
       RegulusState state = new RegulusState();
       state.ritualTicks = RegulusRules.RITUAL_TICKS - 1;
@@ -39,7 +48,7 @@ class EvangeliumTest {
       assertFalse(Evangelium.canBegin(state), "a running cooldown blocks re-entry");
       state.cooldowns.clear();
 
-      state.ritualTicks = 0;
+      state.ritualTicks = RegulusRules.RITUAL_TICKS;
       assertFalse(Evangelium.canBegin(state), "ritual already running");
       state.ritualTicks = -1;
 
@@ -55,23 +64,21 @@ class EvangeliumTest {
    }
 
    @Test
-   void movementBeyondToleranceInterrupts() {
-      Vec3 start = new Vec3(0.0, 64.0, 0.0);
-      assertFalse(Evangelium.ritualMovedTooFar(start, new Vec3(0.1, 64.0, 0.1)), "fractional drift is tolerated");
-      assertTrue(Evangelium.ritualMovedTooFar(start, new Vec3(0.5, 64.0, 0.0)), "walking away cancels");
-      assertTrue(Evangelium.ritualMovedTooFar(start, new Vec3(0.0, 63.4, 0.0)), "falling cancels");
-      assertTrue(Evangelium.ritualMovedTooFar(null, new Vec3(0.0, 64.0, 0.0)), "a missing start point counts as moved");
+   void onlyReleaseCancelsBeforeCompletion() {
+      RegulusState state = new RegulusState();
+      state.ritualTicks = 59;
+      assertTrue(Evangelium.interruptState(state));
+      assertFalse(Evangelium.beginMadnessState(state));
+      assertEquals(0, state.madnessTicksLeft);
    }
 
    @Test
    void interruptChargedFourHundredSampledAtInterrupt() {
       RegulusState state = new RegulusState();
       state.ritualTicks = 20;
-      state.ritualStartPos = new Vec3(1.0, 2.0, 3.0);
 
       assertTrue(Evangelium.interruptState(state));
       assertEquals(-1, state.ritualTicks);
-      assertNull(state.ritualStartPos);
       assertEquals(RegulusRules.RITUAL_CANCEL_COOLDOWN, state.cooldownOf(RegulusAbilities.EVANGELIUM));
 
       state.cooldowns.clear();
@@ -99,12 +106,10 @@ class EvangeliumTest {
    void completionGrantsNineHundredMadnessTicks() {
       RegulusState state = new RegulusState();
       state.ritualTicks = RegulusRules.RITUAL_TICKS;
-      state.ritualStartPos = new Vec3(0.0, 0.0, 0.0);
 
       assertTrue(Evangelium.beginMadnessState(state));
       assertEquals(RegulusRules.MADNESS_TICKS, state.madnessTicksLeft);
       assertEquals(-1, state.ritualTicks);
-      assertNull(state.ritualStartPos);
       assertFalse(Evangelium.beginMadnessState(state), "idempotent once the ritual is over");
    }
 
@@ -147,9 +152,9 @@ class EvangeliumTest {
    }
 
    @Test
-   void damageInterruptsOnlyOutsideLion() {
+   void damageNeverInterruptsHeldBook() {
       assertFalse(RegulusRules.ritualDamageInterrupts(0.5F, false), "chip damage below 4 never interrupts");
-      assertTrue(RegulusRules.ritualDamageInterrupts(RegulusRules.RITUAL_INTERRUPT_DAMAGE, false), "a 4-HP hit interrupts");
+      assertFalse(RegulusRules.ritualDamageInterrupts(50.0F, false), "damage does not release RMB");
       assertFalse(RegulusRules.ritualDamageInterrupts(50.0F, true), "inside Lion blocked hits cannot interrupt (§16)");
    }
 }

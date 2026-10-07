@@ -23,17 +23,72 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * Carrier hearts (spec 5): every 20 ticks scan for up to 12 valid living
- * carriers in a 20-block sphere. Hearts persist once bound, even past the
+ * Carrier hearts: manual server-resolved gaze assignment, up to 12 within
+ * 20 blocks. Hearts persist once bound, even past the
  * radius. A dead carrier burns its heart (10% max-HP internal backlash plus
  * Weakness I 60t); an unloaded/despawned one drops it silently. The carrier
  * set is owner-private; only the count is public.
  */
 public final class RegulusHearts {
    private RegulusHearts() {
+   }
+
+   enum Assignment {
+      ASSIGNED, REMOVED, FULL, INVALID
+   }
+
+   static Assignment toggleCarrier(RegulusState state, UUID carrierId, boolean valid) {
+      if (!valid) {
+         return Assignment.INVALID;
+      }
+      if (dropCarrier(state, carrierId)) {
+         return Assignment.REMOVED;
+      }
+      if (state.hearts() >= RegulusRules.MAX_HEARTS) {
+         return Assignment.FULL;
+      }
+      state.carriers.add(carrierId);
+      return Assignment.ASSIGNED;
+   }
+
+   public static void assignLookedAt(ServerPlayer player, RegulusState state) {
+      Vec3 eye = player.getEyePosition();
+      Vec3 end = eye.add(player.getLookAngle().scale(RegulusRules.HEART_SCAN_RADIUS));
+      Vec3 clipped = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getLocation();
+      LivingEntity target = null;
+      double nearest = eye.distanceTo(clipped);
+      AABB area = player.getBoundingBox().expandTowards(clipped.subtract(eye)).inflate(1.0);
+      for (LivingEntity entity : player.serverLevel().getEntitiesOfClass(LivingEntity.class, area, e -> e != player)) {
+         double distance = entity.getBoundingBox().inflate(0.1).contains(eye) ? 0.0
+            : entity.getBoundingBox().inflate(0.1).clip(eye, clipped).map(eye::distanceTo).orElse(-1.0);
+         if (distance >= 0.0 && distance < nearest) {
+            nearest = distance;
+            target = entity;
+         }
+      }
+      if (target == null) {
+         feedback(player, "no_target");
+         return;
+      }
+      boolean valid = target.level() == player.level() && isValidCarrier(target, player)
+         && target.distanceToSqr(player) <= RegulusRules.HEART_SCAN_RADIUS * RegulusRules.HEART_SCAN_RADIUS
+         && player.hasLineOfSight(target);
+      Assignment result = toggleCarrier(state, target.getUUID(), valid);
+      if (result == Assignment.ASSIGNED) {
+         bindCarrierLevels(state, List.of(target.getUUID()), player.level().dimension().location());
+      }
+      feedback(player, result.name().toLowerCase(java.util.Locale.ROOT));
+      pushSnapshotIfChanged(player, state);
+   }
+
+   private static void feedback(ServerPlayer player, String result) {
+      player.displayClientMessage(Component.translatable("message.viltrumitecore.hearts." + result), true);
    }
 
    /** How a bound carrier reads when looked up in its own dimension (spec 5.3). */
@@ -127,7 +182,6 @@ public final class RegulusHearts {
       if (now >= state.nextCarrierScan) {
          state.nextCarrierScan = now + RegulusRules.HEART_SCAN_PERIOD;
          pruneGoneCarriers(player, state);
-         scanForCarriers(player, state, level);
       }
 
       pushSnapshotIfChanged(player, state);
@@ -157,25 +211,6 @@ public final class RegulusHearts {
       for (UUID carrierId : dead) {
          onCarrierDeath(player, state, carrierId);
       }
-   }
-
-   private static void scanForCarriers(ServerPlayer player, RegulusState state, ServerLevel level) {
-      if (state.carriers.size() >= RegulusRules.MAX_HEARTS) {
-         return;
-      }
-
-      double radius = RegulusRules.HEART_SCAN_RADIUS;
-      AABB area = player.getBoundingBox().inflate(radius);
-      List<UUID> candidates = new ArrayList<>();
-      for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {
-         if (entity.distanceToSqr(player) <= radius * radius && isValidCarrier(entity, player)) {
-            candidates.add(entity.getUUID());
-         }
-      }
-
-      // Only actually-bound carriers record a dimension binding; over-cap
-      // candidates never join the set and must not leave stale entries.
-      bindCarrierLevels(state, addCarriers(state.carriers, candidates, RegulusRules.MAX_HEARTS), level.dimension().location());
    }
 
    private static void pushSnapshotIfChanged(ServerPlayer player, RegulusState state) {

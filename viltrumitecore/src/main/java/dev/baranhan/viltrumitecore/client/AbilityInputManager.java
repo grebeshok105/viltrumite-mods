@@ -23,6 +23,7 @@ public class AbilityInputManager {
    public static KeyMapping abilityMenuKey;
    public static KeyMapping dashboardKey;
    public static KeyMapping abilitySwapKey;
+   public static KeyMapping assignHeartKey;
 
    public static void registerKeys(RegisterKeyMappingsEvent event) {
       abilityKey1 = new KeyMapping("key.viltrumitecore.ability_1", 82, "category.viltrumitecore.keys");
@@ -43,9 +44,19 @@ public class AbilityInputManager {
       event.register(abilityMenuKey);
       event.register(dashboardKey);
       event.register(abilitySwapKey);
+      assignHeartKey = new KeyMapping("key.viltrumitecore.assign_heart", net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
+         com.mojang.blaze3d.platform.InputConstants.Type.MOUSE, 2, "category.viltrumitecore.keys");
+      event.register(assignHeartKey);
    }
 
    public static void tick(Minecraft client) {
+      while (assignHeartKey.consumeClick()) {
+         if (client.screen == null && client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+            && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
+            CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(
+               dev.baranhan.viltrumitecore.hero.HeroAction.ASSIGN_HEART, true));
+         }
+      }
       while (abilitySwapKey.consumeClick()) {
          Player player = client.player;
          if (player == null || !dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).allowsAbilityPages(player)) {

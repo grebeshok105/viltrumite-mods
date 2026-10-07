@@ -261,9 +261,9 @@ public final class RegulusRules {
       return nowTick - attackerTick <= COUNTER_ATTACKER_WINDOW;
    }
 
-   /** §11.1/§16: outside Lion a single lost hit of >=4 HP interrupts; inside Lion only movement/release cancel. */
+   /** The held-book rework does not interrupt Evangelium on external damage. */
    public static boolean ritualDamageInterrupts(float lostHealth, boolean lionActive) {
-      return !lionActive && lostHealth >= RITUAL_INTERRUPT_DAMAGE;
+      return false;
    }
 
    /**

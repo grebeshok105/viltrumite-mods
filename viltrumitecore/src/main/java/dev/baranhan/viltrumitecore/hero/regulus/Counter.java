@@ -64,17 +64,20 @@ public final class Counter {
          return;
       }
 
+      if (!ready(player, state)) {
+         player.displayClientMessage(Component.translatable("message.viltrumitecore.counter.no_target"), true);
+         return;
+      }
+      beginCast(state);
+   }
+
+   public static boolean ready(ServerPlayer player, RegulusState state) {
       ServerLevel level = player.serverLevel();
       LivingEntity attacker = resolveTarget(level, state.attackerId);
       boolean fresh = state.attackerId != null && RegulusRules.attackerValid(state.attackerTick, level.getGameTime());
       boolean alive = attacker != null && attacker.isAlive();
       boolean inRange = alive && attacker.distanceToSqr(player) <= RegulusRules.COUNTER_RANGE * RegulusRules.COUNTER_RANGE;
-      if (!canActivate(state, fresh, alive, inRange)) {
-         player.displayClientMessage(Component.translatable("message.viltrumitecore.counter.no_target"), true);
-         return;
-      }
-
-      beginCast(state);
+      return canActivate(state, fresh, alive, inRange);
    }
 
    public static void tick(ServerPlayer player, RegulusState state) {

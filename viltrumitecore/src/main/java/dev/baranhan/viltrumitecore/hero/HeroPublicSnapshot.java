@@ -1,6 +1,9 @@
 package dev.baranhan.viltrumitecore.hero;
 
 import java.util.Arrays;
+import java.util.Objects;
+import javax.annotation.Nullable;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Immutable server-produced public hero snapshot. Serialized into one packed
@@ -22,12 +25,25 @@ public record HeroPublicSnapshot(
    int ritualTicks,
    int controlTargetId,
    int[] cooldowns,
-   boolean actionBusy
+   boolean actionBusy,
+   int availableActions,
+   @Nullable Vec3 actionTarget
 ) {
    public static final int COOLDOWN_COUNT = 6;
    public static final HeroPublicSnapshot EMPTY = new HeroPublicSnapshot(
       HeroId.HUMAN, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1, new int[COOLDOWN_COUNT], false
    );
+
+   public HeroPublicSnapshot(HeroId heroId, int actionId, int actionElapsed, int actionLength, int hearts,
+      boolean lionActive, int lionWindowLeft, int lionWindowMax, boolean lionOverheat, boolean madness,
+      int madnessTicksLeft, int ritualTicks, int controlTargetId, int[] cooldowns, boolean actionBusy) {
+      this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
+         lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy, -1, null);
+   }
+
+   public boolean actionAvailable(HeroAction action) {
+      return (this.availableActions & (1 << action.ordinal())) != 0;
+   }
 
    public String encode() {
       StringBuilder builder = new StringBuilder(96);
@@ -50,6 +66,10 @@ public record HeroPublicSnapshot(
       }
 
       builder.append(';').append(this.actionBusy ? 1 : 0);
+      builder.append(';').append(this.availableActions);
+      if (this.actionTarget != null) {
+         builder.append(';').append(this.actionTarget.x).append(';').append(this.actionTarget.y).append(';').append(this.actionTarget.z);
+      }
       return builder.toString();
    }
 
@@ -72,6 +92,10 @@ public record HeroPublicSnapshot(
             cooldowns[i] = index < parts.length ? Integer.parseInt(parts[index]) : 0;
          }
 
+         Vec3 target = parts.length >= 24 ? new Vec3(Double.parseDouble(parts[21]), Double.parseDouble(parts[22]), Double.parseDouble(parts[23])) : null;
+         if (target != null && (!Double.isFinite(target.x) || !Double.isFinite(target.y) || !Double.isFinite(target.z))) {
+            return EMPTY;
+         }
          return new HeroPublicSnapshot(
             heroId,
             Integer.parseInt(parts[1]),
@@ -87,7 +111,9 @@ public record HeroPublicSnapshot(
             Integer.parseInt(parts[11]),
             Integer.parseInt(parts[12]),
             cooldowns,
-            parts.length > 19 && "1".equals(parts[19])
+            parts.length > 19 && "1".equals(parts[19]),
+            parts.length > 20 ? Integer.parseInt(parts[20]) : -1,
+            target
          );
       } catch (NumberFormatException exception) {
          return EMPTY;
@@ -115,7 +141,9 @@ public record HeroPublicSnapshot(
             && this.ritualTicks == snapshot.ritualTicks
             && this.controlTargetId == snapshot.controlTargetId
             && Arrays.equals(this.cooldowns, snapshot.cooldowns)
-            && this.actionBusy == snapshot.actionBusy;
+            && this.actionBusy == snapshot.actionBusy
+            && this.availableActions == snapshot.availableActions
+            && Objects.equals(this.actionTarget, snapshot.actionTarget);
       }
    }
 
@@ -136,6 +164,8 @@ public record HeroPublicSnapshot(
       result = 31 * result + this.controlTargetId;
       result = 31 * result + Arrays.hashCode(this.cooldowns);
       result = 31 * result + Boolean.hashCode(this.actionBusy);
+      result = 31 * result + this.availableActions;
+      result = 31 * result + Objects.hashCode(this.actionTarget);
       return result;
    }
 }

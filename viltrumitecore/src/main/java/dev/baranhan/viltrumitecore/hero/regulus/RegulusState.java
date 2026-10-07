@@ -64,7 +64,6 @@ public final class RegulusState {
    // Evangelium / madness.
    public int ritualTicks = -1;
    public int madnessTicksLeft;
-   public Vec3 ritualStartPos;
 
    // Mania channel.
    public UUID channelTargetId;
@@ -202,7 +201,6 @@ public final class RegulusState {
 
       this.ritualTicks = -1;
       this.madnessTicksLeft = 0;
-      this.ritualStartPos = null;
 
       this.channelTargetId = null;
       this.channelEffectId = null;

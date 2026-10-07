@@ -82,7 +82,6 @@ class HeroLifecycleTest {
       state.attackerTick = 50L;
       state.attackerLastPos = new Vec3(2.0, 64.0, 2.0);
       state.ritualTicks = 40;
-      state.ritualStartPos = new Vec3(3.0, 64.0, 3.0);
       state.madnessTicksLeft = 500;
       state.channelTargetId = UUID.randomUUID();
       state.channelTicks = 66;
@@ -108,7 +107,6 @@ class HeroLifecycleTest {
       assertEquals(Long.MIN_VALUE, state.attackerTick);
       assertNull(state.attackerLastPos);
       assertEquals(-1, state.ritualTicks);
-      assertNull(state.ritualStartPos);
       assertEquals(0, state.madnessTicksLeft);
       assertNull(state.channelTargetId);
       assertEquals(0, state.channelTicks);

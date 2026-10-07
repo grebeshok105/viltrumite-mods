@@ -3,7 +3,6 @@ package dev.baranhan.viltrumitecore.hero.regulus;
 import dev.baranhan.viltrumitecore.hero.CleanupReason;
 import dev.baranhan.viltrumitecore.hero.HeroDamage;
 import dev.baranhan.viltrumitecore.item.ViltrumiteItems;
-import javax.annotation.Nullable;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -13,19 +12,15 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * Evangelium (spec §11/§16): the bound ritual book — granted on hero entry and
  * on respawn when missing, never dropped or thrown. Holding it channels a 60t
- * ritual under Slowness II; a hit of 4+ HP (outside Lion), movement or an early
- * release interrupts into the 400t cooldown. Completion grants 900t of madness
+ * ritual under Slowness II; only an early book release interrupts into the
+ * 400t cooldown. Completion grants 900t of madness
  * paid 0.6 HP per second, and the 1800t book cooldown starts when madness ENDS.
  */
 public final class Evangelium {
-   /** Movement tolerance during the ritual: ~0.2 blocks. */
-   private static final double RITUAL_MOVE_TOLERANCE_SQR = 0.04;
-
    private Evangelium() {
    }
 
@@ -64,7 +59,6 @@ public final class Evangelium {
       }
 
       state.ritualTicks = 0;
-      state.ritualStartPos = player.position();
       player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5, 1, true, false, true));
       player.level().playSound(null, player.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0F, 1.0F);
       return true;
@@ -84,10 +78,6 @@ public final class Evangelium {
          && state.channelTargetId == null;
    }
 
-   static boolean ritualMovedTooFar(@Nullable Vec3 start, Vec3 now) {
-      return start == null || now.distanceToSqr(start) > RITUAL_MOVE_TOLERANCE_SQR;
-   }
-
    static boolean ritualFinished(RegulusState state) {
       return state.ritualTicks >= RegulusRules.RITUAL_TICKS;
    }
@@ -104,19 +94,17 @@ public final class Evangelium {
       }
 
       state.ritualTicks = -1;
-      state.ritualStartPos = null;
       state.startCooldown(RegulusAbilities.EVANGELIUM, RegulusRules.RITUAL_CANCEL_COOLDOWN);
       return true;
    }
 
    /** Pure completion: the ritual ends and 900t of madness begins. */
    static boolean beginMadnessState(RegulusState state) {
-      if (state.ritualTicks < 0) {
+      if (!ritualFinished(state)) {
          return false;
       }
 
       state.ritualTicks = -1;
-      state.ritualStartPos = null;
       state.madnessTicksLeft = RegulusRules.MADNESS_TICKS;
       return true;
    }
@@ -140,17 +128,29 @@ public final class Evangelium {
       }
 
       RegulusPassives.applyMadness(player);
+      player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.viltrumitecore.evangelium.complete"), true);
       player.stopUsingItem();
       player.level().playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
    }
 
-   /** Damage, movement or an early release cancels the ritual for 400t. */
+   public static void finishBookUse(ServerPlayer player) {
+      RegulusState state = RegulusHero.stateOf(player);
+      if (state == null || state.ritualTicks < 0 || !player.isUsingItem()
+         || !player.getUseItem().is(ViltrumiteItems.EVANGELIUM.get()) || player.getUseItemRemainingTicks() > 0) {
+         return;
+      }
+      state.ritualTicks = RegulusRules.RITUAL_TICKS;
+      completeRitual(player);
+   }
+
+   /** Releasing the book early cancels the ritual for 400t. */
    public static void interrupt(ServerPlayer player, RegulusState state) {
       if (!interruptState(state)) {
          return;
       }
 
       player.stopUsingItem();
+      player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.viltrumitecore.evangelium.cancelled"), true);
    }
 
    /** Item-side interrupt without a state at hand. */
@@ -172,10 +172,10 @@ public final class Evangelium {
 
    public static void tick(ServerPlayer player, RegulusState state) {
       if (state.ritualTicks >= 0) {
-         if (ritualMovedTooFar(state.ritualStartPos, player.position())) {
+         if (!player.isAlive() || !player.isUsingItem() || !player.getUseItem().is(ViltrumiteItems.EVANGELIUM.get())) {
             interrupt(player, state);
          } else {
-            state.ritualTicks++;
+            state.ritualTicks = Math.max(state.ritualTicks, RegulusRules.RITUAL_TICKS - player.getUseItemRemainingTicks());
             // Short refresh: a cancelled ritual sheds Slowness II on its own.
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5, 1, true, false, true));
             if (ritualFinished(state)) {

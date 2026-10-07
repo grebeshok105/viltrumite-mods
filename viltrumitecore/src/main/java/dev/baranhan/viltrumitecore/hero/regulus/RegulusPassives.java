@@ -55,7 +55,7 @@ public final class RegulusPassives {
    }
 
    public static void applyMadness(Player player) {
-      addModifier(player, Attributes.ARMOR, MADNESS_ARMOR_MODIFIER_ID, "Regulus madness armor", 10.0, Operation.ADDITION);
+      removeModifier(player, Attributes.ARMOR, MADNESS_ARMOR_MODIFIER_ID);
       addModifier(player, Attributes.MAX_HEALTH, MADNESS_HEALTH_MODIFIER_ID, "Regulus madness vitality", 0.2, Operation.MULTIPLY_TOTAL);
       // Flat +0.4 attack (spec 11.2, Codex canon) — not a multiplier.
       addModifier(player, Attributes.ATTACK_DAMAGE, MADNESS_ATTACK_MODIFIER_ID, "Regulus madness strength", 0.4, Operation.ADDITION);

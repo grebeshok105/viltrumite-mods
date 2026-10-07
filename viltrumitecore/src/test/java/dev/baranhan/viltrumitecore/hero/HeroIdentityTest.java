@@ -111,6 +111,15 @@ class HeroIdentityTest {
    }
 
    @Test
+   void publicSnapshotKeepsActionAvailabilityAndLockedWorldPoint() {
+      String encoded = "regulus;3;13;33;2;0;0;0;0;0;0;-1;-1;0;0;0;0;0;0;1;239;10.25;64.5;-12.75";
+      HeroPublicSnapshot decoded = HeroPublicSnapshot.decode(encoded);
+      assertEquals(encoded, decoded.encode());
+      assertFalse(decoded.equals(HeroPublicSnapshot.decode(encoded.replace(";239;", ";255;"))));
+      assertFalse(decoded.equals(HeroPublicSnapshot.decode(encoded.replace(";10.25;", ";11.25;"))));
+   }
+
+   @Test
    void malformedSnapshotStringFallsBackToEmpty() {
       HeroPublicSnapshot decoded = HeroPublicSnapshot.decode("garbage;;;");
       assertEquals(HeroId.HUMAN, decoded.heroId());
