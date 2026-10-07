@@ -18,5 +18,9 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Impact effects are driven by `PunchImpactManager`, `ChopImpactManager`, `ThunderClapManager`.
 - Core has its own geo/animation loader in `client/anim/` for JSON in `assets/viltrumitecore/geo/` and `assets/viltrumitecore/animations/`. Details: `.agents/skills/animation-system/SKILL.md`.
 
+## Rendering gotchas
+- Through-wall entity highlights: use the vanilla glowing path — `Minecraft.getInstance().renderBuffers().outlineBufferSource()`, `setColor(r,g,b,a)`, then draw the model into `outline.getBuffer(RenderType.outline(texture))` at ~1.06 scale. `RenderStateShard` constants (`NO_DEPTH_TEST` etc.) are protected and unavailable to mod code.
+- `SilhouetteManager.getState(entity, shouldDraw)` consumes a per-frame delta (max 0.1 s). Call it at most once per entity per frame; a second caller zeros the first caller's alpha lerp.
+
 ## Topic files
 - `decompile.md`: decompile artifacts and their fixes.
