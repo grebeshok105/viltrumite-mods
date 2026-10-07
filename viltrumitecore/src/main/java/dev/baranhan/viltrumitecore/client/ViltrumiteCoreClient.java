@@ -267,12 +267,12 @@ public class ViltrumiteCoreClient {
                      CoreMessages.sendToServer(new PunchC2SPacket(isLeft));
                   }
                }
+            }
 
-               // Super jump: one press of G, instant launch ~20 blocks up.
-               while (AbilityInputManager.superJumpKey.consumeClick()) {
-                  if (dev.baranhan.viltrumitecore.client.regulus.RegulusJumpClient.tryLaunch(client.player)) {
-                     CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(dev.baranhan.viltrumitecore.hero.HeroAction.JUMP, true));
-                  }
+            // Super jump (any hero with superJumpVelocity > 0): one press, instant launch.
+            while (AbilityInputManager.superJumpKey.consumeClick()) {
+               if (dev.baranhan.viltrumitecore.client.hero.SuperJumpClient.tryLaunch(client.player)) {
+                  CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(dev.baranhan.viltrumitecore.hero.HeroAction.JUMP, true));
                }
             }
 

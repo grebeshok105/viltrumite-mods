@@ -1,6 +1,5 @@
 package dev.baranhan.viltrumitecore.util;
 
-import dev.baranhan.viltrumiteflight.mixin.FallingBlockEntityInvoker;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,8 +14,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -94,22 +91,10 @@ public class ThunderClapManager {
                                  BlockState upState = world.getBlockState(mutablePos.above());
                                  if (upState.isAir() || upState.canBeReplaced()) {
                                     if (world.random.nextFloat() < 0.25F) {
-                                       FallingBlockEntity fallingBlock = FallingBlockEntityInvoker.invokeConstructor(
-                                          world, (double)x + 0.5, (double)y + 0.5, (double)z + 0.5, state
-                                       );
-                                       fallingBlock.dropItem = false;
-                                       fallingBlock.time = 1;
                                        Vec3 outward = new Vec3((double)x + 0.5 - clap.origin.x, 0.0, (double)z + 0.5 - clap.origin.z).normalize();
-                                       double rawVelX = outward.x * 0.8;
-                                       double rawVelY = 0.7 + world.random.nextDouble() * 0.5;
-                                       double rawVelZ = outward.z * 0.8;
-                                       double syncedVelX = (double)Math.round(rawVelX * 8000.0) / 8000.0;
-                                       double syncedVelY = (double)Math.round(rawVelY * 8000.0) / 8000.0;
-                                       double syncedVelZ = (double)Math.round(rawVelZ * 8000.0) / 8000.0;
-                                       fallingBlock.setDeltaMovement(syncedVelX, syncedVelY, syncedVelZ);
-                                       fallingBlock.hasImpulse = true;
-                                       world.setBlock(mutablePos, Blocks.AIR.defaultBlockState(), 3);
-                                       world.addFreshEntity(fallingBlock);
+                                       dev.baranhan.viltrumitecore.hero.HeroDebris.launchBlock(
+                                          world, mutablePos.immutable(), state, new Vec3(outward.x * 0.8, 0.7 + world.random.nextDouble() * 0.5, outward.z * 0.8), 0.0F, 0
+                                       );
                                     } else {
                                        world.destroyBlock(mutablePos, false);
                                     }

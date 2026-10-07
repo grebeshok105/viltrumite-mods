@@ -4,7 +4,6 @@ import dev.baranhan.viltrumitecore.client.gui.ViltrumiteDashboardScreen;
 import dev.baranhan.viltrumitecore.network.CoreMessages;
 import dev.baranhan.viltrumitecore.network.packet.SwapAbilityBarC2SPacket;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
-import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -49,6 +48,7 @@ public class AbilityInputManager {
       assignHeartKey = new KeyMapping("key.viltrumitecore.assign_heart", net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
          com.mojang.blaze3d.platform.InputConstants.Type.MOUSE, org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE, "category.viltrumitecore.keys");
       event.register(assignHeartKey);
+      // Id kept from v1.13.0 (renaming would drop players' bindings); the key is shared by every hero.
       superJumpKey = new KeyMapping("key.viltrumitecore.regulus_super_jump", net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
          com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM, org.lwjgl.glfw.GLFW.GLFW_KEY_G, "category.viltrumitecore.keys");
       event.register(superJumpKey);

@@ -1,4 +1,4 @@
-package dev.baranhan.viltrumitecore.client.regulus;
+package dev.baranhan.viltrumitecore.client.render.vfx;
 
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
@@ -8,11 +8,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
-import dev.baranhan.viltrumitecore.ViltrumiteCore;
-import dev.baranhan.viltrumitecore.client.render.vfx.RegulusPixelVfx;
-import dev.baranhan.viltrumitecore.config.ViltrumitePostProcessingConfig;
-import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
-import dev.baranhan.viltrumitecore.network.packet.RegulusFxS2CPacket;
+import dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +19,8 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -33,7 +31,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
-import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -41,18 +38,18 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 /**
- * Client half of the one-shot Regulus FX packet: visible shard streaks with a
- * bullet whiz placed where a shard passes the listener, expanding ground
- * rings for the landing shockwave and the Counter slam, the madness air
- * blade, and a camera shake (ComputeCameraAngles, so it also works with
- * post-processing off or a shader pack).
+ * Client half of the shared hero FX packet (server API: hero.fx.HeroFx):
+ * visible shard streaks with a whiz placed where a shard passes the listener,
+ * expanding ground rings for landings and slams, blade streaks, flashes, and
+ * a camera shake through {@link CameraShake}. Hero-neutral: the whiz sound
+ * comes in the packet.
  */
 @EventBusSubscriber(
    modid = "viltrumitecore",
    bus = Bus.FORGE,
    value = {Dist.CLIENT}
 )
-public final class RegulusImpactFx {
+public final class HeroImpactFx {
    private static final List<Shard> SHARDS = new ArrayList<>();
    private static final List<Ring> RINGS = new ArrayList<>();
    private static final List<Blade> BLADES = new ArrayList<>();
@@ -60,14 +57,14 @@ public final class RegulusImpactFx {
    private static final List<Whiz> WHIZZES = new ArrayList<>();
    private static final int MAX_WHIZZES_PER_SPRAY = 3;
    private static final double WHIZ_RADIUS = 3.5;
-   private static float shake;
-   private static float shakeTime;
+   /** Blocks per tick of a drawn shard; server shards resolve instantly. */
+   static final double SHARD_VISUAL_SPEED = 7.0;
    private static ClientLevel lastLevel;
 
-   private RegulusImpactFx() {
+   private HeroImpactFx() {
    }
 
-   public static void handle(RegulusFxS2CPacket packet) {
+   public static void handle(HeroFxS2CPacket packet) {
       Minecraft client = Minecraft.getInstance();
       ClientLevel level = client.level;
       if (level == null) {
@@ -76,16 +73,17 @@ public final class RegulusImpactFx {
 
       BlockState material = packet.blockStateId == 0 ? Blocks.DIRT.defaultBlockState() : Block.stateById(packet.blockStateId);
       Vec3 listener = client.gameRenderer.getMainCamera().getPosition();
+      SoundEvent whiz = packet.soundId < 0 ? null : BuiltInRegistries.SOUND_EVENT.byId(packet.soundId);
       switch (packet.kind) {
-         case RegulusFxS2CPacket.SHARDS -> spray(level, listener, packet, material);
-         case RegulusFxS2CPacket.SHOCKWAVE -> {
+         case HeroFxS2CPacket.SHARDS -> spray(level, listener, packet, material, whiz);
+         case HeroFxS2CPacket.SHOCKWAVE -> {
             float radius = packet.points.length > 0 ? packet.points[0] : 6.0F;
             RINGS.add(new Ring(packet.origin, radius, material, 12 + (int)(8 * packet.power), false));
             RINGS.add(new Ring(packet.origin, radius * 0.6F, material, 8, false));
             dust(level, packet.origin, material, radius, 40 + (int)(60 * packet.power));
             addShake(listener, packet.origin, 0.45F + 0.9F * packet.power, 18.0 + radius * 2.0);
          }
-         case RegulusFxS2CPacket.SLAM -> {
+         case HeroFxS2CPacket.SLAM -> {
             float radius = packet.points.length > 0 ? packet.points[0] : 8.0F;
             RINGS.add(new Ring(packet.origin, radius, material, 16, true));
             RINGS.add(new Ring(packet.origin, radius * 1.6F, material, 22, false));
@@ -93,19 +91,19 @@ public final class RegulusImpactFx {
             dust(level, packet.origin, material, radius, 140);
             addShake(listener, packet.origin, 1.6F, 40.0);
          }
-         case RegulusFxS2CPacket.AIR_BLADE -> {
+         case HeroFxS2CPacket.BLADE -> {
             if (packet.points.length >= 3) {
                Vec3 end = new Vec3(packet.points[0], packet.points[1], packet.points[2]);
                BLADES.add(new Blade(packet.origin, end));
-               scheduleWhiz(level, listener, packet.origin, end, 9.0, 1.0F, 0.75F);
+               scheduleWhiz(listener, packet.origin, end, 9.0, 1.0F, 0.75F, whiz);
                addShake(listener, packet.origin, 0.35F, 16.0);
             }
          }
-         case RegulusFxS2CPacket.JUMP_LAUNCH -> {
+         case HeroFxS2CPacket.LAUNCH -> {
             RINGS.add(new Ring(packet.origin, 2.5F + 3.0F * packet.power, material, 8, false));
             addShake(listener, packet.origin, 0.25F + 0.35F * packet.power, 10.0);
          }
-         case RegulusFxS2CPacket.COUNTER_LAUNCH -> {
+         case HeroFxS2CPacket.FLASH -> {
             FLASHES.add(new Flash(packet.origin, 1.4F, 6));
             addShake(listener, packet.origin, 0.6F, 20.0);
          }
@@ -114,7 +112,7 @@ public final class RegulusImpactFx {
       }
    }
 
-   private static void spray(ClientLevel level, Vec3 listener, RegulusFxS2CPacket packet, BlockState material) {
+   private static void spray(ClientLevel level, Vec3 listener, HeroFxS2CPacket packet, BlockState material, SoundEvent whiz) {
       int color = material.getMapColor(level, BlockPos.containing(packet.origin)).col;
       RandomSource random = level.random;
       List<double[]> passes = new ArrayList<>();
@@ -131,21 +129,21 @@ public final class RegulusImpactFx {
 
       // Whiz the listener with the nearest few shards that actually pass by.
       passes.sort((a, b) -> Double.compare(a[3], b[3]));
-      for (int i = 0; i < Math.min(MAX_WHIZZES_PER_SPRAY, passes.size()); i++) {
+      for (int i = 0; whiz != null && i < Math.min(MAX_WHIZZES_PER_SPRAY, passes.size()); i++) {
          double[] p = passes.get(i);
          float closeness = (float)(1.0 - p[3] / WHIZ_RADIUS);
-         int delay = (int)Math.round(p[4] / RegulusRules.DEBRIS_VISUAL_SPEED) + i;
-         WHIZZES.add(new Whiz(new Vec3(p[0], p[1], p[2]), delay, 0.5F + 0.7F * closeness, 0.85F + random.nextFloat() * 0.35F, closeness));
+         int delay = (int)Math.round(p[4] / SHARD_VISUAL_SPEED) + i;
+         WHIZZES.add(new Whiz(new Vec3(p[0], p[1], p[2]), delay, 0.5F + 0.7F * closeness, 0.85F + random.nextFloat() * 0.35F, closeness, whiz));
       }
 
       addShake(listener, packet.origin, 0.3F * packet.power + 0.15F, 14.0);
    }
 
-   private static void scheduleWhiz(ClientLevel level, Vec3 listener, Vec3 from, Vec3 to, double speed, float volume, float pitch) {
-      double[] p = closestPass(listener, from, to);
+   private static void scheduleWhiz(Vec3 listener, Vec3 from, Vec3 to, double speed, float volume, float pitch, SoundEvent sound) {
+      double[] p = sound == null ? null : closestPass(listener, from, to);
       if (p != null) {
          float closeness = (float)(1.0 - p[3] / WHIZ_RADIUS);
-         WHIZZES.add(new Whiz(new Vec3(p[0], p[1], p[2]), (int)Math.round(p[4] / speed), volume, pitch, closeness));
+         WHIZZES.add(new Whiz(new Vec3(p[0], p[1], p[2]), (int)Math.round(p[4] / speed), volume, pitch, closeness, sound));
       }
    }
 
@@ -189,10 +187,17 @@ public final class RegulusImpactFx {
       }
    }
 
-   /** Shake with a linear distance falloff; the strongest live shake wins. */
    private static void addShake(Vec3 listener, Vec3 at, float power, double range) {
-      float falloff = (float)Math.max(0.0, 1.0 - listener.distanceTo(at) / range);
-      shake = Math.min(2.5F, Math.max(shake, power * falloff));
+      CameraShake.add(CameraShake.falloff(listener.distanceTo(at), range) * power);
+   }
+
+   /** Deterministic 0..1 noise for ring wobble. */
+   private static float hashOffset(int seed, int axis) {
+      int h = seed * 0x9E3779B9 + axis * 0x85EBCA6B;
+      h ^= h >>> 13;
+      h *= 0xC2B2AE35;
+      h ^= h >>> 16;
+      return (h & 0xFFFF) / 65536.0F;
    }
 
    @SubscribeEvent
@@ -210,15 +215,9 @@ public final class RegulusImpactFx {
          BLADES.clear();
          FLASHES.clear();
          WHIZZES.clear();
-         shake = 0.0F;
       }
       if (level == null || client.isPaused()) {
          return;
-      }
-
-      shake *= 0.86F;
-      if (shake < 0.01F) {
-         shake = 0.0F;
       }
 
       for (Iterator<Shard> it = SHARDS.iterator(); it.hasNext();) {
@@ -247,7 +246,7 @@ public final class RegulusImpactFx {
             continue;
          }
 
-         level.playLocalSound(whiz.pos.x, whiz.pos.y, whiz.pos.z, ViltrumiteCore.REGULUS_SHARD_WHIZ.get(), SoundSource.PLAYERS, whiz.volume, whiz.pitch, false);
+         level.playLocalSound(whiz.pos.x, whiz.pos.y, whiz.pos.z, whiz.sound, SoundSource.PLAYERS, whiz.volume, whiz.pitch, false);
          Vec3 listener = client.gameRenderer.getMainCamera().getPosition();
          addShake(listener, whiz.pos, 0.25F * whiz.closeness, WHIZ_RADIUS + 1.0);
          it.remove();
@@ -256,21 +255,6 @@ public final class RegulusImpactFx {
       RINGS.removeIf(ring -> ++ring.age > ring.life);
       BLADES.removeIf(blade -> ++blade.age > 8);
       FLASHES.removeIf(flash -> ++flash.age > flash.life);
-   }
-
-   @SubscribeEvent
-   public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
-      if (shake <= 0.0F) {
-         return;
-      }
-
-      float multiplier = ViltrumitePostProcessingConfig.INSTANCE.punchShakeMultiplier;
-      float t = (float)(event.getPartialTick() + (lastLevel == null ? 0L : lastLevel.getGameTime() % 100000L));
-      float amp = shake * multiplier;
-      // Two detuned sines per axis: cheap, smooth, never periodic-looking.
-      event.setPitch(event.getPitch() + amp * 1.6F * (Mth.sin(t * 2.9F) * 0.6F + Mth.sin(t * 5.3F + 1.3F) * 0.4F));
-      event.setYaw(event.getYaw() + amp * 1.3F * (Mth.sin(t * 3.7F + 0.7F) * 0.6F + Mth.sin(t * 6.1F + 2.1F) * 0.4F));
-      event.setRoll(event.getRoll() + amp * 1.1F * Mth.sin(t * 4.3F + 0.4F));
    }
 
    @SubscribeEvent
@@ -285,7 +269,7 @@ public final class RegulusImpactFx {
       PoseStack modelViewStack = RenderSystem.getModelViewStack();
       modelViewStack.pushPose();
       modelViewStack.setIdentity();
-      RegulusPixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
+      PixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
       RenderSystem.applyModelViewMatrix();
       RenderSystem.enableBlend();
       RenderSystem.disableCull();
@@ -322,7 +306,7 @@ public final class RegulusImpactFx {
             float progress = (flash.age + partialTick) / flash.life;
             int alpha = (int)(255.0F * (1.0F - progress));
             if (alpha > 0) {
-               RegulusPixelVfx.crossGlow(buffer, cameraPos, camera, flash.pos, flash.size * (0.4F + progress), 255, 250, 235, alpha);
+               PixelVfx.crossGlow(buffer, cameraPos, camera, flash.pos, flash.size * (0.4F + progress), 255, 250, 235, alpha);
             }
          }
          tessellator.end();
@@ -346,15 +330,15 @@ public final class RegulusImpactFx {
       int g = (shard.color >> 8) & 0xFF;
       int b = shard.color & 0xFF;
       // A chunk of the kicked ground: a dark rim and the block color on top.
-      RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, head, shard.size * 1.35F, r / 3, g / 3, b / 3, 235);
-      RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, head, shard.size, r, g, b, 255);
+      PixelVfx.billboardPixel(buffer, cameraPos, camera, head, shard.size * 1.35F, r / 3, g / 3, b / 3, 235);
+      PixelVfx.billboardPixel(buffer, cameraPos, camera, head, shard.size, r, g, b, 255);
       for (int i = 1; i <= 6; i++) {
          Vec3 p = head.subtract(shard.dir.scale(i * 0.32));
          if (p.subtract(shard.from).dot(shard.dir) < 0.0) {
             break;
          }
          int alpha = 200 - i * 30;
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p, shard.size * (0.8F - i * 0.1F), r, g, b, alpha);
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, p, shard.size * (0.8F - i * 0.1F), r, g, b, alpha);
       }
    }
 
@@ -364,7 +348,7 @@ public final class RegulusImpactFx {
       }
 
       Vec3 head = shard.head(partialTick);
-      RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, head, shard.size * 0.55F, 255, 245, 220, 200);
+      PixelVfx.billboardPixel(buffer, cameraPos, camera, head, shard.size * 0.55F, 255, 245, 220, 200);
       // Hot air streak: long, thin, fading — what makes a shard read as "fast".
       for (int i = 1; i <= 12; i++) {
          Vec3 p = head.subtract(shard.dir.scale(i * 0.28));
@@ -372,7 +356,7 @@ public final class RegulusImpactFx {
             break;
          }
          int alpha = 170 - i * 13;
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p, 0.035F, 255, 225, 180, alpha);
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, p, 0.035F, 255, 225, 180, alpha);
       }
    }
 
@@ -384,21 +368,21 @@ public final class RegulusImpactFx {
       float fade = 1.0F - progress;
       for (int i = 0; i < count; i++) {
          double az = Math.PI * 2.0 * i / count;
-         float wobble = (float)RegulusVfxMath.hashOffset(i, ring.seed) * 0.35F;
+         float wobble = (float)hashOffset(i, ring.seed) * 0.35F;
          double rr = radius + wobble;
          Vec3 p = ring.center.add(Math.cos(az) * rr, 0.12 + wobble * 0.4, Math.sin(az) * rr);
          if (glow) {
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p.add(0.0, 0.1, 0.0), 0.05F, 255, 240, 215, (int)(150 * fade * fade));
+            PixelVfx.billboardPixel(buffer, cameraPos, camera, p.add(0.0, 0.1, 0.0), 0.05F, 255, 240, 215, (int)(150 * fade * fade));
          } else {
             int r = (ring.color >> 16) & 0xFF;
             int g = (ring.color >> 8) & 0xFF;
             int b = ring.color & 0xFF;
             // Dust wall: two stacked pixels, pale like a thrown-up cloud.
             int alpha = (int)(190 * fade);
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p, 0.16F, (r + 200) / 2, (g + 195) / 2, (b + 185) / 2, alpha);
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p.add(0.0, 0.3 + wobble, 0.0), 0.12F, (r + 220) / 2, (g + 215) / 2, (b + 205) / 2, alpha / 2);
+            PixelVfx.billboardPixel(buffer, cameraPos, camera, p, 0.16F, (r + 200) / 2, (g + 195) / 2, (b + 185) / 2, alpha);
+            PixelVfx.billboardPixel(buffer, cameraPos, camera, p.add(0.0, 0.3 + wobble, 0.0), 0.12F, (r + 220) / 2, (g + 215) / 2, (b + 205) / 2, alpha / 2);
             if (ring.heavy && i % 2 == 0) {
-               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p.add(0.0, 0.7 + wobble * 2.0, 0.0), 0.1F, r, g, b, alpha / 2);
+               PixelVfx.billboardPixel(buffer, cameraPos, camera, p.add(0.0, 0.7 + wobble * 2.0, 0.0), 0.1F, r, g, b, alpha / 2);
             }
          }
       }
@@ -425,9 +409,9 @@ public final class RegulusImpactFx {
          double width = 0.9 * Math.max(0.15, taper);
          Vec3 c = blade.from.add(dir.scale(d));
          // A thin crescent of frozen air: bright core, cold fringe either side.
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, c, 0.05F, 255, 255, 255, (int)(230 * fade));
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, c.add(side.scale(width)), 0.035F, 190, 225, 255, (int)(150 * fade));
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, c.subtract(side.scale(width)), 0.035F, 190, 225, 255, (int)(150 * fade));
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, c, 0.05F, 255, 255, 255, (int)(230 * fade));
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, c.add(side.scale(width)), 0.035F, 190, 225, 255, (int)(150 * fade));
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, c.subtract(side.scale(width)), 0.035F, 190, 225, 255, (int)(150 * fade));
       }
    }
 
@@ -456,11 +440,11 @@ public final class RegulusImpactFx {
       }
 
       int flightTicks() {
-         return (int)Math.ceil(this.length / RegulusRules.DEBRIS_VISUAL_SPEED);
+         return (int)Math.ceil(this.length / SHARD_VISUAL_SPEED);
       }
 
       double travelled(float partialTick) {
-         return Math.max(0.0, (this.age + partialTick - this.delay) * RegulusRules.DEBRIS_VISUAL_SPEED);
+         return Math.max(0.0, (this.age + partialTick - this.delay) * SHARD_VISUAL_SPEED);
       }
 
       boolean flying(float partialTick) {
@@ -527,14 +511,16 @@ public final class RegulusImpactFx {
       final float volume;
       final float pitch;
       final float closeness;
+      final SoundEvent sound;
       int delay;
 
-      Whiz(Vec3 pos, int delay, float volume, float pitch, float closeness) {
+      Whiz(Vec3 pos, int delay, float volume, float pitch, float closeness, SoundEvent sound) {
          this.pos = pos;
          this.delay = delay;
          this.volume = volume;
          this.pitch = pitch;
          this.closeness = closeness;
+         this.sound = sound;
       }
    }
 }

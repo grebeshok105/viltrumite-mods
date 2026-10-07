@@ -119,6 +119,11 @@ public class RegulusHero implements HeroDefinition {
          return false;
       }
 
+      // A Mania channel grounds the caster (spec 8.2): no super jump.
+      if (action == HeroAction.JUMP && state.channelTargetId != null) {
+         return false;
+      }
+
       return actionPermitted(action, state.lionActive, state.busy(), state.channelTargetId != null, state.ritualTicks >= 0, state.madnessTicksLeft > 0);
    }
 
@@ -153,17 +158,31 @@ public class RegulusHero implements HeroDefinition {
    }
 
    @Override
+   public boolean cancelsFallDamage(Player player) {
+      return true;
+   }
+
+   @Override
+   public void onLanded(ServerPlayer player, float fallDistance) {
+      RegulusState state = stateOf(player);
+      if (state != null) {
+         RegulusMovement.onLanding(player, state, fallDistance);
+      }
+   }
+
+   @Override
+   public float superJumpVelocity(Player player) {
+      return RegulusRules.SUPER_JUMP_VELOCITY;
+   }
+
+   @Override
+   public void onSuperJump(ServerPlayer player) {
+      RegulusMovement.onSuperJump(player);
+   }
+
+   @Override
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       RegulusState state = ensureState(player);
-      if (action == HeroAction.JUMP) {
-         // The client already launched; an anchored Regulus or one grounded by
-         // a Mania channel gets no launch FX.
-         if (pressed && !HeroDamage.isAnchored(player) && state.channelTargetId == null) {
-            RegulusMovement.onSuperJump(player);
-         }
-         return;
-      }
-
       if (pressed) {
          this.tryStart(player, state, action);
       } else {

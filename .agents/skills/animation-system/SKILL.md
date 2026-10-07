@@ -173,7 +173,13 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
 - Use `calculateWeight` for third person. Use `calculateFirstPersonWeight` for first person. For a held-book pose, pass the fourth `mainHand` argument so each hand has its own weight. Tick inactive weights too, so they fade out.
 - Call `RegulusAnimationManager.reset(entity)` when the hero changes. It clears third-person weights, both first-person hands, and the action clock.
 - `RegulusPoseTiming.keyedAngle` recovers to the supplied base rotation. End transient keys at zero. Add head/body offsets to vanilla aim and crouch. Mirror action limbs and yaw/roll for the main arm. Restore position offsets at `setupAnim` HEAD before vanilla uses the model again. Copy hat, jacket, sleeves and pants; do not copy body pivots to the cloak.
-- `RegulusPixelVfx` emits camera-relative vertices. Call `rotateCamera` once per render pass. Do not translate by the camera again. Use `billboardPixel`, `domeShell` or `sphereShell` for floating points. Shell shimmer changes alpha, not position. Apply owner-only carrier filtering and local first-person aura filtering in the managers, not in the shape helper.
+- `PixelVfx` emits camera-relative vertices. Call `rotateCamera` once per render pass. Do not translate by the camera again. Use `billboardPixel`, `domeShell` or `sphereShell` for floating points. Shell shimmer changes alpha, not position. Apply owner-only carrier filtering and local first-person aura filtering in the managers, not in the shape helper.
+
+### Shared hero impact FX
+
+- Server code sends impact FX with `hero/fx/HeroFx` (`shards`, `shockwave`, `slam`, `blade`, `launch`, `flash`). It sends `HeroFxS2CPacket`; `client/render/vfx/HeroImpactFx` draws it for every hero. Do not add a hero-specific packet for these shapes.
+- Camera shake goes through `client/render/vfx/CameraShake` (`addAt` with distance falloff, `add` for local). Do not add a second shake accumulator.
+- Full API list: `.agents/skills/add_hero/references/shared-toolkit.md`.
 
 ## 9. Screen effects
 

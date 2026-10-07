@@ -13,8 +13,8 @@ import org.joml.Vector3f;
  * POSITION_COLOR quads in camera-relative space — the same "paint pixel"
  * vocabulary the existing managers use (skill §8).
  */
-public final class RegulusPixelVfx {
-   private RegulusPixelVfx() {
+public final class PixelVfx {
+   private PixelVfx() {
    }
 
    public static void rotateCamera(PoseStack stack, float pitch, float yaw) {

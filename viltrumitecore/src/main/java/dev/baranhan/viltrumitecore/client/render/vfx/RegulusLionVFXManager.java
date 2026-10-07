@@ -121,7 +121,7 @@ public class RegulusLionVFXManager {
       PoseStack modelViewStack = RenderSystem.getModelViewStack();
       modelViewStack.pushPose();
       modelViewStack.setIdentity();
-      RegulusPixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
+      PixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
       RenderSystem.applyModelViewMatrix();
       RenderSystem.enableBlend();
       RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
@@ -143,9 +143,9 @@ public class RegulusLionVFXManager {
                // Aura hugs the body: ~0.5 block off the silhouette.
                float auraXZ = lion.getBbWidth() * 0.5F + AURA_MARGIN;
                float auraY = lion.getBbHeight() * 0.5F + AURA_MARGIN;
-               RegulusPixelVfx.bodyShell(buffer, cameraPos, camera, center, auraXZ, auraY, timeSeconds, 250, green, blue, 80);
+               PixelVfx.bodyShell(buffer, cameraPos, camera, center, auraXZ, auraY, timeSeconds, 250, green, blue, 80);
                drawSuspendedMotes(buffer, cameraPos, camera, center, lion);
-               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, center, 0.08F, 255, green, blue, 180);
+               PixelVfx.billboardPixel(buffer, cameraPos, camera, center, 0.08F, 255, green, blue, 180);
             }
 
             // Frozen projectiles inside the aura get a white highlight.
@@ -154,7 +154,7 @@ public class RegulusLionVFXManager {
                   && entity.isNoGravity()
                   && entity.getDeltaMovement().lengthSqr() < 0.01
                   && entity.distanceToSqr(lion) <= 16.0 + 4.0) {
-                  RegulusPixelVfx.crossGlow(buffer, cameraPos, camera, entity.getPosition(partialTick).add(0.0, entity.getBbHeight() * 0.5, 0.0), 0.16F, 250, 252, 255, 210);
+                  PixelVfx.crossGlow(buffer, cameraPos, camera, entity.getPosition(partialTick).add(0.0, entity.getBbHeight() * 0.5, 0.0), 0.16F, 250, 252, 255, 210);
                }
             }
          }
@@ -168,7 +168,7 @@ public class RegulusLionVFXManager {
             int alpha = (int)(180.0F * (1.0F - progress));
             if (alpha > 0) {
                Vec3 chest = owner.getPosition(partialTick).add(0.0, owner.getBbHeight() * 0.55, 0.0);
-               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.12F - progress * 0.07F,
+               PixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.12F - progress * 0.07F,
                   pulse.activated ? 255 : 180, pulse.activated ? 235 : 185, pulse.activated ? 150 : 190, alpha);
             }
          }
@@ -203,7 +203,7 @@ public class RegulusLionVFXManager {
          double ry = bodyY + band;
          Vec3 pos = center.add(Math.cos(theta) * Math.cos(phi) * rxz, Math.sin(phi) * ry, Math.sin(theta) * Math.cos(phi) * rxz);
          float twinkle = 0.4F + 0.6F * (float)Math.abs(Math.sin((double)(i * 1.3F) + center.x));
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.03F, 235, 240, 255, (int)(80.0F * twinkle));
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.03F, 235, 240, 255, (int)(80.0F * twinkle));
       }
    }
 

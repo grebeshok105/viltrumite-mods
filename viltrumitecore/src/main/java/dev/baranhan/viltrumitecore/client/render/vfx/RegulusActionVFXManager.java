@@ -30,7 +30,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -175,7 +174,7 @@ public class RegulusActionVFXManager {
       PoseStack modelViewStack = RenderSystem.getModelViewStack();
       modelViewStack.pushPose();
       modelViewStack.setIdentity();
-      RegulusPixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
+      PixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
       RenderSystem.applyModelViewMatrix();
       RenderSystem.enableBlend();
       RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
@@ -246,7 +245,7 @@ public class RegulusActionVFXManager {
          point = GreedsEmbrace.aimPoint(player);
       }
       if (point != null) {
-         RegulusPixelVfx.domeShell(buffer, cameraPos, camera, point, (float)RegulusRules.EMBRACE_RADIUS,
+         PixelVfx.domeShell(buffer, cameraPos, camera, point, (float)RegulusRules.EMBRACE_RADIUS,
             timeSeconds, GOLD_R, GOLD_G, GOLD_B, 75);
       }
    }
@@ -269,7 +268,7 @@ public class RegulusActionVFXManager {
       Vec3 hand = eyePos.add(look.scale(0.45)).add(side.scale(0.28)).add(0.0, -0.28, 0.0);
       Vec3 targetPos = target.getPosition(partialTick).add(0.0, target.getBbHeight() * 0.55, 0.0);
       float shimmer = 0.75F + 0.25F * (float)Math.sin((double)((level.getGameTime() % 24000L) + partialTick) * 6.0);
-      RegulusPixelVfx.beamDots(buffer, cameraPos, camera, hand, targetPos, 0.42F, 0.055F, GOLD_R, GOLD_G, GOLD_B, (int)(200.0F * shimmer));
+      PixelVfx.beamDots(buffer, cameraPos, camera, hand, targetPos, 0.42F, 0.055F, GOLD_R, GOLD_G, GOLD_B, (int)(200.0F * shimmer));
    }
 
    /** Ritual: runes orbit the caster, the held book glows faintly gold. */
@@ -292,7 +291,7 @@ public class RegulusActionVFXManager {
       for (int i = 0; i < 4; i++) {
          float angle = timeSeconds * 2.2F + i * (float)(Math.PI / 2.0);
          Vec3 mote = book.add(Math.cos((double)angle) * 0.22, Math.sin((double)angle * 1.4) * 0.1, Math.sin((double)angle) * 0.22);
-         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, mote, 0.04F, 255, 235, 160, 170);
+         PixelVfx.billboardPixel(buffer, cameraPos, camera, mote, 0.04F, 255, 235, 160, 170);
       }
    }
 
@@ -323,7 +322,7 @@ public class RegulusActionVFXManager {
             float dx = (col - 1.5F) * cell;
             float dy = (1.5F - row) * cell;
             Vec3 pixelPos = pos.add(left.x * dx + up.x * dy, left.y * dx + up.y * dy, left.z * dx + up.z * dy);
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, pixelPos, cell * 0.6F, r, g, b, alpha);
+            PixelVfx.billboardPixel(buffer, cameraPos, camera, pixelPos, cell * 0.6F, r, g, b, alpha);
          }
       }
    }
@@ -337,14 +336,14 @@ public class RegulusActionVFXManager {
             continue;
          }
 
-         RegulusPixelVfx.domeShell(buffer, cameraPos, camera, center, (float)dome.radius(), timeSeconds, GOLD_R, GOLD_G, GOLD_B, alpha);
+         PixelVfx.domeShell(buffer, cameraPos, camera, center, (float)dome.radius(), timeSeconds, GOLD_R, GOLD_G, GOLD_B, alpha);
          int seedBase = dome.id().hashCode() & 0x7FFF;
          for (int i = 0; i < 30; i++) {
             double theta = RegulusVfxMath.hashOffset(seedBase + i, 0) * Math.PI * 2.0;
             double y = RegulusVfxMath.hashOffset(seedBase + i, 1) * dome.radius() * 0.85;
             double radius = RegulusVfxMath.hashOffset(seedBase + i, 2) * dome.radius() * 0.8;
             Vec3 pos = center.add(Math.cos(theta) * radius, y, Math.sin(theta) * radius);
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.035F, 255, 225, 140, (int)(alpha * 0.7F));
+            PixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.035F, 255, 225, 140, (int)(alpha * 0.7F));
          }
       }
    }
@@ -361,7 +360,7 @@ public class RegulusActionVFXManager {
          Entity target = level.getEntity(control.entityId());
          if (target != null) {
             float pulse = 0.7F + 0.3F * (float)Math.sin((double)((level.getGameTime() % 24000L) + partialTick) * 4.0);
-            RegulusPixelVfx.boxOutline(buffer, cameraPos, camera, target.getBoundingBox().move(target.getPosition(partialTick).subtract(target.position())), 0.025F, GOLD_R, GOLD_G, GOLD_B, (int)(170.0F * pulse));
+            PixelVfx.boxOutline(buffer, cameraPos, camera, target.getBoundingBox().move(target.getPosition(partialTick).subtract(target.position())), 0.025F, GOLD_R, GOLD_G, GOLD_B, (int)(170.0F * pulse));
          }
       }
    }
@@ -372,12 +371,12 @@ public class RegulusActionVFXManager {
          int alpha = (int)(255.0F * (1.0F - progress));
          if (alpha > 0) {
             float size = 0.3F + progress * 1.1F;
-            RegulusPixelVfx.crossGlow(buffer, cameraPos, camera, flash.pos, size, 255, 255, 255, alpha);
+            PixelVfx.crossGlow(buffer, cameraPos, camera, flash.pos, size, 255, 255, 255, alpha);
             // Speed lines: vertical streaks racing down past the lifted player.
             for (int i = 0; i < 6; i++) {
                double az = Math.PI * 2.0 * (double)i / 6.0;
                Vec3 linePos = flash.pos.add(Math.cos(az) * 0.8, 1.8 - progress * 2.6, Math.sin(az) * 0.8);
-               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, linePos, 0.05F, 255, 255, 255, alpha / 2);
+               PixelVfx.billboardPixel(buffer, cameraPos, camera, linePos, 0.05F, 255, 255, 255, alpha / 2);
             }
          }
       }
@@ -386,7 +385,7 @@ public class RegulusActionVFXManager {
          float progress = (spark.age + partialTick) / 14.0F;
          int alpha = (int)(240.0F * (1.0F - progress));
          if (alpha > 0) {
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, spark.pos, 0.06F, 200, 30, 24, alpha);
+            PixelVfx.billboardPixel(buffer, cameraPos, camera, spark.pos, 0.06F, 200, 30, 24, alpha);
          }
       }
    }
@@ -429,7 +428,7 @@ public class RegulusActionVFXManager {
                int r = highlight ? 255 : 205 + (int)(50 * beat);
                int g = highlight ? 170 : 18;
                int b = highlight ? 170 : 38;
-               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, p, cell, r, g, b, 225);
+               PixelVfx.billboardPixel(buffer, cameraPos, camera, p, cell, r, g, b, 225);
             }
          }
       }

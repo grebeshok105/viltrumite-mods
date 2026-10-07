@@ -53,11 +53,7 @@ public final class RegulusRules {
    public static final double DEBRIS_KNOCKBACK = 1.3;
    public static final int DEBRIS_COOLDOWN = 400;
    /** The kick rips a forward crater: its blocks fly out as real falling blocks. */
-   public static final double KICK_ERUPT_RADIUS = 3.4;
-   public static final double KICK_ERUPT_DEPTH = 2.2;
-   public static final double KICK_ERUPT_AHEAD = 1.8;
-   public static final int KICK_ERUPT_MAX_FLYING = 30;
-   public static final double KICK_ERUPT_SPEED = 1.25;
+   public static final dev.baranhan.viltrumitecore.hero.HeroDebris.Eruption KICK_ERUPTION = new dev.baranhan.viltrumitecore.hero.HeroDebris.Eruption(3.4, 2.2, 1.8, 30, 1.25, 1.0);
    public static final float KICK_ERUPT_ENTITY_DAMAGE = 4.0F;
    public static final double MADNESS_ERUPT_SCALE = 1.4;
 
@@ -104,14 +100,10 @@ public final class RegulusRules {
    public static final float BLOOD_PRICE_PER_20_TICKS = 0.6F;
    public static final int EVANGELIUM_COOLDOWN = 1800;
 
-   /** One press, instant: v0 = 2.0 with vanilla gravity/drag peaks ~20 blocks up. */
+   /** One press, instant: v0 = 2.0 with vanilla gravity/drag peaks ~20 blocks up (HeroSuperJump.apex). */
    public static final float SUPER_JUMP_VELOCITY = 2.0F;
-   public static final double SUPER_JUMP_FORWARD = 0.35;
-   public static final float SHOCKWAVE_MIN_FALL = 8.0F;
-   public static final double SHOCKWAVE_RADIUS = 5.0;
-   public static final double SHOCKWAVE_MAX_RADIUS = 12.0;
-   public static final float SHOCKWAVE_DAMAGE = 5.0F;
-   public static final float SHOCKWAVE_MAX_DAMAGE = 14.0F;
+   /** Landing shockwave: from 8 blocks, radius 5→12 and damage 5→14 at 32 blocks; flat (no heart bonus, spec 5.4). */
+   public static final dev.baranhan.viltrumitecore.hero.HeroShockwave.Landing LANDING = new dev.baranhan.viltrumitecore.hero.HeroShockwave.Landing(8.0F, 32.0F, 5.0, 12.0, 5.0F, 14.0F);
 
    /** Regulus fist (Viltrumite punch pipeline, own damage). */
    public static final float PUNCH_DAMAGE = 14.0F;
@@ -162,50 +154,7 @@ public final class RegulusRules {
       return repulseTarget(opponent, allied, ownCarrier) && impulseAllowed && !anchored;
    }
 
-   /**
-    * Section-4 landing shockwave stays flat: the +2%/heart bonus is scoped to
-    * abilities and melee (spec 5.4), so hearts are accepted but ignored.
-    */
-   public static float shockwaveDamage(int hearts) {
-      return SHOCKWAVE_DAMAGE;
-   }
-
-   /** 0 at the minimum fall, 1 at a 32-block drop: drives radius, damage and FX. */
-   public static float shockwavePower(float fallDistance) {
-      return Math.max(0.0F, Math.min(1.0F, (fallDistance - SHOCKWAVE_MIN_FALL) / 24.0F));
-   }
-
-   public static double shockwaveRadius(float fallDistance, boolean madness) {
-      double radius = SHOCKWAVE_RADIUS + (SHOCKWAVE_MAX_RADIUS - SHOCKWAVE_RADIUS) * shockwavePower(fallDistance);
-      return madness ? radius * MADNESS_SHOCKWAVE_MULTIPLIER : radius;
-   }
-
-   public static float shockwaveDamage(float fallDistance, boolean madness) {
-      float damage = SHOCKWAVE_DAMAGE + (SHOCKWAVE_MAX_DAMAGE - SHOCKWAVE_DAMAGE) * shockwavePower(fallDistance);
-      return madness ? damage * (float)MADNESS_SHOCKWAVE_MULTIPLIER : damage;
-   }
-
-   /**
-    * Pure: whether a block offset (from the eruption centre) is inside the
-    * kick crater — a flattened half-ellipsoid reaching {@code depth} down and
-    * one layer up (grass, plants), cut off behind the kicking foot.
-    */
-   public static boolean inEruption(double dx, double dy, double dz, double forwardX, double forwardZ, double radius, double depth) {
-      if (dy > 1.0 || dy < -depth) {
-         return false;
-      }
-
-      double ahead = dx * forwardX + dz * forwardZ;
-      if (ahead < -KICK_ERUPT_AHEAD) {
-         return false;
-      }
-
-      double horizontal = (dx * dx + dz * dz) / (radius * radius);
-      double vertical = dy < 0.0 ? dy * dy / (depth * depth) : 0.0;
-      return horizontal + vertical <= 1.0;
-   }
-
-   public static int debrisShardCount(boolean madness) {
+      public static int debrisShardCount(boolean madness) {
       return madness ? (int)Math.round(DEBRIS_SHARDS * MADNESS_SHARD_MULTIPLIER) : DEBRIS_SHARDS;
    }
 
@@ -360,18 +309,6 @@ public final class RegulusRules {
 
    public static float heartBacklash(float maxHealth) {
       return 0.1F * maxHealth;
-   }
-
-   /** Pure: peak height of a launch with vanilla player gravity (0.08) and drag (0.98). */
-   public static double jumpApex(double velocity) {
-      double y = 0.0;
-      double v = velocity;
-      while (v > 0.0) {
-         y += v;
-         v = (v - 0.08) * 0.98;
-      }
-
-      return y;
    }
 
    public static boolean attackerValid(long attackerTick, long nowTick) {

@@ -250,16 +250,21 @@ public final class HeroEvents {
       }
    }
 
-   /** Regulus never takes fall damage; the shockwave itself lives in the tick. */
+   /** Landing hook for every hero (HeroDefinition.onLanded / cancelsFallDamage). */
    @SubscribeEvent
    public static void onLivingFall(LivingFallEvent event) {
-      LivingEntity entity = event.getEntity();
-      if (entity instanceof Player player && RegulusHero.stateOf(player) != null) {
-         // The only place the real landing distance is still known: vanilla
-         // resets fallDistance on this same tick, before the hero tick runs.
-         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer && !player.level().isClientSide()) {
-            dev.baranhan.viltrumitecore.hero.regulus.RegulusMovement.onLanding(serverPlayer, RegulusHero.stateOf(player), event.getDistance());
-         }
+      if (!(event.getEntity() instanceof Player player)) {
+         return;
+      }
+
+      HeroDefinition hero = HeroRegistry.get(player);
+      // The only place the real landing distance is still known: vanilla
+      // resets fallDistance on this same tick, before the hero tick runs.
+      if (player instanceof ServerPlayer serverPlayer) {
+         hero.onLanded(serverPlayer, event.getDistance());
+      }
+
+      if (hero.cancelsFallDamage(player)) {
          event.setCanceled(true);
       }
    }
