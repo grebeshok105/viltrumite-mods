@@ -1,0 +1,11 @@
+# Devin environment blueprint for viltrumite-mods.
+# Java 17 is required — the default VM JDK is 21 and the Forge build fails on it.
+knowledge:
+  - name: test
+    contents: JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./gradlew :viltrumitecore:test --no-daemon
+  - name: build
+    contents: JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./gradlew build --no-daemon
+  - name: server
+    contents: printf 'eula=true\n' > viltrumitecore/run/eula.txt && JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./gradlew :viltrumitecore:runServer --no-daemon
+  - name: notes
+    contents: Prefix every gradle command with JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 — the default JDK is 21. JUnit lives in viltrumitecore only; viltrumiteflight has no tests. In-game checks are the user's job.
