@@ -17,7 +17,6 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - `PlayerEntityCoreMixin` (~1500 lines) holds most core player logic: synced data (`IS_VILTRUMITE`, `HAS_CHOSEN_RACE`, `IS_DASHING`, `DASH_TICKS`, `PUNCH_TICKS`, `IS_LEFT_ARM_PUNCH`, ...), dash, punch, chop, grab. Client model mixins read this synced data to pose the model. It is a refactor target for the hero seam.
 - Impact effects are driven by `PunchImpactManager`, `ChopImpactManager`, `ThunderClapManager`.
 - Core has its own geo/animation loader in `client/anim/` for JSON in `assets/viltrumitecore/geo/` and `assets/viltrumitecore/animations/`. Details: `.agents/skills/animation-system/SKILL.md`.
-- No hero abstraction exists yet. The code assumes one race (Viltrumite or human).
 
 ## Topic files
 - `decompile.md`: decompile artifacts and their fixes.

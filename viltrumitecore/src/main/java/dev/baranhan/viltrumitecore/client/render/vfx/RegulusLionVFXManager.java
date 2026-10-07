@@ -26,6 +26,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.level.ClipContext;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
@@ -35,23 +37,16 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
-/**
- * Lion's Heart world VFX (spec 14): the distortion dome around an active
- * Regulus, suspended dust motes inside it, a white highlight on frozen
- * projectiles, the owner-only gold pulse on heart carriers, and a small repulse
- * burst when the heart releases.
- */
+/** Lion's frozen mote boundary and owner-private body-center carrier glow. */
 @EventBusSubscriber(
    modid = "viltrumitecore",
    bus = Bus.FORGE,
    value = {Dist.CLIENT}
 )
 public class RegulusLionVFXManager {
-   private static final List<RegulusLionVFXManager.BurstVFX> BURSTS = new ArrayList<>();
+   private static final List<RegulusLionVFXManager.ChestPulse> PULSES = new ArrayList<>();
    private static final Map<UUID, Boolean> PREV_LION = new HashMap<>();
-   private static final int GOLD_R = 255;
-   private static final int GOLD_G = 210;
-   private static final int GOLD_B = 92;
+   private static ClientLevel lastLevel;
 
    @SubscribeEvent
    public static void onClientTick(ClientTickEvent event) {
@@ -60,9 +55,12 @@ public class RegulusLionVFXManager {
       }
 
       Minecraft client = Minecraft.getInstance();
-      if (client.level == null) {
+      if (client.level != lastLevel) {
+         lastLevel = client.level;
          PREV_LION.clear();
-         BURSTS.clear();
+         PULSES.clear();
+      }
+      if (client.level == null) {
          return;
       }
 
@@ -73,18 +71,19 @@ public class RegulusLionVFXManager {
 
          HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
          if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
+            PREV_LION.remove(player.getUUID());
             continue;
          }
 
          boolean wasActive = PREV_LION.getOrDefault(player.getUUID(), false);
-         if (wasActive && !snapshot.lionActive()) {
-            BURSTS.add(new RegulusLionVFXManager.BurstVFX(player.position().add(0.0, 0.9, 0.0), 4.0F));
+         if (wasActive != snapshot.lionActive()) {
+            PULSES.add(new ChestPulse(player.getUUID(), snapshot.lionActive()));
          }
 
          PREV_LION.put(player.getUUID(), snapshot.lionActive());
       }
 
-      BURSTS.removeIf(burst -> {
+      PULSES.removeIf(burst -> {
          burst.age++;
          return burst.age > 14;
       });
@@ -112,17 +111,18 @@ public class RegulusLionVFXManager {
          }
       }
 
-      if (activeLions.isEmpty() && BURSTS.isEmpty() && ClientHeroData.carriers().length == 0) {
+      if (activeLions.isEmpty() && PULSES.isEmpty() && ClientHeroData.carriers().length == 0) {
          return;
       }
 
       float partialTick = event.getPartialTick();
       Camera camera = event.getCamera();
       Vec3 cameraPos = camera.getPosition();
-      float timeSeconds = (level.getGameTime() % 24000L) + partialTick;
+      float timeSeconds = ((level.getGameTime() % 24000L) + partialTick) / 20.0F;
       PoseStack modelViewStack = RenderSystem.getModelViewStack();
       modelViewStack.pushPose();
       modelViewStack.setIdentity();
+      RegulusPixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
       RenderSystem.applyModelViewMatrix();
       RenderSystem.enableBlend();
       RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
@@ -132,52 +132,89 @@ public class RegulusLionVFXManager {
       RenderSystem.setShader(GameRenderer::getPositionColorShader);
       Tesselator tessellator = Tesselator.getInstance();
       BufferBuilder buffer = tessellator.getBuilder();
-      buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+      try {
+         buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-      for (Player lion : activeLions) {
-         Vec3 center = lion.getPosition(partialTick).add(0.0, 0.9, 0.0);
-         // Distortion dome + frozen motes (spec 14).
-         RegulusPixelVfx.domeShell(buffer, cameraPos, center, 4.0F, timeSeconds, 235, 240, 255, 95);
-         drawSuspendedMotes(buffer, cameraPos, camera, center, lion.getUUID());
+         for (Player lion : activeLions) {
+            Vec3 center = lion.getPosition(partialTick).add(0.0, lion.getBbHeight() * 0.55, 0.0);
+            if (!localFirstPerson(lion)) {
+               HeroPublicSnapshot snapshot = ((HeroPlayer)lion).getHeroSnapshot();
+               int green = snapshot.lionOverheat() ? 110 : 240;
+               int blue = snapshot.lionOverheat() ? 90 : 230;
+               RegulusPixelVfx.sphereShell(buffer, cameraPos, camera, center, 4.0F, timeSeconds, 250, green, blue, 65);
+               drawSuspendedMotes(buffer, cameraPos, camera, center, lion.getUUID());
+               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, center, 0.08F, 255, green, blue, 180);
+            }
 
-         // Frozen projectiles inside the aura get a white highlight.
-         for (Entity entity : level.entitiesForRendering()) {
-            if (entity instanceof Projectile
-               && entity.isNoGravity()
-               && entity.getDeltaMovement().lengthSqr() < 0.01
-               && entity.distanceToSqr(lion) <= 16.0 + 4.0) {
-               RegulusPixelVfx.crossGlow(buffer, cameraPos, camera, entity.getPosition(partialTick).add(0.0, entity.getBbHeight() * 0.5, 0.0), 0.16F, 250, 252, 255, 210);
+            // Frozen projectiles inside the aura get a white highlight.
+            for (Entity entity : level.entitiesForRendering()) {
+               if (entity instanceof Projectile
+                  && entity.isNoGravity()
+                  && entity.getDeltaMovement().lengthSqr() < 0.01
+                  && entity.distanceToSqr(lion) <= 16.0 + 4.0) {
+                  RegulusPixelVfx.crossGlow(buffer, cameraPos, camera, entity.getPosition(partialTick).add(0.0, entity.getBbHeight() * 0.5, 0.0), 0.16F, 250, 252, 255, 210);
+               }
             }
          }
-      }
 
-      // Heart carriers: owner-only gold pulse (carrier ids are owner-private).
-      for (int carrierId : ClientHeroData.carriers()) {
-         Entity carrier = level.getEntity(carrierId);
-         if (carrier != null) {
-            float pulse = 0.5F + 0.5F * (float)Math.sin((double)(timeSeconds * 2.4F));
-            float ringRadius = 0.7F + 0.25F * pulse;
-            Vec3 carrierPos = carrier.getPosition(partialTick);
-            RegulusPixelVfx.groundRing(buffer, cameraPos, carrierPos, ringRadius, 0.06F, GOLD_R, GOLD_G, GOLD_B, 80 + (int)(90.0F * pulse));
-            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, carrierPos.add(0.0, carrier.getBbHeight() + 0.25 + pulse * 0.15, 0.0), 0.07F, GOLD_R, GOLD_G, GOLD_B, 110);
+         for (ChestPulse pulse : PULSES) {
+            Player owner = level.getPlayerByUUID(pulse.ownerId);
+            if (owner == null || localFirstPerson(owner)) {
+               continue;
+            }
+            float progress = (pulse.age + partialTick) / 14.0F;
+            int alpha = (int)(180.0F * (1.0F - progress));
+            if (alpha > 0) {
+               Vec3 chest = owner.getPosition(partialTick).add(0.0, owner.getBbHeight() * 0.55, 0.0);
+               RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.12F - progress * 0.07F,
+                  pulse.activated ? 255 : 180, pulse.activated ? 235 : 185, pulse.activated ? 150 : 190, alpha);
+            }
          }
-      }
 
-      for (RegulusLionVFXManager.BurstVFX burst : BURSTS) {
-         float progress = (burst.age + partialTick) / 14.0F;
-         int alpha = (int)(220.0F * (1.0F - progress));
-         if (alpha > 0) {
-            RegulusPixelVfx.expandingRing(buffer, cameraPos, burst.origin, progress, burst.maxRadius, 240, 245, 255, alpha);
+         tessellator.end();
+         // Body-center markers bypass the entity skin, but never the owner's block LOS.
+         RenderSystem.disableDepthTest();
+         buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+         drawCarriers(client, level, buffer, cameraPos, camera, partialTick, timeSeconds);
+         tessellator.end();
+         RenderSystem.enableDepthTest();
+      } finally {
+         RenderSystem.enableDepthTest();
+         RenderSystem.depthMask(true);
+         RenderSystem.enableCull();
+         RenderSystem.defaultBlendFunc();
+         RenderSystem.disableBlend();
+         modelViewStack.popPose();
+         RenderSystem.applyModelViewMatrix();
+      }
+   }
+
+   private static void drawCarriers(Minecraft client, ClientLevel level, BufferBuilder buffer, Vec3 cameraPos, Camera camera, float partialTick, float timeSeconds) {
+      if (!(client.player instanceof HeroPlayer heroPlayer)) {
+         return;
+      }
+      HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
+      if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
+         return;
+      }
+      for (int id : ClientHeroData.carriers()) {
+         Entity carrier = level.getEntity(id);
+         if (carrier == null || !carrier.isAlive()) {
+            continue;
          }
+         Vec3 chest = carrier.getPosition(partialTick).add(0.0, carrier.getBbHeight() * 0.55, 0.0);
+         if (level.clip(new ClipContext(cameraPos, chest, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, client.player)).getType() != HitResult.Type.MISS) {
+            continue;
+         }
+         float pulse = 0.5F + 0.5F * (float)Math.sin(timeSeconds * 2.4F);
+         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.055F, 180, 20, 15, 35 + (int)(25 * pulse));
+         RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, chest, 0.027F, 245, 35, 25, 100 + (int)(60 * pulse));
       }
+   }
 
-      tessellator.end();
-      RenderSystem.depthMask(true);
-      RenderSystem.enableCull();
-      RenderSystem.defaultBlendFunc();
-      RenderSystem.disableBlend();
-      modelViewStack.popPose();
-      RenderSystem.applyModelViewMatrix();
+   private static boolean localFirstPerson(Player player) {
+      Minecraft client = Minecraft.getInstance();
+      return player == client.player && client.options.getCameraType().isFirstPerson();
    }
 
    /** Dust motes hang frozen inside the dome — static hash positions, no drift. */
@@ -193,14 +230,14 @@ public class RegulusLionVFXManager {
       }
    }
 
-   private static class BurstVFX {
-      final Vec3 origin;
-      final float maxRadius;
+   private static class ChestPulse {
+      final UUID ownerId;
+      final boolean activated;
       int age;
 
-      BurstVFX(Vec3 origin, float maxRadius) {
-         this.origin = origin;
-         this.maxRadius = maxRadius;
+      ChestPulse(UUID ownerId, boolean activated) {
+         this.ownerId = ownerId;
+         this.activated = activated;
       }
    }
 }

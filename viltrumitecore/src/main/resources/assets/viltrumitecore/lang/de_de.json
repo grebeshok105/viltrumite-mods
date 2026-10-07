@@ -167,7 +167,7 @@
   "ability.viltrumitecore.lions_heart.name": "<gold>Herz des Löwen",
   "ability.viltrumitecore.lions_heart.desc": "<grey>Abklingzeit: <lime>5s / 30s\n<grey>Typ: <yellow>Umschalten\n\n<grey>Verwandle dich in einen unbezwingbaren Löwen.\n<grey>Solange das Herz schlägt, erleidest du keinen\n<grey>Schaden und frierst Projektile ein.\n\n<red>Überhitzung verbrennt dein Leben.\n\n<blue>Regulus",
   "ability.viltrumitecore.debris_kick.name": "<gold>Trümmertritt",
-  "ability.viltrumitecore.debris_kick.desc": "<grey>Abklingzeit: <lime>20s\n<grey>Typ: <yellow>Wirken\n\n<grey>Tritt einen Fächer aus Trümmerstrahlen in\n<grey>einem 35°-Kegel; jeder Strahl durchschlägt\n<grey>bis zu 3 Blöcke.\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>Abklingzeit: <lime>20s\n<grey>Typ: <yellow>Wirken\n\n<grey>Tritt auf den Boden und schicke eine Trümmerwelle etwa 8 Blöcke vorwärts.\n<grey>Jedes Ziel wird einmal getroffen und erleidet je nach Entfernung 7 bis 2 Schaden.\n\n<blue>Regulus",
   "ability.viltrumitecore.mania.name": "<gold>Manie",
   "ability.viltrumitecore.mania.desc": "<grey>Abklingzeit: <lime>25s\n<grey>Typ: <yellow>Kanal\n\n<grey>Ziehe ein Ziel bis zu 6 Sekunden zu dir und\n<grey>friere es danach ein.\n\n<blue>Regulus",
   "ability.viltrumitecore.greeds_embrace.name": "<gold>Umarmung der Gier",

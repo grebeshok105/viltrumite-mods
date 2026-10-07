@@ -24,7 +24,6 @@ public final class RegulusRules {
    public static final int DEBRIS_ANIM_TICKS = 44;
    public static final int DEBRIS_EVENT_TICK = 14;
    public static final int DEBRIS_RISE_TICK = 11;
-   public static final double DEBRIS_CONE_DEGREES = 35.0;
    public static final double DEBRIS_RANGE = 8.0;
    public static final int DEBRIS_COOLDOWN = 400;
 

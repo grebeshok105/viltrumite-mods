@@ -167,7 +167,7 @@
   "ability.viltrumitecore.lions_heart.name": "<gold>狮之心",
   "ability.viltrumitecore.lions_heart.desc": "<grey>冷却: <lime>5秒 / 30秒\n<grey>类型: <yellow>开关\n\n<grey>化身坚不可摧的狮子。心脏跳动期间你免疫\n<grey>伤害与控制,并冻结附近的弹射物。\n\n<red>过热会燃烧自己的生命。\n\n<blue>Regulus",
   "ability.viltrumitecore.debris_kick.name": "<gold>碎石踢",
-  "ability.viltrumitecore.debris_kick.desc": "<grey>冷却: <lime>20秒\n<grey>类型: <yellow>施放\n\n<grey>在35°锥形范围内踢出9道碎石射线,每道最多\n<grey>击穿3个方块。\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>冷却: <lime>20秒\n<grey>类型: <yellow>施放\n\n<grey>猛踢地面，向前约8格释放一道碎石波。\n<grey>每个目标只会命中一次，伤害随距离从7降至2。\n\n<blue>Regulus",
   "ability.viltrumitecore.mania.name": "<gold>狂热",
   "ability.viltrumitecore.mania.desc": "<grey>冷却: <lime>25秒\n<grey>类型: <yellow>引导\n\n<grey>将目标拉向自己最多6秒,随后将其冻结在原地。\n\n<blue>Regulus",
   "ability.viltrumitecore.greeds_embrace.name": "<gold>贪婪之拥",

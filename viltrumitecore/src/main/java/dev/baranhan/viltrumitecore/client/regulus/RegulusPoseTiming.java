@@ -19,6 +19,26 @@ public final class RegulusPoseTiming {
    private RegulusPoseTiming() {
    }
 
+   public static float actionElapsed(int syncedElapsed, long ticksSinceSync, float partialTick, int length) {
+      return Math.min(length, syncedElapsed + Math.min(6, Math.max(0, ticksSinceSync - 1)) + partialTick);
+   }
+
+   public static float keyedAngle(float elapsed, float vanilla, float[][] keys, int axis) {
+      if (elapsed <= keys[0][0]) {
+         return vanilla;
+      }
+      int last = keys.length - 1;
+      for (int i = 0; i < last; i++) {
+         if (elapsed < keys[i + 1][0]) {
+            float from = i == 0 ? vanilla : keys[i][axis];
+            float to = keys[i + 1][axis] + (i + 1 == last ? vanilla : 0.0F);
+            float t = (elapsed - keys[i][0]) / (keys[i + 1][0] - keys[i][0]);
+            return from + (to - from) * t;
+         }
+      }
+      return vanilla + keys[last][axis];
+   }
+
    /** Cast window in ticks: the event fires at eventTick, the anim ends at length. */
    public record Timing(int eventTick, int unlockTick, int length) {
    }

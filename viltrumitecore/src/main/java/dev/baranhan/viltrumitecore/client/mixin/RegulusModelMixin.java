@@ -12,10 +12,10 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,12 +32,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
    priority = 1180
 )
 public abstract class RegulusModelMixin<T extends LivingEntity> extends HumanoidModel<T> {
-   @Shadow
-   @Final
-   private ModelPart cloak;
+   @Unique
+   private final float[] regulusBasePositions = new float[18];
+   @Unique
+   private boolean regulusPositionOffsets;
+   @Unique
+   private float regulusMirror = 1.0F;
 
    public RegulusModelMixin(ModelPart root) {
       super(root);
+   }
+
+   @Inject(
+      method = {"setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V"},
+      at = {@At("HEAD")}
+   )
+   private void restoreRegulusPivots(T entity, float f, float g, float h, float yaw, float pitch, CallbackInfo ci) {
+      if (!this.regulusPositionOffsets) {
+         return;
+      }
+      ModelPart[] parts = {this.head, this.body, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg};
+      for (int i = 0; i < parts.length; i++) {
+         parts[i].x = this.regulusBasePositions[i * 3];
+         parts[i].y = this.regulusBasePositions[i * 3 + 1];
+         parts[i].z = this.regulusBasePositions[i * 3 + 2];
+      }
+      this.regulusPositionOffsets = false;
    }
 
    @Inject(
@@ -51,6 +71,7 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
 
       HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
       if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
+         RegulusAnimationManager.reset(livingEntity);
          return;
       }
 
@@ -62,6 +83,7 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
 
       float partialTick = minecraft.getFrameTime();
       PlayerModel<?> model = (PlayerModel<?>)(Object)this;
+      this.regulusMirror = livingEntity.getMainArm() == HumanoidArm.LEFT ? -1.0F : 1.0F;
       this.head.zRot = 0.0F;
       this.body.yRot = 0.0F;
       this.body.zRot = 0.0F;
@@ -85,12 +107,12 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
          livingEntity, RegulusAnimationManager.Pose.RITUAL, snapshot.ritualTicks() >= 0
       );
       if (ritualWeight > 0.01F) {
-         this.applyRitualHold(ritualWeight);
+         this.applyRitualHold(ritualWeight, livingEntity.getUsedItemHand() == InteractionHand.OFF_HAND);
       }
 
       HeroAction action = HeroAction.byId(snapshot.actionId());
       if (action != null) {
-         float elapsed = (float)snapshot.actionElapsed() + partialTick;
+         float elapsed = RegulusAnimationManager.actionTime(livingEntity, snapshot, partialTick);
          switch (action) {
             case LIONS_HEART:
                this.applyLionWindup(elapsed);
@@ -112,65 +134,97 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
          }
       }
 
+      float offsetWeight = Math.max(lionWeight, Math.max(channelWeight, ritualWeight));
+      if (action != null && snapshot.actionLength() > 0) {
+         float elapsed = RegulusAnimationManager.actionTime(livingEntity, snapshot, partialTick);
+         RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(action);
+         if (timing != null) {
+            float windup = timing.eventTick() > 0 ? elapsed / timing.eventTick() : 0.0F;
+            float recovery = (timing.length() - elapsed) / Math.max(1, timing.length() - timing.eventTick());
+            offsetWeight = Math.max(offsetWeight, Mth.clamp(Math.min(windup, recovery), 0.0F, 1.0F));
+         }
+      }
+      this.applyPositionOffsets(offsetWeight, action);
+
       model.hat.copyFrom(this.head);
       model.jacket.copyFrom(this.body);
       model.rightSleeve.copyFrom(this.rightArm);
       model.leftSleeve.copyFrom(this.leftArm);
       model.rightPants.copyFrom(this.rightLeg);
       model.leftPants.copyFrom(this.leftLeg);
-      if (this.cloak != null) {
-         this.cloak.copyFrom(this.body);
+   }
+
+   @Unique
+   private void applyPositionOffsets(float weight, HeroAction action) {
+      if (weight <= 0.001F) {
+         return;
+      }
+      ModelPart[] parts = {this.head, this.body, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg};
+      for (int i = 0; i < parts.length; i++) {
+         this.regulusBasePositions[i * 3] = parts[i].x;
+         this.regulusBasePositions[i * 3 + 1] = parts[i].y;
+         this.regulusBasePositions[i * 3 + 2] = parts[i].z;
+      }
+      this.regulusPositionOffsets = true;
+      this.body.z -= 0.4F * weight;
+      this.head.z -= 0.3F * weight;
+      this.rightArm.z -= 0.5F * weight;
+      this.leftArm.z -= 0.5F * weight;
+      if (action == HeroAction.DEBRIS_KICK) {
+         this.mirroredPart(this.rightLeg).z -= 1.2F * weight;
+         this.mirroredPart(this.leftLeg).z += 0.4F * weight;
+      } else if (action == HeroAction.COUNTER) {
+         this.body.y -= 0.6F * weight;
       }
    }
 
    /** Keyframe lerp: rows are {tick, xDeg, yDeg, zDeg}, first row is reached from the part's vanilla pose. */
    @Unique
    private void poseKeyed(ModelPart part, float elapsed, float[][] keys) {
-      float firstTick = keys[0][0];
-      if (elapsed < firstTick) {
-         return;
-      }
-
-      int last = keys.length - 1;
-      if (elapsed >= keys[last][0]) {
-         part.xRot = (float)Math.toRadians((double)keys[last][1]);
-         part.yRot = (float)Math.toRadians((double)keys[last][2]);
-         part.zRot = (float)Math.toRadians((double)keys[last][3]);
-         return;
-      }
-
-      for (int i = 0; i < last; i++) {
-         float t0 = keys[i][0];
-         float t1 = keys[i + 1][0];
-         if (elapsed >= t0 && elapsed < t1) {
-            float localT = (elapsed - t0) / (t1 - t0);
-            float fromX;
-            float fromY;
-            float fromZ;
-            if (i == 0) {
-               fromX = part.xRot;
-               fromY = part.yRot;
-               fromZ = part.zRot;
-            } else {
-               fromX = (float)Math.toRadians((double)keys[i][1]);
-               fromY = (float)Math.toRadians((double)keys[i][2]);
-               fromZ = (float)Math.toRadians((double)keys[i][3]);
-            }
-
-            part.xRot = Mth.lerp(localT, fromX, (float)Math.toRadians((double)keys[i + 1][1]));
-            part.yRot = Mth.lerp(localT, fromY, (float)Math.toRadians((double)keys[i + 1][2]));
-            part.zRot = Mth.lerp(localT, fromZ, (float)Math.toRadians((double)keys[i + 1][3]));
-            return;
-         }
-      }
+      part = this.mirroredPart(part);
+      float baseX = (float)Math.toDegrees(part.xRot);
+      float baseY = (float)Math.toDegrees(part.yRot);
+      float baseZ = (float)Math.toDegrees(part.zRot);
+      boolean additive = part == this.head || part == this.body;
+      part.xRot = (float)Math.toRadians(RegulusPoseTiming.keyedAngle(elapsed, additive ? 0.0F : baseX, keys, 1) + (additive ? baseX : 0.0F));
+      part.yRot = (float)Math.toRadians(this.regulusMirror * RegulusPoseTiming.keyedAngle(elapsed, additive ? 0.0F : baseY * this.regulusMirror, keys, 2) + (additive ? baseY : 0.0F));
+      part.zRot = (float)Math.toRadians(this.regulusMirror * RegulusPoseTiming.keyedAngle(elapsed, additive ? 0.0F : baseZ * this.regulusMirror, keys, 3) + (additive ? baseZ : 0.0F));
    }
 
    /** Weighted blend toward a pose — used by the continuous states. */
    @Unique
    private void poseBlend(ModelPart part, float weight, float xDeg, float yDeg, float zDeg) {
+      part = this.mirroredPart(part);
       part.xRot = Mth.lerp(weight, part.xRot, (float)Math.toRadians((double)xDeg));
-      part.yRot = Mth.lerp(weight, part.yRot, (float)Math.toRadians((double)yDeg));
-      part.zRot = Mth.lerp(weight, part.zRot, (float)Math.toRadians((double)zDeg));
+      part.yRot = Mth.lerp(weight, part.yRot, (float)Math.toRadians(yDeg * this.regulusMirror));
+      part.zRot = Mth.lerp(weight, part.zRot, (float)Math.toRadians(zDeg * this.regulusMirror));
+   }
+
+   @Unique
+   private void poseBlendAdditive(ModelPart part, float weight, float xDeg, float yDeg, float zDeg) {
+      part.xRot += Mth.lerp(weight, 0.0F, (float)Math.toRadians(xDeg));
+      part.yRot += Mth.lerp(weight, 0.0F, (float)Math.toRadians(yDeg * this.regulusMirror));
+      part.zRot += Mth.lerp(weight, 0.0F, (float)Math.toRadians(zDeg * this.regulusMirror));
+   }
+
+   @Unique
+   private ModelPart mirroredPart(ModelPart part) {
+      if (this.regulusMirror > 0.0F) {
+         return part;
+      }
+      if (part == this.rightArm) {
+         return this.leftArm;
+      }
+      if (part == this.leftArm) {
+         return this.rightArm;
+      }
+      if (part == this.rightLeg) {
+         return this.leftLeg;
+      }
+      if (part == this.leftLeg) {
+         return this.rightLeg;
+      }
+      return part;
    }
 
    /** Lion windup: right hand pressed to the chest, fist clench at the event tick. */
@@ -185,12 +239,12 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
             {7.0F, -62.0F, -34.0F, 8.0F},
             {12.0F, -74.0F, -38.0F, 12.0F},
             {(float)timing.eventTick(), -72.0F, -36.0F, 30.0F},
-            {(float)timing.length(), -70.0F, -35.0F, 18.0F}
+            {(float)timing.length(), 0.0F, 0.0F, 0.0F}
          }
       );
-      this.poseKeyed(this.leftArm, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, -18.0F, 10.0F, -8.0F}, {(float)timing.length(), -14.0F, 8.0F, -6.0F}});
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -9.0F, 0.0F, 0.0F}, {(float)timing.length(), -9.0F, 0.0F, 0.0F}});
-      this.poseKeyed(this.body, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -5.0F, 0.0F, 0.0F}, {(float)timing.length(), -5.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.leftArm, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {8.0F, -18.0F, 10.0F, -8.0F}, {(float)timing.length(), 0.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -9.0F, 0.0F, 0.0F}, {(float)timing.length(), 0.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.body, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -5.0F, 0.0F, 0.0F}, {(float)timing.length(), 0.0F, 0.0F, 0.0F}});
    }
 
    /** "King stands" — calm held pose while Lion's Heart is active. */
@@ -199,8 +253,8 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
       float breath = (float)Math.sin((double)(ageInTicks * 0.08F)) * 1.5F;
       this.poseBlend(this.rightArm, weight, -12.0F, -4.0F, 10.0F);
       this.poseBlend(this.leftArm, weight, -12.0F, 4.0F, -10.0F);
-      this.poseBlend(this.head, weight, -9.0F, 0.0F, 0.0F);
-      this.poseBlend(this.body, weight, -5.0F + breath, 0.0F, 0.0F);
+      this.poseBlendAdditive(this.head, weight, -9.0F, 0.0F, 0.0F);
+      this.poseBlendAdditive(this.body, weight, -5.0F + breath, 0.0F, 0.0F);
    }
 
    /** Mania channel: the extended arm slowly pulls the target in. */
@@ -208,17 +262,18 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
    private void applyChannelPull(float weight, float ageInTicks) {
       float tremble = (float)Math.sin((double)(ageInTicks * 3.1F)) * 2.0F;
       this.poseBlend(this.rightArm, weight, -68.0F, -14.0F, 10.0F + tremble);
-      this.poseBlend(this.body, weight, 8.0F, 0.0F, 0.0F);
-      this.poseBlend(this.head, weight, 6.0F, 0.0F, 0.0F);
+      this.poseBlendAdditive(this.body, weight, 8.0F, 0.0F, 0.0F);
+      this.poseBlendAdditive(this.head, weight, 6.0F, 0.0F, 0.0F);
    }
 
    /** Evangelium ritual: both hands hold the book in front of the chest. */
    @Unique
-   private void applyRitualHold(float weight) {
-      this.poseBlend(this.rightArm, weight, -62.0F, -30.0F, -8.0F);
-      this.poseBlend(this.leftArm, weight, -62.0F, 30.0F, 8.0F);
-      this.poseBlend(this.head, weight, 14.0F, 0.0F, 0.0F);
-      this.poseBlend(this.body, weight, 6.0F, 0.0F, 0.0F);
+   private void applyRitualHold(float weight, boolean offHand) {
+      float side = offHand ? -1.0F : 1.0F;
+      this.poseBlend(offHand ? this.leftArm : this.rightArm, weight, -68.0F, -24.0F * side, -8.0F * side);
+      this.poseBlend(offHand ? this.rightArm : this.leftArm, weight, -62.0F, 30.0F * side, 8.0F * side);
+      this.poseBlendAdditive(this.head, weight, 14.0F, 0.0F, 0.0F);
+      this.poseBlendAdditive(this.body, weight, 6.0F, 0.0F, 0.0F);
    }
 
    /** Debris kick: leg winds up to the rise tick, slams the ground at the event. */
@@ -271,10 +326,10 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
             {8.0F, -48.0F, -10.0F, 0.0F},
             {17.0F, -88.0F, -5.0F, 0.0F},
             {(float)timing.eventTick(), -88.0F, -5.0F, 22.0F},
-            {(float)timing.length(), -85.0F, -8.0F, 14.0F}
+            {(float)timing.length(), 0.0F, 0.0F, 0.0F}
          }
       );
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {12.0F, 6.0F, 0.0F, 0.0F}, {(float)timing.length(), 6.0F, 0.0F, 0.0F}});
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {12.0F, 6.0F, 0.0F, 0.0F}, {(float)timing.length(), 0.0F, 0.0F, 0.0F}});
    }
 
    /** Embrace: arm raises to the point, opens at the event, lowers by recover. */
@@ -312,17 +367,17 @@ public abstract class RegulusModelMixin<T extends LivingEntity> extends Humanoid
          {liftTick, -150.0F, 0.0F, 0.0F},
          {24.0F, -152.0F, 0.0F, 0.0F},
          {eventTick, 42.0F, 0.0F, 0.0F},
-         {endTick, 30.0F, 0.0F, 0.0F}
+         {endTick, 0.0F, 0.0F, 0.0F}
       };
       this.poseKeyed(this.rightArm, elapsed, mirrorZ(armKeys, -1.0F));
       this.poseKeyed(this.leftArm, elapsed, mirrorZ(armKeys, 1.0F));
       this.poseKeyed(
          this.body,
          elapsed,
-         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {liftTick, -10.0F, 0.0F, 0.0F}, {24.0F, -10.0F, 0.0F, 0.0F}, {eventTick, 30.0F, 0.0F, 0.0F}, {endTick, 24.0F, 0.0F, 0.0F}}
+         new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {liftTick, -10.0F, 0.0F, 0.0F}, {24.0F, -10.0F, 0.0F, 0.0F}, {eventTick, 30.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}}
       );
-      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {liftTick, -12.0F, 0.0F, 0.0F}, {eventTick, 15.0F, 0.0F, 0.0F}, {endTick, 12.0F, 0.0F, 0.0F}});
-      float[][] legKeys = {{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -14.0F, 0.0F, 0.0F}, {eventTick, -18.0F, 0.0F, 0.0F}, {endTick, -14.0F, 0.0F, 0.0F}};
+      this.poseKeyed(this.head, elapsed, new float[][]{{0.0F, 0.0F, 0.0F, 0.0F}, {liftTick, -12.0F, 0.0F, 0.0F}, {eventTick, 15.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}});
+      float[][] legKeys = {{0.0F, 0.0F, 0.0F, 0.0F}, {10.0F, -14.0F, 0.0F, 0.0F}, {eventTick, -18.0F, 0.0F, 0.0F}, {endTick, 0.0F, 0.0F, 0.0F}};
       this.poseKeyed(this.rightLeg, elapsed, legKeys);
       this.poseKeyed(this.leftLeg, elapsed, legKeys);
    }

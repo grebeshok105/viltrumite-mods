@@ -15,17 +15,11 @@ public final class RegulusVfxMath {
    private RegulusVfxMath() {
    }
 
-   /**
-    * Camera-shake factor for entities standing inside the debris cone.
-    * The cone half-angle comes from the 35-degree apex spec constant.
-    */
-   public static float debrisVictimFactor(double distance, double angleDegrees) {
-      double halfAngle = RegulusRules.DEBRIS_CONE_DEGREES * 0.5;
-      if (angleDegrees > halfAngle || distance >= RegulusRules.DEBRIS_RANGE) {
+   public static float debrisImpactEnvelope(float elapsed) {
+      if (elapsed < RegulusRules.DEBRIS_EVENT_TICK) {
          return 0.0F;
       }
-
-      return (float)(1.0 - distance / RegulusRules.DEBRIS_RANGE);
+      return Math.max(0.0F, 1.0F - (elapsed - RegulusRules.DEBRIS_EVENT_TICK) / 10.0F);
    }
 
    /** Overheat screen noise ramps over the first second of overheating. */

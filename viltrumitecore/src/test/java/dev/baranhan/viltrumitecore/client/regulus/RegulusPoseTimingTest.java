@@ -15,6 +15,24 @@ import org.junit.jupiter.api.Test;
 class RegulusPoseTimingTest {
 
    @Test
+   void keyframesReturnToVanillaLocomotionRatherThanZero() {
+      float[][] keys = {{0, 0, 0, 0}, {10, 60, 0, 0}, {20, 0, 0, 0}};
+      assertEquals(20.0F, RegulusPoseTiming.keyedAngle(0, 20, keys, 1));
+      assertEquals(40.0F, RegulusPoseTiming.keyedAngle(5, 20, keys, 1));
+      assertEquals(60.0F, RegulusPoseTiming.keyedAngle(10, 20, keys, 1));
+      assertEquals(40.0F, RegulusPoseTiming.keyedAngle(15, 20, keys, 1));
+      assertEquals(20.0F, RegulusPoseTiming.keyedAngle(20, 20, keys, 1));
+   }
+
+   @Test
+   void extrapolationIsBoundedAndStopsAtActionEnd() {
+      assertEquals(13.5F, RegulusPoseTiming.actionElapsed(13, 1, 0.5F, 14));
+      assertEquals(14.0F, RegulusPoseTiming.actionElapsed(13, 40, 0.5F, 14));
+      assertEquals(13.0F, RegulusPoseTiming.actionElapsed(13, -5, 0.0F, 44));
+      assertEquals(19.0F, RegulusPoseTiming.actionElapsed(13, 40, 0.0F, 44));
+   }
+
+   @Test
    void lionWindupMatchesSpec() {
       RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(HeroAction.LIONS_HEART);
       assertEquals(RegulusRules.LION_WINDUP_TICKS, timing.eventTick());

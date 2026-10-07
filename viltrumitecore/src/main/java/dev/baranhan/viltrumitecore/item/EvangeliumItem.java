@@ -60,7 +60,7 @@ public class EvangeliumItem extends Item {
 
    @Override
    public UseAnim getUseAnimation(ItemStack stack) {
-      return UseAnim.BLOCK;
+      return UseAnim.NONE;
    }
 
    @Override

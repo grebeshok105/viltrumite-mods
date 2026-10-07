@@ -17,7 +17,10 @@ import dev.baranhan.viltrumitecore.hero.HeroPlayer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
+import dev.baranhan.viltrumitecore.hero.regulus.GreedsEmbrace;
+import dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities;
 import dev.baranhan.viltrumitecore.network.packet.HeroControlS2CPacket;
+import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,26 +45,17 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
-/**
- * Regulus ability VFX (spec 14): debris rise + dust cone, mania tether and
- * frozen-target outline, embrace dome + burst, counter flash/speed lines/
- * crater, ritual runes + book glow, madness floating symbols, landing ring,
- * heart-loss sparks and the heartbeat sound. Edges are detected off the synced
- * snapshot ticks; continuous effects read ClientHeroData control snapshots.
- */
+/** State-driven Regulus casts, control telegraphs and ritual/Madness feedback. */
 @EventBusSubscriber(
    modid = "viltrumitecore",
    bus = Bus.FORGE,
    value = {Dist.CLIENT}
 )
 public class RegulusActionVFXManager {
-   private static final List<RegulusActionVFXManager.RiseVFX> RISES = new ArrayList<>();
-   private static final List<RegulusActionVFXManager.ConeVFX> CONES = new ArrayList<>();
    private static final List<RegulusActionVFXManager.FlashVFX> FLASHES = new ArrayList<>();
-   private static final List<RegulusActionVFXManager.RingVFX> RINGS = new ArrayList<>();
    private static final List<RegulusActionVFXManager.SparkVFX> SPARKS = new ArrayList<>();
    private static final Map<UUID, RegulusActionVFXManager.PrevState> PREV = new HashMap<>();
-   private static final Map<UUID, Vec3> LAST_DOMES = new HashMap<>();
+   private static ClientLevel lastLevel;
    private static int lastLocalHearts = -1;
    private static final int GOLD_R = 255;
    private static final int GOLD_G = 210;
@@ -78,16 +72,15 @@ public class RegulusActionVFXManager {
 
       Minecraft client = Minecraft.getInstance();
       ClientLevel level = client.level;
-      if (level == null) {
-         RISES.clear();
-         CONES.clear();
+      if (level != lastLevel) {
+         lastLevel = level;
          FLASHES.clear();
-         RINGS.clear();
          SPARKS.clear();
          PREV.clear();
-         LAST_DOMES.clear();
          lastLocalHearts = -1;
          RegulusClientFx.reset();
+      }
+      if (level == null) {
          return;
       }
 
@@ -100,6 +93,7 @@ public class RegulusActionVFXManager {
 
          HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
          if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
+            PREV.remove(player.getUUID());
             continue;
          }
 
@@ -129,35 +123,13 @@ public class RegulusActionVFXManager {
             }
 
             lastLocalHearts = snapshot.hearts();
+         } else {
+            lastLocalHearts = -1;
+            RegulusClientFx.reset();
          }
       }
 
-      // Dome expiry → burst at the last center (spec 14: dome pops on close).
-      for (UUID domeId : new ArrayList<>(LAST_DOMES.keySet())) {
-         boolean stillPresent = false;
-         for (HeroControlS2CPacket.DomeInfo dome : ClientHeroData.domes()) {
-            if (dome.id().equals(domeId)) {
-               stillPresent = true;
-               break;
-            }
-         }
-
-         if (!stillPresent) {
-            Vec3 center = LAST_DOMES.remove(domeId);
-            if (center != null) {
-               RINGS.add(new RingVFX(center, 8.0F));
-            }
-         }
-      }
-
-      for (HeroControlS2CPacket.DomeInfo dome : ClientHeroData.domes()) {
-         LAST_DOMES.put(dome.id(), new Vec3(dome.x(), dome.y(), dome.z()));
-      }
-
-      RISES.removeIf(vfx -> vfx.age++ > 9);
-      CONES.removeIf(vfx -> vfx.age++ > 16);
       FLASHES.removeIf(vfx -> vfx.age++ > 10);
-      RINGS.removeIf(vfx -> vfx.age++ > 14);
       SPARKS.removeIf(vfx -> {
          vfx.age++;
          vfx.pos = vfx.pos.add(vfx.velX * 0.06, vfx.velY * 0.06, vfx.velZ * 0.06);
@@ -172,38 +144,31 @@ public class RegulusActionVFXManager {
       HeroAction prevAction = HeroAction.byId(prev.actionId);
       int elapsed = snapshot.actionElapsed();
 
-      if (action == HeroAction.DEBRIS_KICK) {
-         if (prevAction == HeroAction.DEBRIS_KICK && prev.elapsed < RegulusRules.DEBRIS_RISE_TICK && elapsed >= RegulusRules.DEBRIS_RISE_TICK) {
-            Vec3 look = player.getLookAngle();
-            Vec3 origin = player.position().add(look.x * 1.5, 0.0, look.z * 1.5);
-            RISES.add(new RiseVFX(origin, player.getYRot()));
-         }
-
-         if (prevAction == HeroAction.DEBRIS_KICK && prev.elapsed < RegulusRules.DEBRIS_EVENT_TICK && elapsed >= RegulusRules.DEBRIS_EVENT_TICK) {
-            Vec3 eyePos = new Vec3(player.getX(), player.getY() + (double)player.getEyeHeight() - 0.2, player.getZ());
-            CONES.add(new ConeVFX(eyePos, player.getYRot(), player.getXRot()));
-            applyDebrisShake(client, player, partialTickOf(client));
-         }
+      if (action == HeroAction.DEBRIS_KICK && player == client.player
+         && (prevAction != action || prev.elapsed < RegulusRules.DEBRIS_EVENT_TICK)
+         && elapsed >= RegulusRules.DEBRIS_EVENT_TICK) {
+         float impact = RegulusVfxMath.debrisImpactEnvelope(elapsed);
+         RegulusClientFx.debrisShakeTicks = 10;
+         RegulusClientFx.debrisShakePower = impact * 0.25F;
       }
 
       if (action == HeroAction.COUNTER) {
-         if (prevAction == HeroAction.COUNTER && prev.elapsed < RegulusRules.COUNTER_LIFT_TICKS && elapsed >= RegulusRules.COUNTER_LIFT_TICKS) {
+         if ((prevAction != action || prev.elapsed < RegulusRules.COUNTER_LIFT_TICKS) && elapsed >= RegulusRules.COUNTER_LIFT_TICKS) {
             FLASHES.add(new FlashVFX(player.position().add(0.0, 1.2, 0.0)));
          }
 
          int slamTick = RegulusRules.COUNTER_LIFT_TICKS + RegulusRules.COUNTER_SLAM_TICKS;
-         if (prevAction == HeroAction.COUNTER && prev.elapsed < slamTick && elapsed >= slamTick) {
-            RINGS.add(new RingVFX(player.position(), 5.0F));
+         if ((prevAction != action || prev.elapsed < slamTick) && elapsed >= slamTick) {
+            Vec3 impact = snapshot.actionTarget() != null ? snapshot.actionTarget() : player.position();
             for (int i = 0; i < 10; i++) {
                double az = Math.PI * 2.0 * (double)i / 10.0;
-               SPARKS.add(new SparkVFX(player.position().add(Math.cos(az) * 1.2, 0.1, Math.sin(az) * 1.2), (float)(Math.cos(az) * 0.5), 1.4F, (float)(Math.sin(az) * 0.5)));
+               SPARKS.add(new SparkVFX(impact.add(Math.cos(az) * 1.2, 0.1, Math.sin(az) * 1.2), (float)(Math.cos(az) * 0.5), 1.4F, (float)(Math.sin(az) * 0.5)));
             }
          }
       }
 
-      // Landing shockwave ring (visual of the existing server shockwave).
+      // Landing fragments follow the existing radial knockback.
       if (prev.fallDistance >= RegulusRules.SHOCKWAVE_MIN_FALL && player.onGround() && !prev.onGround) {
-         RINGS.add(new RingVFX(player.position(), (float)RegulusRules.SHOCKWAVE_RADIUS + 1.0F));
          for (int i = 0; i < 12; i++) {
             double az = Math.PI * 2.0 * (double)i / 12.0;
             SPARKS.add(new SparkVFX(player.position().add(Math.cos(az) * 0.8, 0.1, Math.sin(az) * 0.8), (float)(Math.cos(az) * 0.9), 0.8F + (float)RegulusVfxMath.hashOffset(i, 0), (float)(Math.sin(az) * 0.9)));
@@ -214,33 +179,6 @@ public class RegulusActionVFXManager {
       prev.elapsed = elapsed;
       prev.fallDistance = player.fallDistance;
       prev.onGround = player.onGround();
-   }
-
-   private static float partialTickOf(Minecraft client) {
-      return client.getFrameTime();
-   }
-
-   /** Victim-side camera shake: the camera inside the cone and range feels the kick. */
-   private static void applyDebrisShake(Minecraft client, Player caster, float partialTick) {
-      Entity cameraEntity = client.getCameraEntity();
-      if (cameraEntity == null || cameraEntity == caster) {
-         return;
-      }
-
-      Vec3 look = caster.getViewVector(partialTick).normalize();
-      Vec3 toCamera = cameraEntity.position().add(0.0, cameraEntity.getEyeHeight() * 0.5, 0.0).subtract(caster.getEyePosition(partialTick));
-      double distance = toCamera.length();
-      if (distance < 1.0E-4) {
-         return;
-      }
-
-      double cosAngle = toCamera.normalize().dot(look);
-      double angleDeg = Math.toDegrees(Math.acos(Mth.clamp(cosAngle, -1.0, 1.0)));
-      float factor = RegulusVfxMath.debrisVictimFactor(distance, angleDeg);
-      if (factor > 0.0F) {
-         RegulusClientFx.debrisShakeTicks = 10;
-         RegulusClientFx.debrisShakePower = Math.max(RegulusClientFx.debrisShakePower, factor);
-      }
    }
 
    @SubscribeEvent
@@ -259,10 +197,11 @@ public class RegulusActionVFXManager {
       Camera camera = event.getCamera();
       Vec3 cameraPos = camera.getPosition();
       long gameTime = level.getGameTime();
-      float timeSeconds = (gameTime % 24000L) + partialTick;
+      float timeSeconds = ((gameTime % 24000L) + partialTick) / 20.0F;
       PoseStack modelViewStack = RenderSystem.getModelViewStack();
       modelViewStack.pushPose();
       modelViewStack.setIdentity();
+      RegulusPixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
       RenderSystem.applyModelViewMatrix();
       RenderSystem.enableBlend();
       RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
@@ -272,34 +211,77 @@ public class RegulusActionVFXManager {
       RenderSystem.setShader(GameRenderer::getPositionColorShader);
       Tesselator tessellator = Tesselator.getInstance();
       BufferBuilder buffer = tessellator.getBuilder();
-      buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+      try {
+         buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-      for (Player player : level.players()) {
-         if (!(player instanceof HeroPlayer heroPlayer)) {
-            continue;
+         for (Player player : level.players()) {
+            if (!(player instanceof HeroPlayer heroPlayer)) {
+               continue;
+            }
+
+            HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
+            if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
+               continue;
+            }
+
+            drawEmbracePreview(buffer, cameraPos, camera, player, snapshot, timeSeconds);
+            drawManiaTether(level, buffer, cameraPos, camera, player, snapshot, partialTick);
+            drawRitualRunes(buffer, cameraPos, camera, player, snapshot, partialTick, timeSeconds);
+            drawMadnessSymbols(buffer, cameraPos, camera, player, snapshot, partialTick, timeSeconds);
          }
 
-         HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
-         if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
-            continue;
-         }
+         drawDomes(buffer, cameraPos, camera, gameTime, timeSeconds);
+         drawControlOutlines(level, buffer, cameraPos, camera, partialTick);
+         drawActiveEffects(buffer, cameraPos, camera, partialTick);
 
-         drawManiaTether(level, buffer, cameraPos, camera, player, snapshot, partialTick);
-         drawRitualRunes(buffer, cameraPos, camera, player, snapshot, partialTick, timeSeconds);
-         drawMadnessSymbols(buffer, cameraPos, camera, player, snapshot, partialTick, timeSeconds);
+         tessellator.end();
+      } finally {
+         RenderSystem.depthMask(true);
+         RenderSystem.enableCull();
+         RenderSystem.defaultBlendFunc();
+         RenderSystem.disableBlend();
+         modelViewStack.popPose();
+         RenderSystem.applyModelViewMatrix();
       }
+   }
 
-      drawDomes(buffer, cameraPos, gameTime, timeSeconds);
-      drawControlOutlines(level, buffer, cameraPos, camera, partialTick);
-      drawActiveEffects(buffer, cameraPos, camera, partialTick, timeSeconds);
+   private static void drawEmbracePreview(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Player player,
+      HeroPublicSnapshot snapshot, float timeSeconds) {
+      boolean casting = HeroAction.byId(snapshot.actionId()) == HeroAction.GREEDS_EMBRACE;
+      if (casting && snapshot.actionElapsed() >= RegulusRules.EMBRACE_APPEAR_TICK) {
+         return;
+      }
+      if (!casting && (player != Minecraft.getInstance().player || !embracePreviewReady(player, snapshot))) {
+         return;
+      }
+      Vec3 point = casting ? snapshot.actionTarget() : null;
+      if (point == null) {
+         point = GreedsEmbrace.aimPoint(player);
+      }
+      if (point != null) {
+         RegulusPixelVfx.domeShell(buffer, cameraPos, camera, point, (float)RegulusRules.EMBRACE_RADIUS,
+            timeSeconds, GOLD_R, GOLD_G, GOLD_B, 75);
+      }
+   }
 
-      tessellator.end();
-      RenderSystem.depthMask(true);
-      RenderSystem.enableCull();
-      RenderSystem.defaultBlendFunc();
-      RenderSystem.disableBlend();
-      modelViewStack.popPose();
-      RenderSystem.applyModelViewMatrix();
+   private static boolean embracePreviewReady(Player player, HeroPublicSnapshot snapshot) {
+      if (snapshot.actionBusy() || snapshot.lionActive() || snapshot.controlTargetId() >= 0 || snapshot.ritualTicks() >= 0) {
+         return false;
+      }
+      int cooldownSlot = RegulusAbilities.cooldownIndex(RegulusAbilities.GREEDS_EMBRACE);
+      if (cooldownSlot >= 0 && cooldownSlot < snapshot.cooldowns().length && snapshot.cooldowns()[cooldownSlot] > 0) {
+         return false;
+      }
+      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
+         return false;
+      }
+      int first = abilityUser.getActivePage() * 6;
+      for (int slot = first; slot < first + 6; slot++) {
+         if (RegulusAbilities.GREEDS_EMBRACE.equals(abilityUser.getAbilityInSlot(slot))) {
+            return true;
+         }
+      }
+      return false;
    }
 
    /** Gold tether from the channeling hand to the grabbed target. */
@@ -315,7 +297,8 @@ public class RegulusActionVFXManager {
 
       Vec3 eyePos = player.getEyePosition(partialTick);
       Vec3 look = player.getViewVector(partialTick);
-      Vec3 side = new Vec3(-look.z, 0.0, look.x).normalize();
+      double handedness = player.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT ? -1.0 : 1.0;
+      Vec3 side = new Vec3(-look.z, 0.0, look.x).normalize().scale(handedness);
       Vec3 hand = eyePos.add(look.scale(0.45)).add(side.scale(0.28)).add(0.0, -0.28, 0.0);
       Vec3 targetPos = target.getPosition(partialTick).add(0.0, target.getBbHeight() * 0.55, 0.0);
       float shimmer = 0.75F + 0.25F * (float)Math.sin((double)((level.getGameTime() % 24000L) + partialTick) * 6.0);
@@ -331,7 +314,7 @@ public class RegulusActionVFXManager {
       float progress = (float)snapshot.ritualTicks() / (float)RegulusRules.RITUAL_TICKS;
       int alpha = 140 + (int)(80.0F * progress);
       Vec3 center = player.getPosition(partialTick).add(0.0, 1.25, 0.0);
-      for (int i = 0; i < 8; i++) {
+      for (int i = 0; i < (localFirstPerson(player) ? 0 : 8); i++) {
          float angle = RegulusVfxMath.runeAngle(i, timeSeconds);
          Vec3 pos = center.add(Math.cos((double)angle) * 1.3, Math.sin((double)(angle * 2.0F)) * 0.18, Math.sin((double)angle) * 1.3);
          drawGlyph(buffer, cameraPos, camera, pos, RUNES[i], 0.055F, GOLD_R, GOLD_G, GOLD_B, alpha);
@@ -348,7 +331,7 @@ public class RegulusActionVFXManager {
 
    /** Madness: dark-red runes drift slowly around the mad Regulus. */
    private static void drawMadnessSymbols(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Player player, HeroPublicSnapshot snapshot, float partialTick, float timeSeconds) {
-      if (!snapshot.madness()) {
+      if (!snapshot.madness() || localFirstPerson(player)) {
          return;
       }
 
@@ -379,7 +362,7 @@ public class RegulusActionVFXManager {
    }
 
    /** Embrace domes: ground ring + translucent shell + suspended motes. */
-   private static void drawDomes(BufferBuilder buffer, Vec3 cameraPos, long gameTime, float timeSeconds) {
+   private static void drawDomes(BufferBuilder buffer, Vec3 cameraPos, Camera camera, long gameTime, float timeSeconds) {
       for (HeroControlS2CPacket.DomeInfo dome : ClientHeroData.domes()) {
          Vec3 center = new Vec3(dome.x(), dome.y(), dome.z());
          int alpha = (int)(120.0F * RegulusVfxMath.domeAlpha(gameTime, dome.createdAt(), dome.expiresAt()));
@@ -387,22 +370,15 @@ public class RegulusActionVFXManager {
             continue;
          }
 
-         RegulusPixelVfx.groundRing(buffer, cameraPos, center, (float)dome.radius(), 0.07F, GOLD_R, GOLD_G, GOLD_B, Math.min(200, alpha + 60));
-         RegulusPixelVfx.domeShell(buffer, cameraPos, center, (float)dome.radius(), timeSeconds, GOLD_R, GOLD_G, GOLD_B, alpha);
+         RegulusPixelVfx.domeShell(buffer, cameraPos, camera, center, (float)dome.radius(), timeSeconds, GOLD_R, GOLD_G, GOLD_B, alpha);
          int seedBase = dome.id().hashCode() & 0x7FFF;
          for (int i = 0; i < 30; i++) {
             double theta = RegulusVfxMath.hashOffset(seedBase + i, 0) * Math.PI * 2.0;
             double y = RegulusVfxMath.hashOffset(seedBase + i, 1) * dome.radius() * 0.85;
             double radius = RegulusVfxMath.hashOffset(seedBase + i, 2) * dome.radius() * 0.8;
             Vec3 pos = center.add(Math.cos(theta) * radius, y, Math.sin(theta) * radius);
-            groundPixelSafe(buffer, cameraPos, pos, 0.05F, 255, 225, 140, (int)(alpha * 0.7F));
+            RegulusPixelVfx.billboardPixel(buffer, cameraPos, camera, pos, 0.035F, 255, 225, 140, (int)(alpha * 0.7F));
          }
-      }
-   }
-
-   private static void groundPixelSafe(BufferBuilder buffer, Vec3 cameraPos, Vec3 pos, float size, int r, int g, int b, int alpha) {
-      if (alpha > 4) {
-         RegulusPixelVfx.groundPixel(buffer, cameraPos, pos.x, pos.y, pos.z, size, r, g, b, alpha);
       }
    }
 
@@ -418,50 +394,12 @@ public class RegulusActionVFXManager {
          Entity target = level.getEntity(control.entityId());
          if (target != null) {
             float pulse = 0.7F + 0.3F * (float)Math.sin((double)((level.getGameTime() % 24000L) + partialTick) * 4.0);
-            RegulusPixelVfx.boxOutline(buffer, cameraPos, camera, target.getBoundingBox(), 0.05F, GOLD_R, GOLD_G, GOLD_B, (int)(170.0F * pulse));
+            RegulusPixelVfx.boxOutline(buffer, cameraPos, camera, target.getBoundingBox().move(target.getPosition(partialTick).subtract(target.position())), 0.025F, GOLD_R, GOLD_G, GOLD_B, (int)(170.0F * pulse));
          }
       }
    }
 
-   private static void drawActiveEffects(BufferBuilder buffer, Vec3 cameraPos, Camera camera, float partialTick, float timeSeconds) {
-      for (RegulusActionVFXManager.RiseVFX rise : RISES) {
-         float progress = (rise.age + partialTick) / 9.0F;
-         for (int i = 0; i < 14; i++) {
-            double spread = RegulusVfxMath.hashOffset(i, 0) * 1.6 - 0.8;
-            double depth = RegulusVfxMath.hashOffset(i, 1) * 1.2;
-            Vec3 pos = rise.origin.add(
-               Math.sin(Math.toRadians((double)-rise.yaw)) * (depth + 0.4) + Math.cos(Math.toRadians((double)-rise.yaw)) * spread,
-               progress * (0.7 + RegulusVfxMath.hashOffset(i, 2) * 0.9),
-               Math.cos(Math.toRadians((double)-rise.yaw)) * (depth + 0.4) - Math.sin(Math.toRadians((double)-rise.yaw)) * spread
-            );
-            int alpha = (int)(220.0F * (1.0F - progress * 0.5F));
-            RegulusPixelVfx.groundPixel(buffer, cameraPos, pos.x, pos.y, pos.z, 0.09F, 165, 150, 130, alpha);
-         }
-      }
-
-      for (RegulusActionVFXManager.ConeVFX cone : CONES) {
-         float progress = (cone.age + partialTick) / 16.0F;
-         float reach = progress * 9.0F;
-         int alpha = (int)(190.0F * (1.0F - progress));
-         if (alpha <= 0) {
-            continue;
-         }
-
-         double baseYaw = Math.toRadians((double)-cone.yaw);
-         for (int ray = 0; ray < 9; ray++) {
-            double rayAz = baseYaw + Math.toRadians((double)((ray - 4) * 4));
-            for (int step = 1; step <= 6; step++) {
-               double dist = step / 6.0 * reach;
-               if (dist > 8.0) {
-                  break;
-               }
-
-               Vec3 pos = cone.origin.add(Math.sin(rayAz) * dist, -dist * 0.12, Math.cos(rayAz) * dist);
-               RegulusPixelVfx.groundPixel(buffer, cameraPos, pos.x, pos.y, pos.z, 0.08F, 190, 175, 150, alpha);
-            }
-         }
-      }
-
+   private static void drawActiveEffects(BufferBuilder buffer, Vec3 cameraPos, Camera camera, float partialTick) {
       for (RegulusActionVFXManager.FlashVFX flash : FLASHES) {
          float progress = (flash.age + partialTick) / 10.0F;
          int alpha = (int)(255.0F * (1.0F - progress));
@@ -477,14 +415,6 @@ public class RegulusActionVFXManager {
          }
       }
 
-      for (RegulusActionVFXManager.RingVFX ring : RINGS) {
-         float progress = (ring.age + partialTick) / 14.0F;
-         int alpha = (int)(230.0F * (1.0F - progress));
-         if (alpha > 0) {
-            RegulusPixelVfx.expandingRing(buffer, cameraPos, ring.center, progress, ring.maxRadius, GOLD_R, GOLD_G, GOLD_B, alpha);
-         }
-      }
-
       for (RegulusActionVFXManager.SparkVFX spark : SPARKS) {
          float progress = (spark.age + partialTick) / 14.0F;
          int alpha = (int)(240.0F * (1.0F - progress));
@@ -494,35 +424,16 @@ public class RegulusActionVFXManager {
       }
    }
 
+   private static boolean localFirstPerson(Player player) {
+      Minecraft client = Minecraft.getInstance();
+      return player == client.player && client.options.getCameraType().isFirstPerson();
+   }
+
    private static class PrevState {
       int actionId = -1;
       int elapsed;
       float fallDistance;
       boolean onGround = true;
-   }
-
-   private static class RiseVFX {
-      final Vec3 origin;
-      final float yaw;
-      int age;
-
-      RiseVFX(Vec3 origin, float yaw) {
-         this.origin = origin;
-         this.yaw = yaw;
-      }
-   }
-
-   private static class ConeVFX {
-      final Vec3 origin;
-      final float yaw;
-      final float pitch;
-      int age;
-
-      ConeVFX(Vec3 origin, float yaw, float pitch) {
-         this.origin = origin;
-         this.yaw = yaw;
-         this.pitch = pitch;
-      }
    }
 
    private static class FlashVFX {
@@ -531,17 +442,6 @@ public class RegulusActionVFXManager {
 
       FlashVFX(Vec3 pos) {
          this.pos = pos;
-      }
-   }
-
-   private static class RingVFX {
-      final Vec3 center;
-      final float maxRadius;
-      int age;
-
-      RingVFX(Vec3 center, float maxRadius) {
-         this.center = center;
-         this.maxRadius = maxRadius;
       }
    }
 

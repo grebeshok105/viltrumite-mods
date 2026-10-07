@@ -167,7 +167,7 @@
   "ability.viltrumitecore.lions_heart.name": "<gold>Aslanın Kalbi",
   "ability.viltrumitecore.lions_heart.desc": "<grey>Bekleme: <lime>5sn / 30sn\n<grey>Tür: <yellow>Aç/Kapat\n\n<grey>Kırılmaz bir aslana dönüş. Kalp atarken hasar\n<grey>almazsın ve yakındaki mermiler donar.\n\n<red>Aşırı ısınma canını yakar.\n\n<blue>Regulus",
   "ability.viltrumitecore.debris_kick.name": "<gold>Enkaz Tekmesi",
-  "ability.viltrumitecore.debris_kick.desc": "<grey>Bekleme: <lime>20sn\n<grey>Tür: <yellow>Atış\n\n<grey>35° konide 9 enkaz ışını fırlat; her ışın 3\n<grey>bloğa kadar deler.\n\n<blue>Regulus",
+  "ability.viltrumitecore.debris_kick.desc": "<grey>Bekleme: <lime>20sn\n<grey>Tür: <yellow>Atış\n\n<grey>Yeri tekmele ve yaklaşık 8 blok ileri bir enkaz dalgası gönder.\n<grey>Her hedef yalnızca bir kez, mesafeye göre 7 ila 2 hasar alır.\n\n<blue>Regulus",
   "ability.viltrumitecore.mania.name": "<gold>Mania",
   "ability.viltrumitecore.mania.desc": "<grey>Bekleme: <lime>25sn\n<grey>Tür: <yellow>Kanal\n\n<grey>Hedefi 6 saniyeye kadar kendine çek, sonra\n<grey>yerinde dondur.\n\n<blue>Regulus",
   "ability.viltrumitecore.greeds_embrace.name": "<gold>Açgözlülüğün Kucaklaması",

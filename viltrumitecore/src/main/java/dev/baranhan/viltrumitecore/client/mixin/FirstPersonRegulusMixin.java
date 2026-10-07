@@ -60,6 +60,7 @@ public abstract class FirstPersonRegulusMixin {
 
       HeroPublicSnapshot snapshot = heroPlayer.getHeroSnapshot();
       if (snapshot == null || snapshot.heroId() != HeroId.REGULUS) {
+         RegulusAnimationManager.reset(player);
          return;
       }
 
@@ -67,25 +68,26 @@ public abstract class FirstPersonRegulusMixin {
       boolean mainArm = currentArm == player.getMainArm();
       float m = player.getMainArm() == HumanoidArm.LEFT ? -1.0F : 1.0F;
 
-      // Continuous states apply to whichever arm renders the action pose.
-      float ritualWeight = RegulusAnimationManager.calculateWeight(
-         player, RegulusAnimationManager.Pose.RITUAL, snapshot.ritualTicks() >= 0
+      boolean ritualArm = snapshot.ritualTicks() >= 0 && player.getUsedItemHand() == hand;
+      float ritualWeight = RegulusAnimationManager.calculateFirstPersonWeight(
+         player, RegulusAnimationManager.Pose.RITUAL, ritualArm, hand == InteractionHand.MAIN_HAND
       );
-      if (ritualWeight > 0.01F && mainArm) {
-         this.applyFirstPerson(poseStack, ritualWeight, -0.12F * m, 0.08F, -0.06F, -18.0F, 32.0F * m, -12.0F * m);
+      if (ritualWeight > 0.01F) {
+         float ritualMirror = currentArm == HumanoidArm.LEFT ? -1.0F : 1.0F;
+         this.applyFirstPerson(poseStack, ritualWeight, -0.12F * ritualMirror, 0.08F, -0.06F, -18.0F, 32.0F * ritualMirror, -12.0F * ritualMirror);
       }
 
-      float channelWeight = RegulusAnimationManager.calculateWeight(
+      float channelWeight = mainArm ? RegulusAnimationManager.calculateFirstPersonWeight(
          player, RegulusAnimationManager.Pose.CHANNEL, snapshot.controlTargetId() >= 0
-      );
-      if (channelWeight > 0.01F && mainArm) {
+      ) : 0.0F;
+      if (channelWeight > 0.01F) {
          this.applyFirstPerson(poseStack, channelWeight, 0.0F, 0.02F, -0.3F, -42.0F, -14.0F * m, 0.0F);
       }
 
-      float lionWeight = RegulusAnimationManager.calculateWeight(
+      float lionWeight = mainArm ? RegulusAnimationManager.calculateFirstPersonWeight(
          player, RegulusAnimationManager.Pose.LION, snapshot.lionActive()
-      );
-      if (lionWeight > 0.01F && mainArm) {
+      ) : 0.0F;
+      if (lionWeight > 0.01F) {
          this.applyFirstPerson(poseStack, lionWeight, 0.06F * m, -0.04F, -0.02F, 6.0F, 8.0F * m, -6.0F * m);
       }
 
@@ -95,9 +97,9 @@ public abstract class FirstPersonRegulusMixin {
       }
 
       RegulusPoseTiming.Timing timing = RegulusPoseTiming.timing(action);
-      boolean eventPassed = RegulusPoseTiming.eventPassed(action, snapshot.actionElapsed(), partialTicks);
       float eventTick = (float)timing.eventTick();
-      float elapsed = (float)snapshot.actionElapsed() + partialTicks;
+      float elapsed = RegulusAnimationManager.actionTime(player, snapshot, partialTicks);
+      boolean eventPassed = eventTick > 0.0F && elapsed >= eventTick;
       switch (action) {
          case LIONS_HEART:
             // Hand presses to the chest, clench at the event tick.

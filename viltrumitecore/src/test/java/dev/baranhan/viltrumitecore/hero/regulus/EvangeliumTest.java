@@ -10,9 +10,9 @@ import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 /**
- * Spec 11/16: the Evangelium ritual is a 60t channel cancelable by a hit of
- * 4+ HP (outside Lion), movement or early release; it grants 900t of madness
- * paid 0.6 HP per second and the 1800t cooldown starts when madness ENDS.
+ * The Evangelium ritual is a 60t held-book channel cancelable by early release,
+ * not movement or damage. It grants 900t of madness paid at 0.6 HP per second,
+ * and the 1800t cooldown starts when madness ends.
  */
 class EvangeliumTest {
 

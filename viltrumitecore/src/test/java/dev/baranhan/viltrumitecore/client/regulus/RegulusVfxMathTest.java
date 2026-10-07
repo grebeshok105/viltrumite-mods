@@ -13,21 +13,17 @@ import org.junit.jupiter.api.Test;
 class RegulusVfxMathTest {
 
    @Test
-   void debrisVictimShakeNeedsConeAndRange() {
-      // The wave is limited to eight blocks.
-      assertEquals(1.0F, RegulusVfxMath.debrisVictimFactor(0.0, 0.0), 1.0E-6);
-      assertTrue(RegulusVfxMath.debrisVictimFactor(4.0, 10.0) > 0.0F);
-      assertTrue(RegulusVfxMath.debrisVictimFactor(7.9, 17.4) > 0.0F);
-      // Outside the cone or the range: no shake at all.
-      assertEquals(0.0F, RegulusVfxMath.debrisVictimFactor(8.0, 17.6));
-      assertEquals(0.0F, RegulusVfxMath.debrisVictimFactor(16.5, 0.0));
-      assertEquals(0.0F, RegulusVfxMath.debrisVictimFactor(100.0, 45.0));
+   void debrisImpactIsTiedToGroundKickEvent() {
+      assertEquals(0.0F, RegulusVfxMath.debrisImpactEnvelope(13.99F));
+      assertEquals(1.0F, RegulusVfxMath.debrisImpactEnvelope(14.0F));
+      assertEquals(0.0F, RegulusVfxMath.debrisImpactEnvelope(24.0F));
+      assertEquals(0.0F, RegulusVfxMath.debrisImpactEnvelope(44.0F));
    }
 
    @Test
-   void debrisShakeFallsOffWithDistance() {
-      float near = RegulusVfxMath.debrisVictimFactor(4.0, 0.0);
-      float far = RegulusVfxMath.debrisVictimFactor(7.0, 0.0);
+   void debrisImpactFallsOffThroughRecovery() {
+      float near = RegulusVfxMath.debrisImpactEnvelope(15.0F);
+      float far = RegulusVfxMath.debrisImpactEnvelope(23.0F);
       assertTrue(near > far && far > 0.0F);
    }
 

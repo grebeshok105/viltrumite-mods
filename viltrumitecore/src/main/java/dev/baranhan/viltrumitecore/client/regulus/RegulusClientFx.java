@@ -2,7 +2,7 @@ package dev.baranhan.viltrumitecore.client.regulus;
 
 /**
  * Small shared decaying state for Regulus screen FX. The VFX tick detector
- * writes the edges (heart burned, debris cone hit); GameRendererDashMixin and
+ * writes the edges (heart burned, ground kick impact); GameRendererDashMixin and
  * the HUD read them every frame. Reset whenever the level unloads.
  */
 public final class RegulusClientFx {
@@ -10,7 +10,7 @@ public final class RegulusClientFx {
    public static int heartFlashTicks;
    /** Counts down while the debris kick shake is applied to the camera. */
    public static int debrisShakeTicks;
-   /** Cone factor of the most recent debris shake (0..1). */
+   /** Strength of the most recent ground kick impact (0..1). */
    public static float debrisShakePower;
    /** Last game tick the madness heartbeat was played on. */
    public static long lastHeartbeatTick = -1L;
