@@ -30,6 +30,20 @@ class RegulusPowerScalingTest {
    }
 
    @Test
+   void kickCraterIsAForwardHalfEllipsoid() {
+      double r = RegulusRules.KICK_ERUPT_RADIUS;
+      double d = RegulusRules.KICK_ERUPT_DEPTH;
+      assertTrue(RegulusRules.inEruption(0.0, 0.0, 0.0, 0.0, 1.0, r, d), "centre surface block flies");
+      assertTrue(RegulusRules.inEruption(0.0, 1.0, 0.0, 0.0, 1.0, r, d), "plants on top go too");
+      assertTrue(RegulusRules.inEruption(0.0, -2.0, 0.0, 0.0, 1.0, r, d), "digs two layers down");
+      assertTrue(!RegulusRules.inEruption(0.0, -3.0, 0.0, 0.0, 1.0, r, d), "not deeper than the crater");
+      assertTrue(!RegulusRules.inEruption(0.0, 2.0, 0.0, 0.0, 1.0, r, d), "air above is untouched");
+      assertTrue(!RegulusRules.inEruption(r + 0.5, 0.0, 0.0, 0.0, 1.0, r, d), "outside the rim");
+      assertTrue(!RegulusRules.inEruption(0.0, 0.0, -3.0, 0.0, 1.0, r, d), "nothing behind the foot");
+      assertTrue(!RegulusRules.inEruption(0.0, -2.0, 2.5, 0.0, 1.0, r, d), "the rim is shallow");
+   }
+
+   @Test
    void airBladeSegmentDistance() {
       Vec3 a = new Vec3(0.0, 0.0, 0.0);
       Vec3 b = new Vec3(0.0, 0.0, 10.0);

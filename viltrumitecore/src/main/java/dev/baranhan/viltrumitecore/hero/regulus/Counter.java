@@ -50,7 +50,7 @@ public final class Counter {
 
    /** A fresh, live, in-range attacker record. */
    static boolean canActivate(RegulusState state, boolean attackerFresh, boolean attackerAlive, boolean attackerInRange) {
-      return state.attackerId != null && attackerFresh && attackerAlive && attackerInRange;
+      return state.madnessTicksLeft > 0 && state.attackerId != null && attackerFresh && attackerAlive && attackerInRange;
    }
 
    /** The slam damages the target only while it is still alive and in range. */
@@ -88,6 +88,10 @@ public final class Counter {
    }
 
    public static void start(ServerPlayer player, RegulusState state) {
+      if (state.madnessTicksLeft <= 0) {
+         return;
+      }
+
       LivingEntity target = pickTarget(player, state);
       if (target == null) {
          player.displayClientMessage(Component.translatable("message.viltrumitecore.counter.no_target"), true);

@@ -301,6 +301,10 @@ public class ViltrumiteAbilities {
          return true;
       }
 
+      if (action == HeroAction.COUNTER) {
+         return !snapshot.madness();
+      }
+
       return action == HeroAction.RITUAL && snapshot.madness();
    }
 

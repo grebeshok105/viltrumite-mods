@@ -3,6 +3,10 @@ package dev.baranhan.viltrumitecore.hero.regulus;
 import dev.baranhan.viltrumitecore.hero.HeroDestruction;
 import dev.baranhan.viltrumitecore.hero.HeroRegistry;
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
+import dev.baranhan.viltrumiteflight.mixin.FallingBlockEntityInvoker;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +27,8 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
@@ -89,7 +95,9 @@ public final class DebrisKick {
       }
 
       state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
-      kick(player, level, materialOf(ground), state.hearts(), state.madnessTicksLeft > 0);
+      boolean madness = state.madnessTicksLeft > 0;
+      erupt(player, level, groundPos, state.hearts(), madness);
+      kick(player, level, materialOf(ground), state.hearts(), madness);
    }
 
    /**
@@ -120,6 +128,112 @@ public final class DebrisKick {
       return ground.isAir() || !ground.getFluidState().isEmpty() ? Blocks.DIRT.defaultBlockState() : ground;
    }
 
+   /**
+    * The Viltrumite flying-block treatment (same as Thunderclap): the ground in
+    * front of the kicking foot is torn out and its blocks are thrown forward as
+    * real falling blocks that land wherever they come down and hurt whoever
+    * they hit. Creatures standing on the torn ground are kicked up with it.
+    * Block entities, two-part blocks and fluids are left alone; bedrock and
+    * mobGriefing are honored through HeroDestruction.
+    */
+   private static void erupt(ServerPlayer player, ServerLevel level, BlockPos groundPos, int hearts, boolean madness) {
+      double scale = madness ? RegulusRules.MADNESS_ERUPT_SCALE : 1.0;
+      double radius = RegulusRules.KICK_ERUPT_RADIUS * scale;
+      double depth = RegulusRules.KICK_ERUPT_DEPTH * scale;
+      int maxFlying = (int)Math.round(RegulusRules.KICK_ERUPT_MAX_FLYING * scale * scale);
+      Vec3 forward = shardDirection(player.getYRot(), 0.0F, 0.0, 0.0);
+      Vec3 center = Vec3.atBottomCenterOf(groundPos).add(forward.scale(RegulusRules.KICK_ERUPT_AHEAD));
+      RandomSource random = level.random;
+
+      List<BlockPos> torn = new ArrayList<>();
+      int r = (int)Math.ceil(radius);
+      int d = (int)Math.ceil(depth);
+      BlockPos base = BlockPos.containing(center.x, groundPos.getY(), center.z);
+      for (BlockPos pos : BlockPos.betweenClosed(base.offset(-r, -d, -r), base.offset(r, 1, r))) {
+         double dx = pos.getX() + 0.5 - center.x;
+         double dz = pos.getZ() + 0.5 - center.z;
+         int dy = pos.getY() - groundPos.getY();
+         // Ragged rim: a little noise on the radius.
+         double jitter = 0.82 + random.nextDouble() * 0.3;
+         if (!RegulusRules.inEruption(dx, dy, dz, forward.x, forward.z, radius * jitter, depth)) {
+            continue;
+         }
+
+         // Keep the block under Regulus himself so he does not drop into his own hole.
+         double px = pos.getX() + 0.5 - player.getX();
+         double pz = pos.getZ() + 0.5 - player.getZ();
+         if (dy <= 0 && px * px + pz * pz < 0.8) {
+            continue;
+         }
+
+         BlockState state = level.getBlockState(pos);
+         if (!HeroDestruction.canDestroy(level, pos) || !state.getFluidState().isEmpty() || state.hasBlockEntity()
+            || state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF) || state.hasProperty(BlockStateProperties.BED_PART)) {
+            continue;
+         }
+
+         torn.add(pos.immutable());
+      }
+
+      if (torn.isEmpty()) {
+         return;
+      }
+
+      // Top layers first (cleared ground lets the lower ones out), nearest to
+      // the foot first within a layer; past the cap the far rim just shatters.
+      torn.sort(Comparator.<BlockPos>comparingInt(pos -> -pos.getY()).thenComparingDouble(pos -> pos.getCenter().distanceToSqr(center)));
+      int flying = 0;
+      for (BlockPos pos : torn) {
+         BlockState state = level.getBlockState(pos);
+         boolean solid = !state.getCollisionShape(level, pos).isEmpty();
+         if (!solid || flying >= maxFlying) {
+            HeroDestruction.destroyBlock(level, pos);
+            continue;
+         }
+
+         FallingBlockEntity block = FallingBlockEntityInvoker.invokeConstructor(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, state);
+         block.dropItem = false;
+         block.time = 1;
+         block.setHurtsEntities(2.0F, 12);
+         Vec3 out = new Vec3(pos.getX() + 0.5 - player.getX(), 0.0, pos.getZ() + 0.5 - player.getZ());
+         out = out.lengthSqr() < 1.0E-4 ? forward : out.normalize();
+         Vec3 flat = forward.scale(0.65).add(out.scale(0.35)).normalize();
+         double speed = RegulusRules.KICK_ERUPT_SPEED * scale * (0.65 + random.nextDouble() * 0.6);
+         double up = 0.45 + random.nextDouble() * 0.55 + Math.max(0, groundPos.getY() - pos.getY()) * 0.12;
+         // Rounded like Thunderclap so the client's motion packet matches the server.
+         block.setDeltaMovement(
+            Math.round(flat.x * speed * 8000.0) / 8000.0,
+            Math.round(up * scale * 8000.0) / 8000.0,
+            Math.round(flat.z * speed * 8000.0) / 8000.0
+         );
+         block.hasImpulse = true;
+         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+         level.addFreshEntity(block);
+         level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state), pos.getX() + 0.5, pos.getY() + 0.8, pos.getZ() + 0.5, 8, 0.3, 0.2, 0.3, 0.15);
+         flying++;
+      }
+
+      level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, center.x, center.y + 0.6, center.z, 14, radius * 0.4, 0.2, radius * 0.4, 0.03);
+      level.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y + 0.5, center.z, 3, radius * 0.3, 0.1, radius * 0.3, 0.0);
+      level.playSound(null, BlockPos.containing(center), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.6F, 0.55F);
+
+      // Whoever stands on the torn ground goes up with it.
+      float damage = RegulusRules.KICK_ERUPT_ENTITY_DAMAGE * RegulusRules.heartBonus(hearts) * (float)scale;
+      AABB zone = new AABB(center, center).inflate(radius, 2.0, radius);
+      for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, zone, e -> e != player && e.isAlive() && !e.isSpectator())) {
+         target.hurt(level.damageSources().playerAttack(player), damage);
+         if (HeroRegistry.allowsExternalControl(target, ControlKind.IMPULSE)) {
+            Vec3 push = forward.scale(1.1 * scale).add(0.0, 0.85 * scale, 0.0);
+            target.setDeltaMovement(push);
+            target.hasImpulse = true;
+            target.hurtMarked = true;
+            if (target instanceof ServerPlayer hitPlayer) {
+               hitPlayer.connection.send(new ClientboundSetEntityMotionPacket(hitPlayer));
+            }
+         }
+      }
+   }
+
    private static void kick(ServerPlayer player, ServerLevel level, BlockState material, int hearts, boolean madness) {
       float yaw = player.getYRot();
       Vec3 forward = shardDirection(yaw, 0.0F, 0.0, 0.0);
@@ -127,7 +241,7 @@ public final class DebrisKick {
       Vec3 origin = player.position().add(forward.x * 0.8, 0.35, forward.z * 0.8);
       BlockParticleOption debris = new BlockParticleOption(ParticleTypes.BLOCK, material);
 
-      // Impact at the foot: the ground bursts (visual only — no block breaks here).
+      // Impact at the foot: the ground bursts (the crater itself is erupt()).
       level.sendParticles(debris, origin.x, origin.y, origin.z, 60, 0.45, 0.12, 0.45, 0.35);
       level.sendParticles(ParticleTypes.POOF, origin.x, origin.y, origin.z, 16, 0.4, 0.08, 0.4, 0.08);
       level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, origin.x, origin.y, origin.z, 6, 0.5, 0.1, 0.5, 0.02);

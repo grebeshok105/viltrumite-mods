@@ -20,6 +20,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -126,10 +127,26 @@ public final class RegulusHearts {
       return RegulusRules.carrierEligible(
          vanilla,
          entity instanceof Player,
-         entity instanceof Enemy,
+         isHostile(entity),
          entity.getTags().contains(RegulusRules.HEARTLESS_TAG),
          entity instanceof Mob
       );
+   }
+
+   /**
+    * Hostile for carrier purposes: any Enemy, a neutral mob that is angry
+    * right now (wolf, golem, bee, piglin...), or any mob hunting a player.
+    */
+   static boolean isHostile(LivingEntity entity) {
+      if (entity instanceof Enemy) {
+         return true;
+      }
+
+      if (entity instanceof NeutralMob neutral && (neutral.isAngry() || neutral.getPersistentAngerTarget() != null)) {
+         return true;
+      }
+
+      return entity instanceof Mob mob && mob.getTarget() instanceof Player;
    }
 
    /** Drop one heart by carrier id; false when it was never bound (idempotent). */

@@ -211,8 +211,7 @@ public class RegulusActionVFXManager {
          tessellator.end();
 
          // Carrier hearts: a small heart beating inside the creature's body.
-         // Drawn through the creature's own skin (depth off) but only when no
-         // block stands between the camera and the heart.
+         // Depth off: visible through the creature's skin and through walls.
          if (ClientHeroData.carriers().length > 0) {
             RenderSystem.disableDepthTest();
             RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
@@ -409,17 +408,14 @@ public class RegulusActionVFXManager {
          }
 
          Vec3 center = carrier.getPosition(partialTick).add(0.0, carrier.getBbHeight() * 0.6, 0.0);
-         if (center.distanceToSqr(cameraPos) > 64.0 * 64.0) {
+         double distance = Math.sqrt(center.distanceToSqr(cameraPos));
+         if (distance > 128.0) {
             continue;
          }
 
-         net.minecraft.world.phys.HitResult wall = level.clip(new net.minecraft.world.level.ClipContext(
-            cameraPos, center, net.minecraft.world.level.ClipContext.Block.VISUAL, net.minecraft.world.level.ClipContext.Fluid.NONE, Minecraft.getInstance().player));
-         if (wall.getType() != net.minecraft.world.phys.HitResult.Type.MISS) {
-            continue;
-         }
-
-         float cell = 0.032F * (1.0F + 0.22F * beat);
+         // Drawn without depth: the heart shows through walls. Past 16 blocks it
+         // grows with distance so a far carrier stays readable on screen.
+         float cell = 0.032F * (1.0F + 0.22F * beat) * (float)Math.max(1.0, distance / 16.0);
          for (int row = 0; row < HEART_ROWS.length; row++) {
             for (int col = 0; col < 7; col++) {
                if ((HEART_ROWS[row] >> (6 - col) & 1) == 0) {

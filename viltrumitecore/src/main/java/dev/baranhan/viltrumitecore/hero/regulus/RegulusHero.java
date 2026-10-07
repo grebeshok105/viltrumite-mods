@@ -141,6 +141,10 @@ public class RegulusHero implements HeroDefinition {
          return false;
       }
 
+      if (action == HeroAction.COUNTER) {
+         return madnessActive;
+      }
+
       if (action == HeroAction.RITUAL) {
          return !madnessActive;
       }

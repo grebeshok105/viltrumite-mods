@@ -10,19 +10,22 @@ import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 /**
- * Counter: usable at any time (no madness gate), arms from the last living
+ * Counter: madness only; arms from the last living
  * attacker record or the gaze target, latches its target and spends the 800t
  * cooldown when the slam lands.
  */
 class CounterTest {
 
    @Test
-   void pressNoLongerNeedsMadness() {
+   void pressRequiresActiveMadness() {
       RegulusState state = new RegulusState();
       state.attackerId = UUID.randomUUID();
       state.attackerTick = 100L;
 
-      assertTrue(Counter.canActivate(state, true, true, true), "counter works outside madness");
+      assertFalse(Counter.canActivate(state, true, true, true), "no counter outside madness");
+
+      state.madnessTicksLeft = RegulusRules.MADNESS_TICKS;
+      assertTrue(Counter.canActivate(state, true, true, true));
    }
 
    @Test

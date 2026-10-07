@@ -52,6 +52,14 @@ public final class RegulusRules {
    public static final int DEBRIS_MAX_SHARDS_PER_TARGET = 4;
    public static final double DEBRIS_KNOCKBACK = 1.3;
    public static final int DEBRIS_COOLDOWN = 400;
+   /** The kick rips a forward crater: its blocks fly out as real falling blocks. */
+   public static final double KICK_ERUPT_RADIUS = 3.4;
+   public static final double KICK_ERUPT_DEPTH = 2.2;
+   public static final double KICK_ERUPT_AHEAD = 1.8;
+   public static final int KICK_ERUPT_MAX_FLYING = 30;
+   public static final double KICK_ERUPT_SPEED = 1.25;
+   public static final float KICK_ERUPT_ENTITY_DAMAGE = 4.0F;
+   public static final double MADNESS_ERUPT_SCALE = 1.4;
 
    public static final int MANIA_WINDUP_TICKS = 19;
    public static final double MANIA_TARGET_RANGE = 100.0;
@@ -130,14 +138,14 @@ public final class RegulusRules {
    }
 
    /**
-    * Spec 5.1: a carrier is a vanilla living, non-player, non-Enemy, untagged
+    * Spec 5.1: a carrier is a vanilla living, non-player, non-hostile (Enemy or angry neutral), untagged
     * real creature (Mob). Decoration entities like armor stands are not
     * "живое существо" — otherwise they grant free permanent hearts.
     */
    public static boolean carrierEligible(boolean vanillaNamespace, boolean player, boolean hostile, boolean heartless, boolean creature) {
-      // Hostile mobs carry hearts too (an angry golem, a zombie): only
-      // players, decorations and heartless-tagged entities are refused.
-      return vanillaNamespace && creature && !player && !heartless;
+      // Peaceful and calm neutral mobs only: hostiles (Enemy) and neutrals
+      // that are currently angry are both reported as hostile and refused.
+      return vanillaNamespace && creature && !player && !hostile && !heartless;
    }
 
    /** Spec 6.4: the release impulse pushes opponents only, never allies or own carriers. */
@@ -176,6 +184,26 @@ public final class RegulusRules {
    public static float shockwaveDamage(float fallDistance, boolean madness) {
       float damage = SHOCKWAVE_DAMAGE + (SHOCKWAVE_MAX_DAMAGE - SHOCKWAVE_DAMAGE) * shockwavePower(fallDistance);
       return madness ? damage * (float)MADNESS_SHOCKWAVE_MULTIPLIER : damage;
+   }
+
+   /**
+    * Pure: whether a block offset (from the eruption centre) is inside the
+    * kick crater — a flattened half-ellipsoid reaching {@code depth} down and
+    * one layer up (grass, plants), cut off behind the kicking foot.
+    */
+   public static boolean inEruption(double dx, double dy, double dz, double forwardX, double forwardZ, double radius, double depth) {
+      if (dy > 1.0 || dy < -depth) {
+         return false;
+      }
+
+      double ahead = dx * forwardX + dz * forwardZ;
+      if (ahead < -KICK_ERUPT_AHEAD) {
+         return false;
+      }
+
+      double horizontal = (dx * dx + dz * dz) / (radius * radius);
+      double vertical = dy < 0.0 ? dy * dy / (depth * depth) : 0.0;
+      return horizontal + vertical <= 1.0;
    }
 
    public static int debrisShardCount(boolean madness) {
