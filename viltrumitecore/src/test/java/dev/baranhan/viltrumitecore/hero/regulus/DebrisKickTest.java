@@ -86,4 +86,14 @@ class DebrisKickTest {
       assertEquals(15.0F, DebrisKick.aimPitch(80.0F), 1.0E-6, "looking at feet: clamped then halved");
       assertEquals(-15.0F, DebrisKick.aimPitch(-90.0F), 1.0E-6);
    }
+
+   @Test
+   void shardMaterialIsTheBlockActuallyUnderTheFeet() {
+      // Full block: feet at y=65.0 stand on the block at 64.
+      assertEquals(new net.minecraft.core.BlockPos(0, 64, 0), DebrisKick.feetSurface(0.5, 65.0, 0.5));
+      // Bottom slab at y=64: feet at 64.5 -> the slab itself, not the block below it.
+      assertEquals(new net.minecraft.core.BlockPos(0, 64, 0), DebrisKick.feetSurface(0.5, 64.5, 0.5));
+      // Carpet on 64: feet at 65.0625 -> the carpet cell 65.
+      assertEquals(new net.minecraft.core.BlockPos(0, 65, 0), DebrisKick.feetSurface(0.5, 65.0625, 0.5));
+   }
 }

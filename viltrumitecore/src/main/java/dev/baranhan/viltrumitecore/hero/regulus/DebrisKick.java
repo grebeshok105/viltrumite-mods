@@ -75,7 +75,7 @@ public final class DebrisKick {
       state.eventFired = true;
       RegulusPassives.clearOwnSlowness(player, state, state.actionElapsed);
       ServerLevel level = player.serverLevel();
-      BlockPos groundPos = player.blockPosition().below();
+      BlockPos groundPos = surfaceUnder(level, player);
       BlockState ground = level.getBlockState(groundPos);
       // Knocked up during the windup: nothing to kick out — free abort.
       if (!player.onGround() && ground.getCollisionShape(level, groundPos).isEmpty()) {
@@ -87,6 +87,29 @@ public final class DebrisKick {
       state.startCooldown(RegulusAbilities.DEBRIS_KICK, RegulusRules.DEBRIS_COOLDOWN);
       kick(player, level, materialOf(ground), state.hearts());
    }
+
+   /**
+    * The block the feet actually stand on. blockPosition().below() is wrong on
+    * partial blocks: on a bottom slab the feet sit at y+0.5, blockPosition() is
+    * the slab itself and below() would pick the block UNDER it. Probe just
+    * beneath the feet instead; fall back to vanilla's supporting block when
+    * the feet hang over an edge.
+    */
+   private static BlockPos surfaceUnder(ServerLevel level, ServerPlayer player) {
+      BlockPos probe = feetSurface(player.getX(), player.getY(), player.getZ());
+      if (!level.getBlockState(probe).getCollisionShape(level, probe).isEmpty()) {
+         return probe;
+      }
+
+      return player.getOnPos();
+   }
+
+   /** Pure: the block cell just below the feet (feet y minus a small epsilon). */
+   static BlockPos feetSurface(double x, double feetY, double z) {
+      return BlockPos.containing(x, feetY - SURFACE_EPSILON, z);
+   }
+
+   private static final double SURFACE_EPSILON = 0.05;
 
    /** The shard material is the real surface; air/fluids fall back to dirt. */
    private static BlockState materialOf(BlockState ground) {

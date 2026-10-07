@@ -173,6 +173,24 @@ public final class RegulusRules {
       return overheatTicks >= LION_OVERHEAT_MAX_TICKS;
    }
 
+   /** How an active Lion's Heart ends after this tick's drains, if at all. */
+   public enum LionEnd {
+      NONE,
+      /** HP collapsed to the floor: forced off, LION_FORCED_COOLDOWN. */
+      FORCED,
+      /** Overheat ran its course with HP above the floor: LION_MANUAL_COOLDOWN. */
+      EXHAUSTED
+   }
+
+   /** HP collapse always wins over overheat exhaustion on the same tick. */
+   public static LionEnd lionEndAfterTick(float health, int overheatTicks) {
+      if (lionForcedOff(health)) {
+         return LionEnd.FORCED;
+      }
+
+      return overheatExhausted(overheatTicks) ? LionEnd.EXHAUSTED : LionEnd.NONE;
+   }
+
    /** Heart loss shortens the window, but always leaves a short warning grace. */
    public static int windowAfterHeartLoss(int previousWindow, int shrunkWindow, int elapsed) {
       if (shrunkWindow >= previousWindow) {

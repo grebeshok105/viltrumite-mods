@@ -84,6 +84,17 @@ class RegulusRulesTest {
    }
 
    @Test
+   void hpCollapseOnTheLastOverheatTickIsAForcedOff() {
+      // Third drain lands Regulus at exactly 4 HP on overheat tick 60: the
+      // forced-off (600t) must win over the normal exhaustion end (100t).
+      assertEquals(RegulusRules.LionEnd.FORCED, RegulusRules.lionEndAfterTick(4.0F, 60));
+      assertEquals(RegulusRules.LionEnd.FORCED, RegulusRules.lionEndAfterTick(3.0F, 20));
+      assertEquals(RegulusRules.LionEnd.EXHAUSTED, RegulusRules.lionEndAfterTick(4.5F, 60));
+      assertEquals(RegulusRules.LionEnd.NONE, RegulusRules.lionEndAfterTick(10.0F, 59));
+      assertEquals(RegulusRules.LionEnd.NONE, RegulusRules.lionEndAfterTick(10.0F, 0));
+   }
+
+   @Test
    void heartLossLeavesAWarningGrace() {
       // 2 hearts lost at elapsed 100 from a 140 window would cut to 60 (instant
       // overheat); the grace keeps 40 ticks from now instead.

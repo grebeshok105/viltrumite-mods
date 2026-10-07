@@ -101,15 +101,15 @@ public final class LionsHeart {
          // One drain per second (no per-tick flinch), then Lion stops itself
          // instead of bleeding the hero down to the 4 HP floor.
          HeroDamage.applyInternal(player, RegulusRules.overheatDrain(state.overheatTicks));
-         if (RegulusRules.overheatExhausted(state.overheatTicks) && state.lionActive) {
-            deactivate(player, state, false);
-            return;
-         }
       }
 
-      // Any internal HP loss to 4 or below collapses the heart (spec 6.3).
-      if (RegulusRules.lionForcedOff(player.getHealth())) {
-         deactivate(player, state, true);
+      // The HP collapse is checked FIRST: a drain that lands Regulus at <= 4 HP
+      // on the last overheat tick is a forced-off (600t), never a normal 100t end.
+      switch (RegulusRules.lionEndAfterTick(player.getHealth(), state.overheatTicks)) {
+         case FORCED -> deactivate(player, state, true);
+         case EXHAUSTED -> deactivate(player, state, false);
+         case NONE -> {
+         }
       }
    }
 
