@@ -342,9 +342,15 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
    }
 
    @Override
-   @Unique
    public void resetModFlight() {
-      ViltrumiteFlightPlayer.super.resetModFlight();
+      this.setFlightState(FlightState.NONE);
+      this.setFlightThrottle(0.0F);
+      this.setFlightAccelerating(false);
+      this.setHoverForward(0.0F);
+      this.setHoverSideways(0.0F);
+      this.setSpeedLocked(false);
+      this.setFlightTicks(0);
+      this.setTakeoffTicks(0);
       this.prevFlightThrottle = 0.0F;
       this.clientLocalThrottle = 0.0F;
       this.prevClientLocalThrottle = 0.0F;
