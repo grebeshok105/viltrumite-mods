@@ -14,10 +14,10 @@ class RegulusVfxMathTest {
 
    @Test
    void debrisVictimShakeNeedsConeAndRange() {
-      // Inside the 35-degree cone (17.5 half-angle) and inside 16 blocks.
+      // The wave is limited to eight blocks.
       assertEquals(1.0F, RegulusVfxMath.debrisVictimFactor(0.0, 0.0), 1.0E-6);
-      assertTrue(RegulusVfxMath.debrisVictimFactor(8.0, 10.0) > 0.0F);
-      assertTrue(RegulusVfxMath.debrisVictimFactor(15.9, 17.4) > 0.0F);
+      assertTrue(RegulusVfxMath.debrisVictimFactor(4.0, 10.0) > 0.0F);
+      assertTrue(RegulusVfxMath.debrisVictimFactor(7.9, 17.4) > 0.0F);
       // Outside the cone or the range: no shake at all.
       assertEquals(0.0F, RegulusVfxMath.debrisVictimFactor(8.0, 17.6));
       assertEquals(0.0F, RegulusVfxMath.debrisVictimFactor(16.5, 0.0));
@@ -27,7 +27,7 @@ class RegulusVfxMathTest {
    @Test
    void debrisShakeFallsOffWithDistance() {
       float near = RegulusVfxMath.debrisVictimFactor(4.0, 0.0);
-      float far = RegulusVfxMath.debrisVictimFactor(12.0, 0.0);
+      float far = RegulusVfxMath.debrisVictimFactor(7.0, 0.0);
       assertTrue(near > far && far > 0.0F);
    }
 
