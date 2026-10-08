@@ -51,8 +51,37 @@ public class HeroInputC2SPacket {
             return;
          }
 
+         // A press must come from an equipped slot on the active page; releases always pass
+         // so active channels can stop.
+         if (this.pressed && !equipped(player, action)) {
+            return;
+         }
+
          HeroRegistry.get(player).handleInput(player, action, this.pressed);
       });
       context.setPacketHandled(true);
+   }
+
+   /** True when no hero slot maps to the action, or one that does sits on the active page. */
+   static boolean equipped(ServerPlayer player, HeroAction action) {
+      dev.baranhan.viltrumitecore.hero.HeroDefinition hero = HeroRegistry.get(player);
+      boolean slotBound = false;
+      for (String id : hero.heroInputSlots()) {
+         if (hero.heroActionFor(id) != action) {
+            continue;
+         }
+
+         slotBound = true;
+         if (player instanceof dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser user) {
+            int offset = user.getActivePage() * 6;
+            for (int slot = offset; slot < offset + 6 && slot < 18; slot++) {
+               if (id.equals(user.getAbilityInSlot(slot))) {
+                  return true;
+               }
+            }
+         }
+      }
+
+      return !slotBound;
    }
 }

@@ -45,7 +45,7 @@ public final class FearClient {
       Minecraft client = Minecraft.getInstance();
       LocalPlayer player = client.player;
       boolean now = player != null && player.hasEffect(ViltrumiteEffects.FEAR.get());
-      if (now && !afraid && calmTicks >= EPISODE_GAP) {
+      if (now && !afraid) {
          client.gui.setTimes(10, 50, 20);
          client.gui.setTitle(Component.empty());
          client.gui.setSubtitle(Component.translatable("hud.viltrumitecore.homelander.fear"));

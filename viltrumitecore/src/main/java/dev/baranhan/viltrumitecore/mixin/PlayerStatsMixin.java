@@ -158,7 +158,8 @@ public abstract class PlayerStatsMixin implements ViltrumiteStatHolder {
             }
          }
 
-         if (!player.level().isClientSide() && player.getHealth() < player.getMaxHealth() && player.tickCount % 40 == 0) {
+         if (!player.level().isClientSide() && player.getHealth() < player.getMaxHealth() && player.tickCount % 40 == 0
+            && dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).usesLegacyRegen(player)) {
             player.heal(this.getHealFactor());
          }
       }

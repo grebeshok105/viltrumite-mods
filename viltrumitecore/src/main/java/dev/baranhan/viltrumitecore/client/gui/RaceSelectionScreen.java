@@ -30,7 +30,7 @@ public class RaceSelectionScreen extends Screen {
          this.onClose();
       }).bounds(centerX - 50, centerY - 20, 100, 20).build());
       this.addRenderableWidget(Button.builder(Component.translatable("gui.viltrumitecore.race_selection.remain_human"), button -> {
-         this.sendLegacyChoice(false);
+         this.sendHeroChoice(HeroId.HUMAN);
          this.onClose();
       }).bounds(centerX + 55, centerY - 20, 100, 20).build());
    }

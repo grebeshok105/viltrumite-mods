@@ -94,6 +94,11 @@ public final class HomelanderPoser {
    public static void poseThirdPerson(PlayerModel<?> model, LivingEntity entity, @Nullable ModelPart cloak) {
       HeroPublicSnapshot snapshot = thirdPerson(entity);
       if (snapshot == null) {
+         if (homelander(entity) == null) {
+            // Hero changed: drop cached pose weights so a later return starts clean.
+            THIRD.remove(entity);
+            FIRST.remove(entity);
+         }
          return;
       }
 

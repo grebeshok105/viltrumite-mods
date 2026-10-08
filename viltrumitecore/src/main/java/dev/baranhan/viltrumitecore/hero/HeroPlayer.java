@@ -36,4 +36,7 @@ public interface HeroPlayer {
    void viltrumitecore$setOwnerSnapshot(HeroOwnerSnapshot snapshot);
 
    void viltrumitecore$setSyncedSnapshot(HeroPublicSnapshot snapshot);
+
+   /** True once after loading a legacy Viltrumite save: its saved slots must be migrated. */
+   boolean viltrumitecore$consumeLegacyLoadout();
 }

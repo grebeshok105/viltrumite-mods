@@ -62,6 +62,16 @@ public interface HeroDefinition {
    /** Which registry ability ids this hero owns (and may equip). */
    boolean ownsAbility(String abilityId);
 
+   /** Panel entries this hero registers into the shared ability registry. */
+   default java.util.List<dev.baranhan.viltrumitecore.ability.ViltrumiteAbility> panelAbilities() {
+      return java.util.List.of();
+   }
+
+   /** Does the shared legacy-kit regeneration (every 40 t) apply; heroes with their own regen opt out. */
+   default boolean usesLegacyRegen(Player player) {
+      return true;
+   }
+
    /** Default slot contents applied on hero enter. Length 18, "" for empty. */
    String[] defaultLoadout();
 

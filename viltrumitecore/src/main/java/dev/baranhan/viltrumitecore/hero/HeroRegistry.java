@@ -41,6 +41,9 @@ public final class HeroRegistry {
 
    public static void register(HeroDefinition definition) {
       DEFINITIONS.put(definition.id(), definition);
+      for (dev.baranhan.viltrumitecore.ability.ViltrumiteAbility ability : definition.panelAbilities()) {
+         dev.baranhan.viltrumitecore.ability.ViltrumiteAbilities.registerHeroAbility(ability);
+      }
    }
 
    public static HeroDefinition get(HeroId id) {
@@ -166,11 +169,18 @@ public final class HeroRegistry {
          slots[slot] = abilityUser.getAbilityInSlot(slot);
       }
 
-      if (!needsLoadoutReset(slots, hero::ownsAbility)) {
+      if (needsLoadoutReset(slots, hero::ownsAbility)) {
+         resetLoadout(player);
+      }
+   }
+
+   /** Put the hero's default loadout into all 18 slots (legacy save migration, repair). */
+   public static void resetLoadout(ServerPlayer player) {
+      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
          return;
       }
 
-      String[] loadout = hero.defaultLoadout();
+      String[] loadout = get(player).defaultLoadout();
       for (int slot = 0; slot < 18; slot++) {
          String id = slot < loadout.length ? loadout[slot] : null;
          abilityUser.setAbilityInSlot(slot, id == null ? "" : id);

@@ -225,7 +225,11 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
-         HeroRegistry.repairLoadout(player);
+         if (player instanceof HeroPlayer heroPlayer && heroPlayer.viltrumitecore$consumeLegacyLoadout()) {
+            HeroRegistry.resetLoadout(player);
+         } else {
+            HeroRegistry.repairLoadout(player);
+         }
       }
    }
 

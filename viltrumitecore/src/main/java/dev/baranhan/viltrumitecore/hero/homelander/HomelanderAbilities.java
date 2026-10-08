@@ -18,6 +18,8 @@ public final class HomelanderAbilities {
    private static final String[] OWN = {LASERS, FOCUS, ROAR};
    /** Shared kit abilities this hero keeps (spec §1.2). */
    private static final String[] KIT = {LegacyKit.PUNCH, LegacyKit.DASH, LegacyKit.THUNDERCLAP};
+   /** Flight utility indicators he keeps (no speed lock: he has no super speed). */
+   private static final String[] UTILITY = {"viltrumite:fast_takeoff", "viltrumite:supersonic_flight"};
    /** Page 1: punch and dash keep their Viltrumite keys (R, Y). */
    private static final String[] LOADOUT = {LegacyKit.PUNCH, LegacyKit.DASH, LASERS, FOCUS, ROAR, LegacyKit.THUNDERCLAP};
 
@@ -39,6 +41,12 @@ public final class HomelanderAbilities {
          }
       }
 
+      for (String id : UTILITY) {
+         if (id.equals(abilityId)) {
+            return true;
+         }
+      }
+
       return ownsKit(abilityId);
    }
 
@@ -55,7 +63,7 @@ public final class HomelanderAbilities {
    /** Homelander draws every owned slot (own and kit) with his own icon. */
    @javax.annotation.Nullable
    public static net.minecraft.resources.ResourceLocation icon(String abilityId) {
-      if (!owns(abilityId)) {
+      if (!owns(abilityId) || java.util.Arrays.asList(UTILITY).contains(abilityId)) {
          return null;
       }
 

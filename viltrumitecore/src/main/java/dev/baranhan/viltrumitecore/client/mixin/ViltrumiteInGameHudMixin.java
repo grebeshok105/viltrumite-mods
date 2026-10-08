@@ -106,7 +106,7 @@ public class ViltrumiteInGameHudMixin {
                int slotX = rightBarX + 3 + i * 20;
                int slotY = barY + 3;
                ViltrumiteAbility ability = ViltrumiteAbilities.get(rightIds[i]);
-               if (ability != null) {
+               if (ability != null && dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).ownsAbility(rightIds[i])) {
                   guiGraphics.blit(ability.getIcon(player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
                   if (ability.isGrey(player)) {
                      guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, -1875692749);

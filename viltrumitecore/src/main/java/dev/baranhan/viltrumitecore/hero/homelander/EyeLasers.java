@@ -74,9 +74,13 @@ public final class EyeLasers {
       if (damageTick(state.laserAge)) {
          LivingEntity target = firstLivingOnRay(player);
          if (target != null) {
+            int previousInvulnerable = target.invulnerableTime;
             target.invulnerableTime = 0;
-            target.hurt(player.damageSources().playerAttack(player), HomelanderRules.LASER_DAMAGE);
-            target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), HomelanderRules.LASER_FIRE_TICKS));
+            if (target.hurt(player.damageSources().playerAttack(player), HomelanderRules.LASER_DAMAGE)) {
+               target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), HomelanderRules.LASER_FIRE_TICKS));
+            } else {
+               target.invulnerableTime = previousInvulnerable;
+            }
          }
       }
 
@@ -87,7 +91,17 @@ public final class EyeLasers {
    @Nullable
    static LivingEntity firstLivingOnRay(ServerPlayer player) {
       HitResult hit = ray(player, HomelanderRules.LASER_RANGE);
-      return hit instanceof EntityHitResult entityHit && entityHit.getEntity() instanceof LivingEntity living ? living : null;
+      if (!(hit instanceof EntityHitResult entityHit)) {
+         return null;
+      }
+
+      Entity entity = entityHit.getEntity();
+      // Multipart mobs (ender dragon): the beam hits a part, damage goes to the living parent.
+      if (entity instanceof net.minecraftforge.entity.PartEntity<?> part) {
+         entity = part.getParent();
+      }
+
+      return entity instanceof LivingEntity living ? living : null;
    }
 
    /** Shared ray: blocks (collider shape) then entities up to the block hit. Used on both sides. */

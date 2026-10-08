@@ -48,6 +48,23 @@ public class HomelanderHero implements HeroDefinition {
    }
 
    @Override
+   public java.util.List<dev.baranhan.viltrumitecore.ability.ViltrumiteAbility> panelAbilities() {
+      return HomelanderAbilities.panelAbilities();
+   }
+
+   /** Homelander has his own regeneration (Regen) with a pause after damage. */
+   @Override
+   public boolean usesLegacyRegen(Player player) {
+      return false;
+   }
+
+   /** Spec §1.2: landing never hurts Homelander. */
+   @Override
+   public boolean cancelsFallDamage(Player player) {
+      return true;
+   }
+
+   @Override
    public boolean ownsAbility(String abilityId) {
       return HomelanderAbilities.owns(abilityId);
    }
@@ -107,6 +124,10 @@ public class HomelanderHero implements HeroDefinition {
          state.roarAnim--;
       }
 
+      if (HeroDamage.isAnchored(player) || !player.isAlive()) {
+         stopChannels(player, state);
+      }
+
       EyeLasers.tick(player, state);
       Focus.tick(player, state);
       state.heat.tick(state.laserBeamOn(), state.focusOn);
@@ -158,6 +179,9 @@ public class HomelanderHero implements HeroDefinition {
 
    @Override
    public void enter(ServerPlayer player) {
+      // Apply the chassis now and start full, so the bonus hearts are not empty.
+      applyPassives(player);
+      player.setHealth(player.getMaxHealth());
    }
 
    @Override

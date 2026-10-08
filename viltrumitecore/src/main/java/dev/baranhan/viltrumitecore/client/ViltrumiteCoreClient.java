@@ -108,6 +108,9 @@ public class ViltrumiteCoreClient {
                   if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.DASH) && !corePlayer.isBlocking() && ViltrumiteCoreClient.iAmBeingGrabbedBy == null) {
                      corePlayer.startDash();
                      CoreMessages.sendToServer(new DashToggleC2SPacket());
+                  } else if (dev.baranhan.viltrumitecore.hero.HeroRegistry.get(client.player).ownsAbility(dev.baranhan.viltrumitecore.hero.LegacyKit.DASH)) {
+                     // Owned but not allowed right now (e.g. grounded): local refusal click.
+                     client.player.playNotifySound(net.minecraft.sounds.SoundEvents.DISPENSER_FAIL, net.minecraft.sounds.SoundSource.PLAYERS, 0.4F, 1.6F);
                   }
                }
 

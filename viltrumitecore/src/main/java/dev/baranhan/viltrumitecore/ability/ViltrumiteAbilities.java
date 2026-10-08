@@ -259,13 +259,11 @@ public class ViltrumiteAbilities {
             ViltrumiteAbilities::regulusPunchGrey
          )
       );
-      registerHeroPanels();
    }
 
-   private static void registerHeroPanels() {
-      for (ViltrumiteAbility ability : dev.baranhan.viltrumitecore.hero.homelander.HomelanderAbilities.panelAbilities()) {
-         register(ability);
-      }
+   /** Hero-owned panel entries, registered by HeroRegistry from HeroDefinition.panelAbilities. */
+   public static void registerHeroAbility(ViltrumiteAbility ability) {
+      register(ability);
    }
 
    private static void registerRegulusAbility(String id, String name, int cooldownIndex, HeroAction action) {
