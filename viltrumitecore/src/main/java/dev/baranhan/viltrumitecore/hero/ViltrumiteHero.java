@@ -1,12 +1,8 @@
 package dev.baranhan.viltrumitecore.hero;
 
 import dev.baranhan.viltrumitecore.hero.control.ControlKind;
-import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
-import java.util.UUID;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -15,7 +11,6 @@ import net.minecraft.world.entity.player.Player;
  * strength modifier so a restored stale state cannot keep running.
  */
 public class ViltrumiteHero implements HeroDefinition {
-   private static final UUID BASE_STRENGTH_MODIFIER_ID = UUID.fromString("e7208d13-6453-4cae-908c-9c3f508a6b12");
 
    @Override
    public HeroId id() {
@@ -66,27 +61,8 @@ public class ViltrumiteHero implements HeroDefinition {
 
    @Override
    public void cleanup(ServerPlayer player, CleanupReason reason) {
-      if (reason != CleanupReason.HERO_CHANGE || !(player instanceof ViltrumiteCorePlayer corePlayer)) {
-         return;
-      }
-
-      corePlayer.setPunchTicks(0);
-      corePlayer.setPunchCooldown(0);
-      corePlayer.setChopTicks(0);
-      corePlayer.setThunderclapTicks(0);
-      corePlayer.setBlocking(false);
-      corePlayer.setTryingToGrab(false);
-      corePlayer.releaseTarget();
-      corePlayer.setSuperSpeed(false);
-      corePlayer.setBarraging(false);
-      corePlayer.setBarrageTicks(0);
-      corePlayer.setBarrageCooldown(0);
-      corePlayer.setBlockCooldown(0);
-      corePlayer.setDashing(false);
-
-      AttributeInstance damageAttribute = player.getAttribute(Attributes.ATTACK_DAMAGE);
-      if (damageAttribute != null && damageAttribute.getModifier(BASE_STRENGTH_MODIFIER_ID) != null) {
-         damageAttribute.removeModifier(BASE_STRENGTH_MODIFIER_ID);
+      if (reason == CleanupReason.HERO_CHANGE) {
+         LegacyKit.reset(player);
       }
    }
 

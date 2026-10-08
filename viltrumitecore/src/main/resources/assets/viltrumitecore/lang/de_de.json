@@ -181,5 +181,20 @@
   "message.viltrumitecore.lion.heart_lost": "Ein Herz ist erloschen — das Fenster des Herzens des Löwen wird kürzer.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus-Schlag",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>Abklingzeit: <lime>1s\n<grey>Typ: <aqua>Sofort\n\n<grey>Ein Viltrumiten-Schlag, verstärkt durch deine Herzen.\n<grey>Zerbricht Blöcke und schleudert Gegner weg.\n\n<red>Wahnsinn: <grey>1,5x Schaden und eine Klinge aus\n<grey>gefrorener Luft, die alles vor dir zerschneidet.\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "Supersprung"
+  "key.viltrumitecore.regulus_super_jump": "Supersprung",
+  "gui.viltrumitecore.race_selection.become_homelander": "Homelander werden",
+  "hero.viltrumitecore.homelander": "Homelander",
+  "subtitles.viltrumitecore.homelander_laser_charge": "Homelanders Augen glühen",
+  "subtitles.viltrumitecore.homelander_laser_loop": "Augenlaser brennen",
+  "subtitles.viltrumitecore.homelander_laser_release": "Augenlaser erlöschen",
+  "subtitles.viltrumitecore.homelander_roar": "Homelander brüllt",
+  "subtitles.viltrumitecore.homelander_roar_deep": "Homelander brüllt",
+  "hud.viltrumitecore.homelander.fear": "Du spürst einen Blick auf dir",
+  "effect.viltrumitecore.fear": "Angst",
+  "ability.viltrumitecore.homelander_lasers.name": "<red>Hitzeblick",
+  "ability.viltrumitecore.homelander_lasers.desc": "<grey>Abklingzeit: <lime>-\n<grey>Typ: <yellow>Halten\n\n<grey>Verbrenne alles in deinem Blick mit zwei roten Strahlen.\n<grey>Setzt Ziele in Brand und versengt Wände.\n<grey>Erhitzt deine Augen: Überhitzung sperrt sie für 3s.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_focus.name": "<aqua>Fokus",
+  "ability.viltrumitecore.homelander_focus.desc": "<grey>Abklingzeit: <lime>-\n<grey>Typ: <aqua>Umschalten\n\n<grey>Sieh bis zu 8 nächste Wesen durch Wände,\n<grey>ihre Gesundheit und den Weg zu ihnen.\n<grey>Ihre Schritte werden lauter, der Rest leiser.\n<grey>Wen du beobachtest, fürchtet sich. Erhitzt langsam die Augen.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_roar.name": "<gold>Brüllen",
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Abklingzeit: <lime>15s\n<grey>Typ: <aqua>Sofort\n\n<grey>Ein wütendes Brüllen stößt alle vor dir\n<grey>zurück (12 Blöcke) und verlangsamt sie 3s.\n\n<blue>Homelander"
 }

@@ -1,0 +1,43 @@
+package dev.baranhan.viltrumitecore.hero;
+
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+import org.junit.jupiter.api.Test;
+
+/** Homelander replaces the Viltrumite race: saved Viltrumites load as Homelander. */
+class HeroIdMigrationTest {
+
+   @Test
+   void fromKeyAliasesViltrumite() {
+      assertSame(HeroId.HOMELANDER, HeroId.fromKey("viltrumite"));
+      assertSame(HeroId.HOMELANDER, HeroId.fromKey("homelander"));
+   }
+
+   @Test
+   void legacyTrueIsHomelander() {
+      assertSame(HeroId.HOMELANDER, HeroId.fromLegacyBoolean(true));
+      assertSame(HeroId.HUMAN, HeroId.fromLegacyBoolean(false));
+   }
+
+   @Test
+   void legacySetKeepsRegulus() {
+      assertSame(HeroId.REGULUS, HeroId.legacySet(HeroId.REGULUS, true));
+      assertSame(HeroId.REGULUS, HeroId.legacySet(HeroId.REGULUS, false));
+   }
+
+   @Test
+   void legacySetToggleHumanAndHomelander() {
+      assertSame(HeroId.HOMELANDER, HeroId.legacySet(HeroId.HUMAN, true));
+      assertSame(HeroId.HUMAN, HeroId.legacySet(HeroId.HOMELANDER, false));
+      assertSame(HeroId.HOMELANDER, HeroId.legacySet(HeroId.HOMELANDER, true));
+      assertSame(HeroId.HOMELANDER, HeroId.legacySet(HeroId.VILTRUMITE, true));
+      assertSame(HeroId.HUMAN, HeroId.legacySet(HeroId.VILTRUMITE, false));
+   }
+
+   @Test
+   void homelanderIsLastOrdinal() {
+      HeroId[] values = HeroId.values();
+      assertSame(HeroId.HOMELANDER, values[values.length - 1]);
+      assertSame(HeroId.REGULUS, values[2]);
+   }
+}

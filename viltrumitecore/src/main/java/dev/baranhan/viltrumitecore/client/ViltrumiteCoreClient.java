@@ -47,12 +47,13 @@ public class ViltrumiteCoreClient {
    public static Vec3 prevHandPos = null;
    public static Vec3 currentHandPos = null;
    public static CameraType preGrabPerspective = null;
-   public static boolean[] regulusKeyDown = new boolean[6];
+   public static boolean[] heroKeyDown = new boolean[8];
 
    @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
       event.enqueueWork(() -> {
          RegulusClient.registerSkins();
+         dev.baranhan.viltrumitecore.client.homelander.HomelanderClient.registerSkins();
          CosmeticLoader.init();
          ViltrumiteCameraConfig.load();
          ViltrumitePostProcessingConfig.load();
@@ -104,14 +105,14 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:dash")) {
-                  if (corePlayer.isViltrumite() && !corePlayer.isBlocking() && ViltrumiteCoreClient.iAmBeingGrabbedBy == null) {
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.DASH) && !corePlayer.isBlocking() && ViltrumiteCoreClient.iAmBeingGrabbedBy == null) {
                      corePlayer.startDash();
                      CoreMessages.sendToServer(new DashToggleC2SPacket());
                   }
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:punch")) {
-                  if (corePlayer.isViltrumite()
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.PUNCH)
                      && corePlayer.getPunchTicks() <= 0
                      && corePlayer.getChopTicks() <= 0
                      && corePlayer.getThunderclapTicks() <= 0
@@ -131,7 +132,7 @@ public class ViltrumiteCoreClient {
                   boolean isLeftPunching = corePlayer.getPunchTicks() > 0 && corePlayer.isLeftArmPunch();
                   boolean isLeftChopping = corePlayer.getChopTicks() > 0 && corePlayer.isLeftChop();
                   boolean isThunderclapping = corePlayer.getThunderclapTicks() > 0;
-                  if (corePlayer.isViltrumite()
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.GRAB)
                      && ViltrumiteCoreClient.iAmBeingGrabbedBy == null
                      && !corePlayer.isBlocking()
                      && !isLeftPunching
@@ -152,7 +153,7 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:block")) {
-                  if (corePlayer.isViltrumite()
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.BLOCK)
                      && !corePlayer.isTryingToGrab()
                      && !corePlayer.isDashing()
                      && corePlayer.getPunchTicks() <= 0
@@ -167,13 +168,13 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:lock")) {
-                  if (corePlayer.isViltrumite()) {
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.LOCK)) {
                      TargetLockManager.toggleLock(client);
                   }
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:speed")) {
-                  if (corePlayer.isViltrumite()) {
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.SPEED)) {
                      if (client.player instanceof ViltrumiteFlightPlayer flightPlayer && flightPlayer.getFlightState() != FlightState.NONE) {
                         return;
                      }
@@ -183,7 +184,7 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:chop")) {
-                  if (corePlayer.isViltrumite()
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.CHOP)
                      && corePlayer.getChopTicks() <= 0
                      && corePlayer.getPunchTicks() <= 0
                      && corePlayer.getThunderclapTicks() <= 0
@@ -201,7 +202,7 @@ public class ViltrumiteCoreClient {
                }
 
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, "viltrumite:thunderclap")) {
-                  if (corePlayer.isViltrumite()
+                  if (dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.THUNDERCLAP)
                      && corePlayer.getThunderclapTicks() <= 0
                      && corePlayer.getPunchTicks() <= 0
                      && corePlayer.getChopTicks() <= 0
@@ -214,7 +215,7 @@ public class ViltrumiteCoreClient {
                }
 
                boolean isBarrageKeyDown = AbilityInputManager.isAbilityKeyDown(client.player, "viltrumite:barrage");
-               boolean canBarrage = corePlayer.isViltrumite()
+               boolean canBarrage = dev.baranhan.viltrumitecore.hero.LegacyKit.allows(client.player, dev.baranhan.viltrumitecore.hero.LegacyKit.BARRAGE)
                   && !corePlayer.isBlocking()
                   && !corePlayer.isDashing()
                   && corePlayer.getChopTicks() <= 0
@@ -237,22 +238,26 @@ public class ViltrumiteCoreClient {
                }
             }
 
-            if (client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
-               && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
-               String[] regulusAbilities = dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.slotIds();
-               for (int i = 0; i < regulusAbilities.length; i++) {
-                  dev.baranhan.viltrumitecore.hero.HeroAction action = dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.actionFor(regulusAbilities[i]);
+            // Hero slot keys (any hero): send press/release edges for the hero's own slots.
+            {
+               dev.baranhan.viltrumitecore.hero.HeroDefinition hero = dev.baranhan.viltrumitecore.hero.HeroRegistry.get(client.player);
+               String[] heroSlots = hero.heroInputSlots();
+               for (int i = 0; i < heroSlots.length && i < ViltrumiteCoreClient.heroKeyDown.length; i++) {
+                  dev.baranhan.viltrumitecore.hero.HeroAction action = hero.heroActionFor(heroSlots[i]);
                   if (action == null) {
                      continue;
                   }
 
-                  boolean down = AbilityInputManager.isAbilityKeyDown(client.player, regulusAbilities[i]);
-                  if (down != ViltrumiteCoreClient.regulusKeyDown[i]) {
-                     ViltrumiteCoreClient.regulusKeyDown[i] = down;
+                  boolean down = AbilityInputManager.isAbilityKeyDown(client.player, heroSlots[i]);
+                  if (down != ViltrumiteCoreClient.heroKeyDown[i]) {
+                     ViltrumiteCoreClient.heroKeyDown[i] = down;
                      CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(action, down));
                   }
                }
+            }
 
+            if (client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+               && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
                // The Viltrumite fist, recoloured for Regulus: same client start
                // (local punch timer for the animation) and the same packet.
                while (AbilityInputManager.consumeAbilityKeyPress(client.player, dev.baranhan.viltrumitecore.hero.regulus.RegulusAbilities.PUNCH)) {

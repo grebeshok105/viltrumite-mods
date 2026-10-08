@@ -227,6 +227,14 @@ public final class HeroEvents {
       }
    }
 
+   /** Damage hook for every hero (HeroDefinition.onHurt). */
+   @SubscribeEvent
+   public static void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0.0F) {
+         HeroRegistry.get(player).onHurt(player, event.getSource(), event.getAmount());
+      }
+   }
+
    @SubscribeEvent
    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
@@ -247,6 +255,7 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroRegistry.get(player).onDimensionChange(player);
       }
    }
 

@@ -181,5 +181,20 @@
   "message.viltrumitecore.lion.heart_lost": "A heart burned out — Lion's Heart window shortened.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus Punch",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>Cooldown: <lime>1s\n<grey>Type: <aqua>Instant\n\n<grey>A Viltrumite-grade punch empowered by your hearts.\n<grey>Breaks blocks and launches enemies.\n\n<red>Madness: <grey>1.5x damage and a frozen-air blade\n<grey>that cuts through everything ahead.\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "Super Jump"
+  "key.viltrumitecore.regulus_super_jump": "Super Jump",
+  "gui.viltrumitecore.race_selection.become_homelander": "Become Homelander",
+  "hero.viltrumitecore.homelander": "Homelander",
+  "subtitles.viltrumitecore.homelander_laser_charge": "Homelander's eyes glow",
+  "subtitles.viltrumitecore.homelander_laser_loop": "Eye lasers burn",
+  "subtitles.viltrumitecore.homelander_laser_release": "Eye lasers stop",
+  "subtitles.viltrumitecore.homelander_roar": "Homelander roars",
+  "subtitles.viltrumitecore.homelander_roar_deep": "Homelander roars",
+  "hud.viltrumitecore.homelander.fear": "You feel someone's gaze on you",
+  "effect.viltrumitecore.fear": "Fear",
+  "ability.viltrumitecore.homelander_lasers.name": "<red>Heat Vision",
+  "ability.viltrumitecore.homelander_lasers.desc": "<grey>Cooldown: <lime>-\n<grey>Type: <yellow>Hold\n\n<grey>Burn everything in your sight with two red beams.\n<grey>Sets targets on fire and scorches walls.\n<grey>Heats your eyes: overheat locks them for 3s.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_focus.name": "<aqua>Focus",
+  "ability.viltrumitecore.homelander_focus.desc": "<grey>Cooldown: <lime>-\n<grey>Type: <aqua>Toggle\n\n<grey>See up to 8 nearest creatures through walls,\n<grey>their health and the way to reach them.\n<grey>Their steps get louder, the rest goes quiet.\n<grey>Those you watch feel fear. Slowly heats your eyes.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_roar.name": "<gold>Roar",
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Cooldown: <lime>15s\n<grey>Type: <aqua>Instant\n\n<grey>A furious roar knocks back everyone\n<grey>in front of you (12 blocks) and slows them for 3s.\n\n<blue>Homelander"
 }

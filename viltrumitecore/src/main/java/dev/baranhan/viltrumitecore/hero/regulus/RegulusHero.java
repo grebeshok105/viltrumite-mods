@@ -86,6 +86,16 @@ public class RegulusHero implements HeroDefinition {
    }
 
    @Override
+   public String[] heroInputSlots() {
+      return RegulusAbilities.slotIds();
+   }
+
+   @Override
+   public HeroAction heroActionFor(String abilityId) {
+      return RegulusAbilities.actionFor(abilityId);
+   }
+
+   @Override
    public String[] defaultLoadout() {
       String[] loadout = new String[18];
       String[] slots = RegulusAbilities.slotIds();

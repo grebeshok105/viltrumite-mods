@@ -20,7 +20,7 @@ public class BlockToggleC2SPacket {
       Context context = supplier.get();
       context.enqueueWork(() -> {
          if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer) {
-            if (!corePlayer.isViltrumite()) {
+            if (!dev.baranhan.viltrumitecore.hero.LegacyKit.allows(context.getSender(), dev.baranhan.viltrumitecore.hero.LegacyKit.BLOCK)) {
                return;
             }
 

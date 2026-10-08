@@ -211,7 +211,8 @@ public class RegulusActionVFXManager {
 
          // Carrier hearts: a small heart beating inside the creature's body.
          // Depth off: visible through the creature's skin and through walls.
-         if (ClientHeroData.carriers().length > 0) {
+         if (ClientHeroData.carriers().length > 0 && client.player instanceof HeroPlayer localHero
+            && localHero.getHeroSnapshot() != null && localHero.getHeroSnapshot().heroId() == HeroId.REGULUS) {
             RenderSystem.disableDepthTest();
             RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
             buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
