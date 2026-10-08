@@ -97,6 +97,7 @@ public class HomelanderHero implements HeroDefinition {
 
    @Override
    public void tick(ServerPlayer player) {
+      applyPassives(player);
       HomelanderState state = HomelanderState.ensure(player);
       if (state.roarCooldown > 0) {
          state.roarCooldown--;
@@ -186,6 +187,7 @@ public class HomelanderHero implements HeroDefinition {
       }
 
       if (reason == CleanupReason.HERO_CHANGE) {
+         removePassives(player);
          LegacyKit.reset(player);
       }
    }
@@ -202,5 +204,36 @@ public class HomelanderHero implements HeroDefinition {
    static void stopChannels(ServerPlayer player, HomelanderState state) {
       EyeLasers.release(player, state);
       Focus.stop(player, state);
+   }
+
+   private static final java.util.UUID HEALTH_MODIFIER_ID = java.util.UUID.fromString("5b1f2c7e-8d3a-4e6b-9c41-0a7d3e2f6b11");
+   private static final java.util.UUID ARMOR_MODIFIER_ID = java.util.UUID.fromString("5b1f2c7e-8d3a-4e6b-9c41-0a7d3e2f6b12");
+
+   /** Homelander passives: extra hearts and armor while he is the hero. */
+   static void applyPassives(ServerPlayer player) {
+      addModifier(player, net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, HEALTH_MODIFIER_ID, "Homelander vitality", HomelanderRules.BONUS_MAX_HEALTH);
+      addModifier(player, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, ARMOR_MODIFIER_ID, "Homelander armor", HomelanderRules.BONUS_ARMOR);
+   }
+
+   static void removePassives(ServerPlayer player) {
+      removeModifier(player, net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, HEALTH_MODIFIER_ID);
+      removeModifier(player, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, ARMOR_MODIFIER_ID);
+      if (player.getHealth() > player.getMaxHealth()) {
+         player.setHealth(player.getMaxHealth());
+      }
+   }
+
+   private static void addModifier(ServerPlayer player, net.minecraft.world.entity.ai.attributes.Attribute attribute, java.util.UUID id, String name, double amount) {
+      net.minecraft.world.entity.ai.attributes.AttributeInstance instance = player.getAttribute(attribute);
+      if (instance != null && instance.getModifier(id) == null) {
+         instance.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(id, name, amount, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+      }
+   }
+
+   private static void removeModifier(ServerPlayer player, net.minecraft.world.entity.ai.attributes.Attribute attribute, java.util.UUID id) {
+      net.minecraft.world.entity.ai.attributes.AttributeInstance instance = player.getAttribute(attribute);
+      if (instance != null && instance.getModifier(id) != null) {
+         instance.removeModifier(id);
+      }
    }
 }

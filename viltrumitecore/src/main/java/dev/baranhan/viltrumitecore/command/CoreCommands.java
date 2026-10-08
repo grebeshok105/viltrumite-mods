@@ -3,6 +3,8 @@ package dev.baranhan.viltrumitecore.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import dev.baranhan.viltrumitecore.network.CoreMessages;
+import dev.baranhan.viltrumitecore.network.packet.OpenRaceScreenS2CPacket;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCosmeticsPlayer;
 import net.minecraft.commands.CommandSourceStack;
@@ -67,8 +69,27 @@ public class CoreCommands {
                            .executes(context -> revokePower((CommandSourceStack)context.getSource(), EntityArgument.getPlayer(context, "target")))
                      )
                ))
+            .then(
+               Commands.literal("choose")
+                  .requires(source -> source.hasPermission(2))
+                  .executes(context -> reopenChoice(context.getSource(), context.getSource().getPlayerOrException()))
+                  .then(Commands.argument("target", EntityArgument.player())
+                     .executes(context -> reopenChoice(context.getSource(), EntityArgument.getPlayer(context, "target"))))
+            )
             .then(WorldEventCommands.build())
       );
+   }
+
+   /**
+    * Re-opens the hero choice screen (operators only). The one-time choice
+    * flag is cleared, so the next HeroChoiceC2SPacket is accepted once and
+    * goes through HeroRegistry.changeHero (old hero cleaned up properly).
+    */
+   private static int reopenChoice(CommandSourceStack source, ServerPlayer target) {
+      ((ViltrumiteCorePlayer)target).setChosenRace(false);
+      CoreMessages.sendToPlayer(new OpenRaceScreenS2CPacket(), target);
+      source.sendSuccess(() -> Component.literal("\u00a7fHero choice opened for \u00a7e" + target.getName().getString()), true);
+      return 1;
    }
 
    private static int grantPower(CommandSourceStack source, ServerPlayer target) {

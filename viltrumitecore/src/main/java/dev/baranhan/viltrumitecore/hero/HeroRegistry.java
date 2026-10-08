@@ -149,4 +149,42 @@ public final class HeroRegistry {
          );
       }
    }
+
+   /**
+    * Repair the slots after login / a repeated choice: a slot holding an ability
+    * the current hero does not own (e.g. a migrated Viltrumite save) resets the
+    * whole loadout to the hero's default.
+    */
+   public static void repairLoadout(ServerPlayer player) {
+      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
+         return;
+      }
+
+      HeroDefinition hero = get(player);
+      String[] slots = new String[18];
+      for (int slot = 0; slot < 18; slot++) {
+         slots[slot] = abilityUser.getAbilityInSlot(slot);
+      }
+
+      if (!needsLoadoutReset(slots, hero::ownsAbility)) {
+         return;
+      }
+
+      String[] loadout = hero.defaultLoadout();
+      for (int slot = 0; slot < 18; slot++) {
+         String id = slot < loadout.length ? loadout[slot] : null;
+         abilityUser.setAbilityInSlot(slot, id == null ? "" : id);
+      }
+   }
+
+   /** True when any non-empty slot holds an ability the hero does not own. */
+   public static boolean needsLoadoutReset(String[] slots, java.util.function.Predicate<String> owns) {
+      for (String id : slots) {
+         if (id != null && !id.isEmpty() && !owns.test(id)) {
+            return true;
+         }
+      }
+
+      return false;
+   }
 }

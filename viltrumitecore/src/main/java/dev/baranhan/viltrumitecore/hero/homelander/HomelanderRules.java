@@ -37,6 +37,10 @@ public final class HomelanderRules {
    // Regeneration (§4)
    public static final int REGEN_INTERVAL = 40;
    public static final int REGEN_DAMAGE_PAUSE = 100;
+   /** Bonus max health (20 = +10 hearts). */
+   public static final double BONUS_MAX_HEALTH = 20.0;
+   /** Bonus armor points. */
+   public static final double BONUS_ARMOR = 10.0;
 
    private HomelanderRules() {
    }

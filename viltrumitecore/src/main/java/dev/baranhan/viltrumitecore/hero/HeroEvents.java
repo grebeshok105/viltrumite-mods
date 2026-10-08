@@ -63,6 +63,7 @@ public final class HeroEvents {
          }
 
          newAbility.setActivePage(oldAbility.getActivePage());
+         HeroRegistry.repairLoadout(newPlayer);
       }
    }
 
@@ -224,6 +225,7 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroRegistry.repairLoadout(player);
       }
    }
 
