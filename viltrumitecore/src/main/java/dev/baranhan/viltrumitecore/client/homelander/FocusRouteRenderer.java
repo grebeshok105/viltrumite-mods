@@ -33,10 +33,11 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 /**
- * Walkable route from the focusing player to each target (spec §6.4): a thin
- * line in the target colour with soft sparks running along it, fading toward
- * the target, seen through walls. One target is re-routed per tick (round
- * robin) so the A* cost is spread; no route = a dim dashed arc.
+ * Walkable route from the focusing player to each target (spec §6.4), drawn as
+ * a soft drifting gas trail in the target colour, seen through walls. Routes
+ * are recomputed rarely (only after a long time or a big move), simplified and
+ * smoothed so they do not follow the block grid, and a new route cross-fades
+ * over the old one. The live ends follow the player and the target.
  */
 @EventBusSubscriber(
    modid = "viltrumitecore",
@@ -46,8 +47,18 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 public final class FocusRouteRenderer {
    private static final int MAX_NODES = 4000;
    private static final int GROUND_SCAN = 64;
-   private static final Map<Integer, List<BlockPos>> ROUTES = new HashMap<>();
+   /** A route is never recomputed sooner than this. */
+   private static final int MIN_AGE = 80;
+   /** ...and only if an end moved this far, unless it is older than MAX_AGE. */
+   private static final double MOVE_TRIGGER = 6.0;
+   private static final int MAX_AGE = 300;
+   private static final float FADE_TICKS = 30.0F;
+   private static final Map<Integer, Route> ROUTES = new HashMap<>();
    private static int cursor;
+
+   /** Smoothed middle of a route; ends are attached live while drawing. */
+   private record Route(List<Vec3> middle, Vec3 from, Vec3 to, long born, @Nullable Route previous) {
+   }
 
    private FocusRouteRenderer() {
    }
@@ -66,6 +77,8 @@ public final class FocusRouteRenderer {
          return;
       }
 
+      long now = level.getGameTime();
+      // Look at one target per tick; most ticks nothing is recomputed.
       int id = targets.get(Math.floorMod(cursor++, targets.size()));
       Entity target = level.getEntity(id);
       if (target == null) {
@@ -73,10 +86,27 @@ public final class FocusRouteRenderer {
          return;
       }
 
-      BlockPos from = ground(level, client.player.blockPosition());
-      BlockPos to = ground(level, target.blockPosition());
-      List<BlockPos> route = from == null || to == null ? List.of() : GroundRoute.find(from, to, (x, y, z) -> standable(level, x, y, z), MAX_NODES);
-      ROUTES.put(id, route);
+      Route old = ROUTES.get(id);
+      Vec3 from = client.player.position();
+      Vec3 to = target.position();
+      if (old != null) {
+         long age = now - old.born();
+         boolean moved = old.from().distanceTo(from) > MOVE_TRIGGER || old.to().distanceTo(to) > MOVE_TRIGGER;
+         if (age < MIN_AGE || !moved && age < MAX_AGE) {
+            return;
+         }
+      }
+
+      BlockPos start = ground(level, client.player.blockPosition());
+      BlockPos end = ground(level, target.blockPosition());
+      List<BlockPos> blocks = start == null || end == null ? List.of() : GroundRoute.find(start, end, (x, y, z) -> standable(level, x, y, z), MAX_NODES);
+      List<Vec3> middle = new java.util.ArrayList<>();
+      for (BlockPos pos : blocks) {
+         middle.add(new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
+      }
+
+      middle = RouteCurve.simplify(middle, 1.2);
+      ROUTES.put(id, new Route(middle, from, to, now, old == null ? null : new Route(old.middle(), old.from(), old.to(), old.born(), null)));
    }
 
    static boolean standable(ClientLevel level, int x, int y, int z) {
@@ -125,13 +155,15 @@ public final class FocusRouteRenderer {
       Camera camera = event.getCamera();
       Vec3 cameraPos = camera.getPosition();
       float time = (client.player.tickCount + partialTick) / 20.0F;
+      float now = level.getGameTime() + partialTick;
       PoseStack modelViewStack = RenderSystem.getModelViewStack();
       modelViewStack.pushPose();
       modelViewStack.setIdentity();
       PixelVfx.rotateCamera(modelViewStack, camera.getXRot(), camera.getYRot());
       RenderSystem.applyModelViewMatrix();
       RenderSystem.enableBlend();
-      RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
+      // Plain alpha blending: a soft gas, not an additive neon glow.
+      RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
       RenderSystem.disableCull();
       RenderSystem.disableDepthTest();
       RenderSystem.depthMask(false);
@@ -147,14 +179,25 @@ public final class FocusRouteRenderer {
                continue;
             }
 
-            int r = color >> 16 & 255;
-            int g = color >> 8 & 255;
-            int b = color & 255;
-            List<BlockPos> route = ROUTES.get(id);
+            // Soften the palette colour toward a pale grey so it reads as gas.
+            int r = ((color >> 16 & 255) * 3 + 200) / 4;
+            int g = ((color >> 8 & 255) * 3 + 200) / 4;
+            int b = ((color & 255) * 3 + 200) / 4;
             Vec3 from = client.player.getPosition(partialTick);
             Vec3 to = target.getPosition(partialTick);
-            List<Vec3> path = route != null && route.size() >= 2 ? groundPath(from, route, to) : arcPath(from, to);
-            drawStream(buffer, cameraPos, camera, RouteCurve.resample(RouteCurve.smooth(path, 3), 0.2), time, id * 1.618F, r, g, b);
+            Route route = ROUTES.get(id);
+            float seed = id * 1.618F;
+            if (route == null) {
+               drawGas(buffer, cameraPos, path(from, List.of(), to), time, seed, r, g, b, 1.0F);
+               continue;
+            }
+
+            float fadeIn = route.previous() == null ? 1.0F : Mth.clamp((now - route.born()) / FADE_TICKS, 0.0F, 1.0F);
+            if (fadeIn < 1.0F) {
+               drawGas(buffer, cameraPos, path(from, route.previous().middle(), to), time, seed, r, g, b, 1.0F - fadeIn);
+            }
+
+            drawGas(buffer, cameraPos, path(from, route.middle(), to), time, seed, r, g, b, fadeIn);
          }
 
          tessellator.end();
@@ -169,44 +212,55 @@ public final class FocusRouteRenderer {
       }
    }
 
-   private static Vec3 point(BlockPos pos) {
-      return new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-   }
-
-   /** A* block route with the real end points instead of block centres. */
-   private static List<Vec3> groundPath(Vec3 from, List<BlockPos> route, Vec3 to) {
-      List<Vec3> path = new java.util.ArrayList<>(route.size() + 2);
-      path.add(from);
-      for (int i = 1; i < route.size() - 1; i++) {
-         path.add(point(route.get(i)));
+   /**
+    * Live ends + the stored middle (trimmed to the parts still ahead of the
+    * ends), smoothed and evenly resampled. No middle = a soft low arc.
+    */
+   private static List<Vec3> path(Vec3 from, List<Vec3> middle, Vec3 to) {
+      List<Vec3> points = new java.util.ArrayList<>();
+      points.add(from);
+      if (middle.size() >= 2) {
+         int first = nearest(middle, from);
+         int last = nearest(middle, to);
+         if (first <= last) {
+            for (int i = first + 1; i < last; i++) {
+               points.add(middle.get(i));
+            }
+         } else {
+            for (int i = first - 1; i > last; i--) {
+               points.add(middle.get(i));
+            }
+         }
+      } else {
+         double dist = from.distanceTo(to);
+         points.add(from.lerp(to, 0.5).add(0.0, Math.min(4.0, dist * 0.15), 0.0));
       }
 
-      path.add(to);
-      return path;
+      points.add(to);
+      return RouteCurve.resample(RouteCurve.smooth(points, 4), 0.25);
    }
 
-   /** No walkable route: a soft arc over the obstacles. */
-   private static List<Vec3> arcPath(Vec3 from, Vec3 to) {
-      double dist = from.distanceTo(to);
-      Vec3 mid = from.lerp(to, 0.5).add(0.0, Math.min(6.0, dist * 0.2), 0.0);
-      List<Vec3> path = new java.util.ArrayList<>();
-      int steps = Math.max(4, (int)(dist / 2.0));
-      for (int i = 0; i <= steps; i++) {
-         double t = i / (double)steps;
-         path.add(from.lerp(mid, t).lerp(mid.lerp(to, t), t));
+   private static int nearest(List<Vec3> points, Vec3 at) {
+      int best = 0;
+      double bestDist = Double.MAX_VALUE;
+      for (int i = 0; i < points.size(); i++) {
+         double d = points.get(i).distanceToSqr(at);
+         if (d < bestDist) {
+            bestDist = d;
+            best = i;
+         }
       }
 
-      return path;
+      return best;
    }
 
    /**
-    * Glowing smoky stream along the smoothed path: soft-edged additive ribbon
-    * (wide haze, body, bright core) floating above the ground, swaying and
-    * breathing procedurally, with pulses running toward the target.
+    * Gas trail: wide, soft-edged translucent ribbons plus slow drifting puffs.
+    * Motion is slow and small so the trail breathes instead of jumping.
     */
-   private static void drawStream(BufferBuilder buffer, Vec3 cameraPos, Camera camera, List<Vec3> samples, float time, float seed, int r, int g, int b) {
+   private static void drawGas(BufferBuilder buffer, Vec3 cameraPos, List<Vec3> samples, float time, float seed, int r, int g, int b, float strength) {
       int n = samples.size();
-      if (n < 2) {
+      if (n < 2 || strength <= 0.01F) {
          return;
       }
 
@@ -220,43 +274,39 @@ public final class FocusRouteRenderer {
       float[] fade = new float[n];
       for (int i = 0; i < n; i++) {
          double s = along[i];
-         Vec3 p = samples.get(i);
-         Vec3 next = samples.get(Math.min(n - 1, i + 1));
-         Vec3 prev = samples.get(Math.max(0, i - 1));
-         Vec3 dir = next.subtract(prev);
+         Vec3 dir = samples.get(Math.min(n - 1, i + 1)).subtract(samples.get(Math.max(0, i - 1)));
          Vec3 side = new Vec3(-dir.z, 0.0, dir.x);
          side = side.lengthSqr() < 1.0E-6 ? Vec3.ZERO : side.normalize();
-         double envelope = Math.min(1.0, Math.min(s / 2.0, (length - s) / 1.5));
-         double sway = 0.35 * Math.sin(s * 0.55 + time * 1.6 + seed) + 0.12 * Math.sin(s * 1.7 - time * 2.9 + seed * 2.0);
-         double lift = 0.55 + 0.25 * Math.sin(s * 0.4 - time * 1.2 + seed) + 0.08 * Math.sin(s * 2.3 + time * 3.1);
-         pts[i] = p.add(side.scale(sway * envelope)).add(0.0, Math.max(0.15, lift * Math.max(0.35, envelope)), 0.0);
-         float head = (float)Mth.clamp(s / 1.5, 0.0, 1.0);
-         float pulse = 0.7F + 0.3F * Mth.sin((float)(s * 0.9 - time * 7.0));
-         fade[i] = head * pulse * (1.0F - 0.35F * (float)(s / Math.max(1.0, length)));
+         double envelope = Math.min(1.0, Math.min(s / 3.0, (length - s) / 2.0));
+         double sway = 0.18 * Math.sin(s * 0.25 + time * 0.5 + seed);
+         double lift = 0.5 + 0.1 * Math.sin(s * 0.2 - time * 0.4 + seed);
+         pts[i] = samples.get(i).add(side.scale(sway * envelope)).add(0.0, lift * Math.max(0.5, envelope), 0.0);
+         float head = (float)Mth.clamp(s / 2.0, 0.0, 1.0);
+         float drift = 0.85F + 0.15F * Mth.sin((float)(s * 0.35 - time * 1.2 + seed));
+         fade[i] = strength * head * drift * (1.0F - 0.3F * (float)(s / Math.max(1.0, length)));
       }
 
-      int wr = (r + 255 * 2) / 3;
-      int wg = (g + 255 * 2) / 3;
-      int wb = (b + 255 * 2) / 3;
       for (int i = 0; i < n - 1; i++) {
-         double s = along[i];
-         float breathe = 0.8F + 0.3F * Mth.sin((float)(s * 0.8 - time * 3.0 + seed));
-         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 0.55F * breathe, r, g, b, (int)(55 * fade[i]), (int)(55 * fade[i + 1]));
-         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 0.22F * breathe, r, g, b, (int)(120 * fade[i]), (int)(120 * fade[i + 1]));
-         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 0.06F, wr, wg, wb, (int)(200 * fade[i]), (int)(200 * fade[i + 1]));
+         float breathe = 0.9F + 0.15F * Mth.sin((float)(along[i] * 0.3 - time * 0.8 + seed));
+         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 1.0F * breathe, r, g, b, (int)(28 * fade[i]), (int)(28 * fade[i + 1]));
+         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 0.5F * breathe, r, g, b, (int)(40 * fade[i]), (int)(40 * fade[i + 1]));
       }
 
-      // Wisps drifting toward the target.
-      float offset = (time * 5.0F + seed) % 3.0F;
+      // Puffs drifting slowly toward the target, each swelling and thinning.
+      float offset = (time * 1.0F + seed) % 0.9F;
       int k = 0;
-      for (double s = offset; s < length; s += 3.0) {
+      int index = 0;
+      for (double s = offset; s < length; s += 0.9, index++) {
          while (k < n - 2 && along[k + 1] < s) {
             k++;
          }
 
-         double t = (s - along[k]) / Math.max(1.0E-6, along[k + 1] - along[k]);
-         Vec3 at = pts[k].lerp(pts[k + 1], Mth.clamp(t, 0.0, 1.0)).add(0.0, 0.1 * Math.sin(s + time * 4.0), 0.0);
-         PixelVfx.crossGlow(buffer, cameraPos, camera, at, 0.22F, r, g, b, (int)(120 * fade[k]));
+         double t = Mth.clamp((s - along[k]) / Math.max(1.0E-6, along[k + 1] - along[k]), 0.0, 1.0);
+         float phase = (float)(s * 0.7 + seed * 3.0);
+         Vec3 at = pts[k].lerp(pts[k + 1], t).add(0.08 * Math.sin(phase + time * 0.7), 0.1 * Math.sin(phase * 1.3 + time * 0.5), 0.08 * Math.cos(phase + time * 0.6));
+         float radius = 0.4F + 0.15F * Mth.sin(phase + time * 0.9F);
+         int alpha = (int)(32 * fade[k] * (0.7F + 0.3F * Mth.sin(phase * 2.1F + time)));
+         puff(buffer, cameraPos, at, radius, r, g, b, alpha);
       }
    }
 
@@ -266,9 +316,7 @@ public final class FocusRouteRenderer {
          return;
       }
 
-      Vec3 dir = c.subtract(a);
-      Vec3 toCamera = cameraPos.subtract(a.lerp(c, 0.5));
-      Vec3 side = dir.cross(toCamera);
+      Vec3 side = c.subtract(a).cross(cameraPos.subtract(a.lerp(c, 0.5)));
       if (side.lengthSqr() < 1.0E-8) {
          return;
       }
@@ -282,6 +330,34 @@ public final class FocusRouteRenderer {
          vertex(buffer, ra, r, g, b, alphaA);
          vertex(buffer, rc, r, g, b, alphaC);
          vertex(buffer, rc.add(off), r, g, b, 0);
+      }
+   }
+
+   /** Soft round camera-facing blob: opaque centre fading to a clear rim. */
+   private static void puff(BufferBuilder buffer, Vec3 cameraPos, Vec3 at, float radius, int r, int g, int b, int alpha) {
+      if (alpha <= 0) {
+         return;
+      }
+
+      Vec3 toCamera = cameraPos.subtract(at);
+      if (toCamera.lengthSqr() < 1.0E-6) {
+         return;
+      }
+
+      Vec3 forward = toCamera.normalize();
+      Vec3 u = Math.abs(forward.y) > 0.95 ? new Vec3(1, 0, 0) : forward.cross(new Vec3(0, 1, 0)).normalize();
+      Vec3 v = forward.cross(u);
+      Vec3 c = at.subtract(cameraPos);
+      int segments = 10;
+      for (int i = 0; i < segments; i++) {
+         double a0 = Math.PI * 2.0 * i / segments;
+         double a1 = Math.PI * 2.0 * (i + 1) / segments;
+         Vec3 e0 = c.add(u.scale(Math.cos(a0) * radius)).add(v.scale(Math.sin(a0) * radius));
+         Vec3 e1 = c.add(u.scale(Math.cos(a1) * radius)).add(v.scale(Math.sin(a1) * radius));
+         vertex(buffer, c, r, g, b, alpha);
+         vertex(buffer, c, r, g, b, alpha);
+         vertex(buffer, e0, r, g, b, 0);
+         vertex(buffer, e1, r, g, b, 0);
       }
    }
 

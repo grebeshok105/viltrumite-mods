@@ -24,4 +24,11 @@ class RouteCurveTest {
       assertEquals(1.5, out.get(3).x, 1.0E-9);
       assertEquals(2.0, out.get(4).x, 1.0E-9);
    }
+
+   @Test
+   void simplifyFlattensStairSteps() {
+      List<Vec3> stairs = List.of(new Vec3(0, 0, 0), new Vec3(1, 0, 0), new Vec3(1, 0, 1), new Vec3(2, 0, 1), new Vec3(2, 0, 2), new Vec3(3, 0, 2), new Vec3(3, 0, 3));
+      List<Vec3> out = RouteCurve.simplify(stairs, 1.2);
+      assertEquals(2, out.size());
+   }
 }

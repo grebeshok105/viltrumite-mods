@@ -58,4 +58,51 @@ public final class RouteCurve {
 
       return out;
    }
+
+   /** Douglas-Peucker: drop points within {@code epsilon} of the chord, so block steps become straight runs. */
+   public static List<Vec3> simplify(List<Vec3> points, double epsilon) {
+      if (points.size() < 3) {
+         return new ArrayList<>(points);
+      }
+
+      boolean[] keep = new boolean[points.size()];
+      keep[0] = true;
+      keep[points.size() - 1] = true;
+      mark(points, 0, points.size() - 1, epsilon, keep);
+      List<Vec3> out = new ArrayList<>();
+      for (int i = 0; i < points.size(); i++) {
+         if (keep[i]) {
+            out.add(points.get(i));
+         }
+      }
+
+      return out;
+   }
+
+   private static void mark(List<Vec3> points, int from, int to, double epsilon, boolean[] keep) {
+      if (to - from < 2) {
+         return;
+      }
+
+      Vec3 a = points.get(from);
+      Vec3 ab = points.get(to).subtract(a);
+      double len2 = ab.lengthSqr();
+      int best = -1;
+      double bestDist = epsilon;
+      for (int i = from + 1; i < to; i++) {
+         Vec3 ap = points.get(i).subtract(a);
+         double t = len2 < 1.0E-9 ? 0.0 : Math.max(0.0, Math.min(1.0, ap.dot(ab) / len2));
+         double d = ap.subtract(ab.scale(t)).length();
+         if (d > bestDist) {
+            bestDist = d;
+            best = i;
+         }
+      }
+
+      if (best >= 0) {
+         keep[best] = true;
+         mark(points, from, best, epsilon, keep);
+         mark(points, best, to, epsilon, keep);
+      }
+   }
 }
