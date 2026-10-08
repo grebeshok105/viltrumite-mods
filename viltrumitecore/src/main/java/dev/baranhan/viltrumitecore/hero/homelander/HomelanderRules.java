@@ -12,7 +12,7 @@ public final class HomelanderRules {
    public static final int LASER_DAMAGE_INTERVAL = 4;
    public static final int LASER_FIRE_TICKS = 80;
    public static final int SCORCH_LIFETIME = 600;
-   public static final int SCORCH_MAX = 256;
+   public static final int SCORCH_MAX = 1500;
    // Eye heat (§6)
    public static final float HEAT_MAX = 100.0F;
    public static final float HEAT_LASER_PER_TICK = 1.0F;
@@ -30,7 +30,12 @@ public final class HomelanderRules {
    public static final int FEAR_DURATION = FOCUS_REFRESH_TICKS + FEAR_LINGER_TICKS;
    public static final double FEAR_FLEE_DISTANCE = 16.0;
    // Roar (§5.3)
-   public static final double ROAR_CONE_DEG = 60.0;
+   public static final double ROAR_CONE_DEG = 90.0;
+   /** Anything this close is hit unless it is behind the back (beyond ROAR_CLOSE_DEG from the look). */
+   public static final double ROAR_CLOSE_RANGE = 3.0;
+   public static final double ROAR_CLOSE_DEG = 120.0;
+   /** Damage at point blank; scales down to half at the cone edge. */
+   public static final float ROAR_DAMAGE = 6.0F;
    public static final double ROAR_RANGE = 12.0;
    public static final int ROAR_SLOW_TICKS = 60;
    public static final int ROAR_COOLDOWN = 300;

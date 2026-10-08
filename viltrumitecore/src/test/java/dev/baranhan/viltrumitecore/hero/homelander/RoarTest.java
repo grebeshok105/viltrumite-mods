@@ -22,9 +22,16 @@ class RoarTest {
    }
 
    @Test
-   void outside30Degrees() {
-      assertFalse(Roar.inCone(LOOK, at(31.0, 5.0)));
-      assertFalse(Roar.inCone(LOOK, at(180.0, 3.0)));
+   void outside45Degrees() {
+      assertTrue(Roar.inCone(LOOK, at(44.0, 5.0)));
+      assertFalse(Roar.inCone(LOOK, at(46.0, 5.0)));
+      assertFalse(Roar.inCone(LOOK, at(180.0, 3.5)));
+   }
+
+   @Test
+   void pointBlankHitsUnlessBehind() {
+      assertTrue(Roar.inCone(LOOK, at(100.0, 2.0)));
+      assertFalse(Roar.inCone(LOOK, at(150.0, 2.0)));
    }
 
    @Test

@@ -97,8 +97,9 @@ public final class EyeLasers {
       BlockHitResult blockHit = shooter.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, shooter));
       Vec3 limit = blockHit.getType() == HitResult.Type.MISS ? end : blockHit.getLocation();
       AABB box = shooter.getBoundingBox().expandTowards(limit.subtract(eye)).inflate(1.0);
+      // No aim assist: the beam hits only an entity whose exact hitbox the eye ray crosses.
       EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(shooter.level(), shooter, eye, limit, box,
-         entity -> entity.isPickable() && !entity.isSpectator() && entity.isAlive() && !(entity instanceof ArmorStand), 0.3F);
+         entity -> entity.isPickable() && !entity.isSpectator() && entity.isAlive() && !(entity instanceof ArmorStand), 0.0F);
       return entityHit != null ? entityHit : blockHit;
    }
 }
