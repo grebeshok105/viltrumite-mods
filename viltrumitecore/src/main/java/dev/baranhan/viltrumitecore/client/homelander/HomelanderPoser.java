@@ -109,9 +109,6 @@ public final class HomelanderPoser {
          return;
       }
 
-      model.head.zRot = 0.0F;
-      model.body.yRot = 0.0F;
-      model.body.zRot = 0.0F;
       // Lasers: lean in, head pushed toward the target, arms slightly back and out.
       model.body.xRot += rad(7.0F) * w.laser;
       model.head.xRot += rad(6.0F) * w.laser;
@@ -119,9 +116,6 @@ public final class HomelanderPoser {
       model.leftArm.xRot += rad(12.0F) * w.laser;
       model.rightArm.zRot += rad(10.0F) * w.laser;
       model.leftArm.zRot -= rad(10.0F) * w.laser;
-      // Focus: a small predatory head tilt.
-      model.head.xRot += rad(8.0F) * w.focus;
-      model.head.zRot += rad(5.0F) * w.focus;
       // Roar: chest out, head up, arms thrown back and wide.
       model.body.xRot -= rad(12.0F) * roar;
       model.head.xRot -= rad(28.0F) * roar;

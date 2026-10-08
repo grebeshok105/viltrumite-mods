@@ -71,7 +71,7 @@ public final class Roar {
       Vec3 look = player.getLookAngle();
       player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), ViltrumiteCore.HOMELANDER_ROAR.get(), SoundSource.PLAYERS, 2.0F, 1.0F);
       player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), ViltrumiteCore.HOMELANDER_ROAR_DEEP.get(), SoundSource.PLAYERS, 1.6F, 1.0F);
-      coneFx(player, eye, look);
+      HeroFx.shockwave(player, eye.add(look.scale(2.0)), 0.7F, null, (float)HomelanderRules.ROAR_RANGE * 0.5F);
       double range = HomelanderRules.ROAR_RANGE;
       for (LivingEntity target : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(range),
          e -> e != player && e.isAlive() && !(e instanceof ArmorStand) && !e.isSpectator())) {
@@ -97,29 +97,6 @@ public final class Roar {
          push = push.normalize().scale(0.8 + 1.6 * falloff);
          target.push(push.x, 0.25 + 0.25 * falloff, push.z);
          target.hurtMarked = true;
-      }
-   }
-
-   /** Forward air cone: clouds blown out along random directions inside the gameplay cone. No ground rings, no shake. */
-   private static void coneFx(ServerPlayer player, Vec3 eye, Vec3 look) {
-      if (!(player.level() instanceof net.minecraft.server.level.ServerLevel level)) {
-         return;
-      }
-
-      Vec3 dir = look.normalize();
-      Vec3 up = Math.abs(dir.y) > 0.95 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-      Vec3 u = dir.cross(up).normalize();
-      Vec3 v = u.cross(dir).normalize();
-      double spread = Math.tan(Math.toRadians(HomelanderRules.ROAR_CONE_DEG / 2.0));
-      net.minecraft.util.RandomSource random = player.getRandom();
-      for (int i = 0; i < 48; i++) {
-         double angle = random.nextDouble() * Math.PI * 2.0;
-         double radius = Math.sqrt(random.nextDouble()) * spread;
-         Vec3 ray = dir.add(u.scale(Math.cos(angle) * radius)).add(v.scale(Math.sin(angle) * radius)).normalize();
-         Vec3 start = eye.add(ray.scale(0.8 + random.nextDouble() * 1.5));
-         double speed = 0.6 + random.nextDouble() * 0.6;
-         level.sendParticles(i % 3 == 0 ? net.minecraft.core.particles.ParticleTypes.POOF : net.minecraft.core.particles.ParticleTypes.CLOUD,
-            start.x, start.y, start.z, 0, ray.x, ray.y, ray.z, speed);
       }
    }
 }

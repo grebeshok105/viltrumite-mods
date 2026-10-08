@@ -113,6 +113,8 @@ public class ThunderclapVFXManager {
                      clap.origin.z - camera.getPosition().z
                   );
                   matrices.mulPose(Axis.YP.rotationDegrees(-clap.yaw));
+                  // Tilt the rings with the look so they travel where the clap goes.
+                  matrices.mulPose(Axis.XP.rotationDegrees(clap.pitch));
                   matrices.translate(0.0F, 0.0F, forwardOffset);
                   Matrix4f matrix = matrices.last().pose();
                   int r = 240;

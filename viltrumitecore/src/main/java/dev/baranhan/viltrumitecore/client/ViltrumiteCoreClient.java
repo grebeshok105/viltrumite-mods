@@ -50,6 +50,16 @@ public class ViltrumiteCoreClient {
    public static boolean[] heroKeyDown = new boolean[8];
 
    @SubscribeEvent
+   @SuppressWarnings({"unchecked", "rawtypes"})
+   public static void onAddLayers(net.minecraftforge.client.event.EntityRenderersEvent.AddLayers event) {
+      for (String skin : event.getSkins()) {
+         if (event.getSkin(skin) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer renderer) {
+            renderer.addLayer(new dev.baranhan.viltrumitecore.client.homelander.HomelanderEyesLayer(renderer));
+         }
+      }
+   }
+
+   @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
       event.enqueueWork(() -> {
          RegulusClient.registerSkins();

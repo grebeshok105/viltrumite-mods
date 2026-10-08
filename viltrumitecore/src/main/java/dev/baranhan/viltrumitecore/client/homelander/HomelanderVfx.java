@@ -109,6 +109,14 @@ public final class HomelanderVfx {
 
       long now = level.getGameTime();
       SCORCH.expire(now);
+      // A scorch on a block that is gone (broken, burnt, moved) disappears with it.
+      if (now % 5L == 0L) {
+         SCORCH.removeIf(scorch -> {
+            Vec3 inside = scorch.center().subtract(Vec3.atLowerCornerOf(scorch.face().getNormal()).scale(0.02));
+            BlockPos pos = BlockPos.containing(inside);
+            return level.isLoaded(pos) && level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
+         });
+      }
       RandomSource random = level.random;
       for (Player player : level.players()) {
          HeroPublicSnapshot snapshot = HomelanderPoser.homelander(player);
@@ -189,6 +197,7 @@ public final class HomelanderVfx {
       }
 
       if (!anyLaser && SCORCH.size() == 0) {
+         HomelanderEyesLayer.endFrame();
          return;
       }
 
@@ -228,6 +237,7 @@ public final class HomelanderVfx {
             tessellator.end();
          }
       } finally {
+         HomelanderEyesLayer.endFrame();
          RenderSystem.depthMask(true);
          RenderSystem.enableCull();
          RenderSystem.defaultBlendFunc();
@@ -249,10 +259,12 @@ public final class HomelanderVfx {
       Vec3 rightEye = eye.add(forward).add(right.scale(0.11)).add(0.0, 0.02, 0.0);
       boolean localFirstPerson = player == client.player && client.options.getCameraType().isFirstPerson();
       float flicker = 0.85F + 0.15F * Mth.sin((player.tickCount + partialTick) * 1.7F);
-      if (!localFirstPerson) {
-         int glow = (int)((laser ? 230 : 120) * flicker);
-         PixelVfx.crossGlow(buffer, cameraPos, camera, leftEye, laser ? 0.09F : 0.05F, 255, 60, 30, glow);
-         PixelVfx.crossGlow(buffer, cameraPos, camera, rightEye, laser ? 0.09F : 0.05F, 255, 60, 30, glow);
+      // The glow itself is drawn on the face by HomelanderEyesLayer; beams start from the model's real eyes
+      // (every pose and the flight transition included).
+      Vec3[] modelEyes = HomelanderEyesLayer.eyes(player.getUUID());
+      if (modelEyes != null && !localFirstPerson) {
+         leftEye = modelEyes[0];
+         rightEye = modelEyes[1];
       }
 
       if (!laser) {

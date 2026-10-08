@@ -46,6 +46,10 @@ public final class ScorchBuffer<K> {
       return this.born.entrySet();
    }
 
+   public void removeIf(java.util.function.Predicate<K> dead) {
+      this.born.keySet().removeIf(dead);
+   }
+
    public void clear() {
       this.born.clear();
    }
