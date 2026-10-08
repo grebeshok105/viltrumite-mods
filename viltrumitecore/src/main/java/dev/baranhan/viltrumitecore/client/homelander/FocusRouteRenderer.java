@@ -180,9 +180,9 @@ public final class FocusRouteRenderer {
             }
 
             // Soften the palette colour toward a pale grey so it reads as gas.
-            int r = ((color >> 16 & 255) * 3 + 200) / 4;
-            int g = ((color >> 8 & 255) * 3 + 200) / 4;
-            int b = ((color & 255) * 3 + 200) / 4;
+            int r = ((color >> 16 & 255) * 4 + 160) / 5;
+            int g = ((color >> 8 & 255) * 4 + 160) / 5;
+            int b = ((color & 255) * 4 + 160) / 5;
             Vec3 from = client.player.getPosition(partialTick);
             Vec3 to = target.getPosition(partialTick);
             Route route = ROUTES.get(id);
@@ -288,8 +288,8 @@ public final class FocusRouteRenderer {
 
       for (int i = 0; i < n - 1; i++) {
          float breathe = 0.9F + 0.15F * Mth.sin((float)(along[i] * 0.3 - time * 0.8 + seed));
-         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 1.0F * breathe, r, g, b, (int)(28 * fade[i]), (int)(28 * fade[i + 1]));
-         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 0.5F * breathe, r, g, b, (int)(40 * fade[i]), (int)(40 * fade[i + 1]));
+         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 1.0F * breathe, r, g, b, (int)(40 * fade[i]), (int)(40 * fade[i + 1]));
+         ribbon(buffer, cameraPos, pts[i], pts[i + 1], 0.5F * breathe, r, g, b, (int)(60 * fade[i]), (int)(60 * fade[i + 1]));
       }
 
       // Puffs drifting slowly toward the target, each swelling and thinning.
@@ -305,7 +305,7 @@ public final class FocusRouteRenderer {
          float phase = (float)(s * 0.7 + seed * 3.0);
          Vec3 at = pts[k].lerp(pts[k + 1], t).add(0.08 * Math.sin(phase + time * 0.7), 0.1 * Math.sin(phase * 1.3 + time * 0.5), 0.08 * Math.cos(phase + time * 0.6));
          float radius = 0.4F + 0.15F * Mth.sin(phase + time * 0.9F);
-         int alpha = (int)(32 * fade[k] * (0.7F + 0.3F * Mth.sin(phase * 2.1F + time)));
+         int alpha = (int)(46 * fade[k] * (0.7F + 0.3F * Mth.sin(phase * 2.1F + time)));
          puff(buffer, cameraPos, at, radius, r, g, b, alpha);
       }
    }
