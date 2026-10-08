@@ -215,6 +215,10 @@ public class ViltrumiteAbilities {
             "ability.viltrumitecore.dash.desc",
             1,
             player -> {
+               if (!dev.baranhan.viltrumitecore.hero.LegacyKit.allows(player, dev.baranhan.viltrumitecore.hero.LegacyKit.DASH)) {
+                  return true;
+               }
+
                if (player instanceof ViltrumiteCorePlayer corePlayer
                   && (corePlayer.isDashing() || corePlayer.isBlocking() || corePlayer.getBarrageTicks() != 0)) {
                   return true;
@@ -255,6 +259,13 @@ public class ViltrumiteAbilities {
             ViltrumiteAbilities::regulusPunchGrey
          )
       );
+      registerHeroPanels();
+   }
+
+   private static void registerHeroPanels() {
+      for (ViltrumiteAbility ability : dev.baranhan.viltrumitecore.hero.homelander.HomelanderAbilities.panelAbilities()) {
+         register(ability);
+      }
    }
 
    private static void registerRegulusAbility(String id, String name, int cooldownIndex, HeroAction action) {

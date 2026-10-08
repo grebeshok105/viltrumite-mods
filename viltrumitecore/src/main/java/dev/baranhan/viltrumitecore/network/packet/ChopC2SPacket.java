@@ -29,7 +29,7 @@ public class ChopC2SPacket {
       Context context = supplier.get();
       context.enqueueWork(() -> {
          if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer) {
-            if (!corePlayer.isViltrumite() || HeroDamage.isAnchored(context.getSender())) {
+            if (!dev.baranhan.viltrumitecore.hero.LegacyKit.allows(context.getSender(), dev.baranhan.viltrumitecore.hero.LegacyKit.CHOP) || HeroDamage.isAnchored(context.getSender())) {
                return;
             }
 

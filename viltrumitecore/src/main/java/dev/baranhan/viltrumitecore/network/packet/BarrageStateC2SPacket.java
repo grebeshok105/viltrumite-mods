@@ -26,7 +26,7 @@ public class BarrageStateC2SPacket {
       Context context = supplier.get();
       context.enqueueWork(() -> {
          ServerPlayer player = context.getSender();
-         if (player != null && player instanceof ViltrumiteCorePlayer corePlayer && corePlayer.isViltrumite()) {
+         if (player != null && player instanceof ViltrumiteCorePlayer corePlayer && dev.baranhan.viltrumitecore.hero.LegacyKit.allows(player, dev.baranhan.viltrumitecore.hero.LegacyKit.BARRAGE)) {
             // Starting a barrage while anchored is denied; stopping one stays allowed.
             if (this.isBarraging && HeroDamage.isAnchored(player)) {
                return;

@@ -27,7 +27,7 @@ public class PunchC2SPacket {
          if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer) {
             boolean regulus = dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.stateOf(context.getSender()) != null;
             if (regulus ? !dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.canPunch(context.getSender()) || !dev.baranhan.viltrumitecore.hero.regulus.RegulusHero.punchEquipped(context.getSender())
-               : !corePlayer.isViltrumite() || HeroDamage.isAnchored(context.getSender())) {
+               : !dev.baranhan.viltrumitecore.hero.LegacyKit.allows(context.getSender(), dev.baranhan.viltrumitecore.hero.LegacyKit.PUNCH) || HeroDamage.isAnchored(context.getSender())) {
                return;
             }
 

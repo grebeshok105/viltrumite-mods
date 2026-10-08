@@ -88,7 +88,7 @@ public class ViltrumiteInGameHudMixin {
                if (abilityId != null && !abilityId.isEmpty()) {
                   ViltrumiteAbility ability = ViltrumiteAbilities.get(abilityId);
                   if (ability != null) {
-                     guiGraphics.blit(ability.getIcon(), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
+                     guiGraphics.blit(ability.getIcon(player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
                      if (ability.isGrey(player)) {
                         guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, -1875692749);
                      }
@@ -107,7 +107,7 @@ public class ViltrumiteInGameHudMixin {
                int slotY = barY + 3;
                ViltrumiteAbility ability = ViltrumiteAbilities.get(rightIds[i]);
                if (ability != null) {
-                  guiGraphics.blit(ability.getIcon(), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
+                  guiGraphics.blit(ability.getIcon(player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
                   if (ability.isGrey(player)) {
                      guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, -1875692749);
                   }

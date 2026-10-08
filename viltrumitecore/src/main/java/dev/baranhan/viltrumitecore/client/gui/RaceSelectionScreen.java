@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class RaceSelectionScreen extends Screen {
+   private static final ResourceLocation HOMELANDER_SKIN = new ResourceLocation("viltrumitecore", "textures/entity/hero/homelander.png");
    private static final ResourceLocation REGULUS_SKIN = new ResourceLocation("viltrumitecore", "textures/entity/hero/regulus.png");
 
    public RaceSelectionScreen() {
@@ -20,8 +21,8 @@ public class RaceSelectionScreen extends Screen {
    protected void init() {
       int centerX = this.width / 2;
       int centerY = this.height / 2;
-      this.addRenderableWidget(Button.builder(Component.translatable("gui.viltrumitecore.race_selection.become_viltrumite"), button -> {
-         this.sendLegacyChoice(true);
+      this.addRenderableWidget(Button.builder(Component.translatable("gui.viltrumitecore.race_selection.become_homelander"), button -> {
+         this.sendHeroChoice(HeroId.HOMELANDER);
          this.onClose();
       }).bounds(centerX - 155, centerY - 20, 100, 20).build());
       this.addRenderableWidget(Button.builder(Component.translatable("gui.viltrumitecore.race_selection.become_regulus"), button -> {
@@ -49,11 +50,14 @@ public class RaceSelectionScreen extends Screen {
       int centerY = this.height / 2;
       guiGraphics.drawCenteredString(this.font, Component.translatable("gui.viltrumitecore.race_selection.question"), centerX, centerY - 60, 16777215);
 
-      // Regulus head preview: base face + hat layer, drawn skin-flat like a player head.
-      int headX = centerX - 12;
-      int headY = centerY - 48;
-      guiGraphics.blit(REGULUS_SKIN, headX, headY, 24, 24, 8.0F, 8.0F, 8, 8, 64, 64);
-      guiGraphics.blit(REGULUS_SKIN, headX, headY, 24, 24, 40.0F, 8.0F, 8, 8, 64, 64);
+      // Head previews above each hero button: base face + hat layer, drawn skin-flat like a player head.
+      drawHead(guiGraphics, HOMELANDER_SKIN, centerX - 105 - 12, centerY - 48);
+      drawHead(guiGraphics, REGULUS_SKIN, centerX - 12, centerY - 48);
+   }
+
+   private static void drawHead(GuiGraphics guiGraphics, ResourceLocation skin, int x, int y) {
+      guiGraphics.blit(skin, x, y, 24, 24, 8.0F, 8.0F, 8, 8, 64, 64);
+      guiGraphics.blit(skin, x, y, 24, 24, 40.0F, 8.0F, 8, 8, 64, 64);
    }
 
    public boolean shouldCloseOnEsc() {

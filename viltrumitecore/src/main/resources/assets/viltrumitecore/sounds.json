@@ -84,5 +84,40 @@
     "sounds": [
       "viltrumitecore:regulus/jump_charge"
     ]
+  },
+  "homelander_laser_charge": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.homelander_laser_charge",
+    "sounds": [
+      "viltrumitecore:homelander/laser_charge"
+    ]
+  },
+  "homelander_laser_loop": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.homelander_laser_loop",
+    "sounds": [
+      "viltrumitecore:homelander/laser_loop"
+    ]
+  },
+  "homelander_laser_release": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.homelander_laser_release",
+    "sounds": [
+      "viltrumitecore:homelander/laser_release"
+    ]
+  },
+  "homelander_roar": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.homelander_roar",
+    "sounds": [
+      "viltrumitecore:homelander/roar"
+    ]
+  },
+  "homelander_roar_deep": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.homelander_roar_deep",
+    "sounds": [
+      "viltrumitecore:homelander/roar_deep"
+    ]
   }
 }

@@ -21,6 +21,7 @@ public class ThunderclapC2SPacket {
       context.enqueueWork(
          () -> {
             if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer
+               && dev.baranhan.viltrumitecore.hero.LegacyKit.allows(context.getSender(), dev.baranhan.viltrumitecore.hero.LegacyKit.THUNDERCLAP)
                && corePlayer.getThunderclapTicks() <= 0
                && corePlayer.getPunchTicks() <= 0
                && corePlayer.getChopTicks() <= 0

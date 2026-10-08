@@ -51,7 +51,7 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
    @Inject(method = {"defineSynchedData"}, at = {@At("TAIL")})
    private void viltrumitecore$defineHeroData(CallbackInfo ci) {
       Player player = (Player)(Object)this;
-      int defaultId = ViltrumiteCoreConfig.INSTANCE.isViltrumiteByDefault ? HeroId.VILTRUMITE.ordinal() : HeroId.HUMAN.ordinal();
+      int defaultId = ViltrumiteCoreConfig.INSTANCE.isViltrumiteByDefault ? HeroId.HOMELANDER.ordinal() : HeroId.HUMAN.ordinal();
       player.getEntityData().define(HERO_ID, defaultId);
       player.getEntityData().define(HERO_SNAPSHOT, HeroPublicSnapshot.EMPTY.encode());
    }

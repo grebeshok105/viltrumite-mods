@@ -214,7 +214,9 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public boolean isViltrumite() {
-      return (Object)this instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.VILTRUMITE;
+      // "Viltrumite" = user of the shared legacy kit (Homelander replaced the race).
+      Player self = (Player)(Object)this;
+      return dev.baranhan.viltrumitecore.hero.HeroRegistry.get(self).allowsLegacyAbilities(self);
    }
 
    @Override
