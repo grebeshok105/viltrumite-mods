@@ -40,6 +40,13 @@ final class Focus {
 
    static void stop(ServerPlayer player, HomelanderState state) {
       state.focusOn = false;
+      // Outstanding fear lingers only FEAR_LINGER_TICKS after the focus ends.
+      for (int id : state.focusTargets) {
+         if (player.level().getEntity(id) instanceof LivingEntity target) {
+            shortenFear(target);
+         }
+      }
+
       state.focusTargets.clear();
       HeroRegistry.pushOwnerSnapshot(player, HeroOwnerSnapshot.EMPTY);
    }
@@ -47,6 +54,17 @@ final class Focus {
    static void tick(ServerPlayer player, HomelanderState state) {
       if (!state.focusOn) {
          return;
+      }
+
+      // Every tick: frightened mobs drop their target so chase/attack goals cannot override the flight.
+      for (int id : state.focusTargets) {
+         if (player.level().getEntity(id) instanceof net.minecraft.world.entity.Mob mob && mob.hasEffect(ViltrumiteEffects.FEAR.get())) {
+            mob.setTarget(null);
+            mob.setAggressive(false);
+            if (mob instanceof PathfinderMob pathfinder && pathfinder.getNavigation().isDone()) {
+               flee(player, pathfinder);
+            }
+         }
       }
 
       if (state.focusRefresh-- > 0) {
@@ -95,10 +113,30 @@ final class Focus {
       target.addEffect(new MobEffectInstance(ViltrumiteEffects.FEAR.get(), duration, 0, false, false, true), player);
       target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 0, false, false, true), player);
       if (target instanceof PathfinderMob mob) {
-         Vec3 away = DefaultRandomPos.getPosAway(mob, (int)HomelanderRules.FEAR_FLEE_DISTANCE, 7, player.position());
-         if (away != null) {
-            mob.getNavigation().moveTo(away.x, away.y, away.z, 1.3);
-         }
+         flee(player, mob);
+      }
+   }
+
+   private static void flee(ServerPlayer player, PathfinderMob mob) {
+      Vec3 away = DefaultRandomPos.getPosAway(mob, (int)HomelanderRules.FEAR_FLEE_DISTANCE, 7, player.position());
+      if (away != null) {
+         mob.getNavigation().moveTo(away.x, away.y, away.z, 1.3);
+      }
+   }
+
+   /** Cut the focus fear (and its Slowness I) down to the linger time; stronger slowness (roar) stays. */
+   private static void shortenFear(LivingEntity target) {
+      int linger = HomelanderRules.FEAR_LINGER_TICKS;
+      MobEffectInstance fear = target.getEffect(ViltrumiteEffects.FEAR.get());
+      if (fear != null && fear.getDuration() > linger) {
+         target.removeEffect(ViltrumiteEffects.FEAR.get());
+         target.addEffect(new MobEffectInstance(ViltrumiteEffects.FEAR.get(), linger, 0, false, false, true));
+      }
+
+      MobEffectInstance slow = target.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+      if (slow != null && slow.getAmplifier() == 0 && slow.getDuration() > linger && slow.getDuration() <= HomelanderRules.FEAR_DURATION) {
+         target.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, linger, 0, false, false, true));
       }
    }
 }

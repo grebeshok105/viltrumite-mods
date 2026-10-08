@@ -54,12 +54,23 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 public final class HomelanderVfx {
    /** Scorch mark at the exact hit point (quantized to 1/16 block) on a face. */
    public record Scorch(int qx, int qy, int qz, Direction face) {
+      /** Tangent axes snap to the 1/16 grid; the face axis keeps the hit plane (rounded to 1/1024). */
       static Scorch at(Vec3 p, Direction face) {
-         return new Scorch(Mth.floor(p.x * 16.0), Mth.floor(p.y * 16.0), Mth.floor(p.z * 16.0), face);
+         Direction.Axis axis = face.getAxis();
+         return new Scorch(q(p.x, axis == Direction.Axis.X), q(p.y, axis == Direction.Axis.Y), q(p.z, axis == Direction.Axis.Z), face);
+      }
+
+      private static int q(double v, boolean plane) {
+         return plane ? (int)Math.round(v * 1024.0) : Mth.floor(v * 16.0);
       }
 
       Vec3 center() {
-         return new Vec3((this.qx + 0.5) / 16.0, (this.qy + 0.5) / 16.0, (this.qz + 0.5) / 16.0);
+         Direction.Axis axis = this.face.getAxis();
+         return new Vec3(c(this.qx, axis == Direction.Axis.X), c(this.qy, axis == Direction.Axis.Y), c(this.qz, axis == Direction.Axis.Z));
+      }
+
+      private static double c(int q, boolean plane) {
+         return plane ? q / 1024.0 : (q + 0.5) / 16.0;
       }
    }
 
@@ -295,7 +306,7 @@ public final class HomelanderVfx {
       long seed = (scorch.qx() * 73856093L) ^ (scorch.qy() * 19349663L) ^ (scorch.qz() * 83492791L) ^ face.ordinal();
       // Snap the mark onto the face plane (the hit point already lies on it), nudged out to avoid z-fighting.
       Vec3 c0 = scorch.center();
-      double plane = Math.round(c0.get(face.getAxis()) * 16.0) / 16.0;
+      double plane = c0.get(face.getAxis());
       Vec3 centre = switch (face.getAxis()) {
          case X -> new Vec3(plane + face.getStepX() * 0.003, c0.y, c0.z);
          case Y -> new Vec3(c0.x, plane + face.getStepY() * 0.003, c0.z);

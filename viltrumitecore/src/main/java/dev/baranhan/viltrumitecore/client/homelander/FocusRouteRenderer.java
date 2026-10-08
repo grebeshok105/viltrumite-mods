@@ -188,16 +188,18 @@ public final class FocusRouteRenderer {
             Route route = ROUTES.get(id);
             float seed = id * 1.618F;
             if (route == null) {
-               drawGas(buffer, cameraPos, path(from, List.of(), to), time, seed, r, g, b, 1.0F);
+               drawGas(buffer, cameraPos, path(from, List.of(), to), time, seed, r, g, b, 0.35F);
                continue;
             }
 
             float fadeIn = route.previous() == null ? 1.0F : Mth.clamp((now - route.born()) / FADE_TICKS, 0.0F, 1.0F);
             if (fadeIn < 1.0F) {
-               drawGas(buffer, cameraPos, path(from, route.previous().middle(), to), time, seed, r, g, b, 1.0F - fadeIn);
+               drawGas(buffer, cameraPos, path(from, route.previous().middle(), to), time, seed, r, g, b, (1.0F - fadeIn) * (route.previous().middle().size() >= 2 ? 1.0F : 0.35F));
             }
 
-            drawGas(buffer, cameraPos, path(from, route.middle(), to), time, seed, r, g, b, fadeIn);
+            // No walkable route: a much fainter arc, so it never reads as real navigation.
+            float found = route.middle().size() >= 2 ? 1.0F : 0.35F;
+            drawGas(buffer, cameraPos, path(from, route.middle(), to), time, seed, r, g, b, fadeIn * found);
          }
 
          tessellator.end();

@@ -108,9 +108,12 @@ public final class HomelanderAbilities {
       return loadout;
    }
 
-   /** Spec §5.5: the dash works only in flight. */
+   /**
+    * Spec §5.5: the dash works only in flight. The shared dash starts from a
+    * hover (cruise/sonic are already a dash), so in flight that means HOVER.
+    */
    public static boolean dashAllowed(FlightState state) {
-      return state != null && state != FlightState.NONE;
+      return state == FlightState.HOVER;
    }
 
    /** Input action for an own slot, or null. */

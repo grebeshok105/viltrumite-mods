@@ -34,11 +34,9 @@ class HomelanderHeroTest {
    @Test
    void dashOnlyInFlight() {
       assertFalse(HomelanderAbilities.dashAllowed(FlightState.NONE));
-      for (FlightState state : FlightState.values()) {
-         if (state != FlightState.NONE) {
-            assertTrue(HomelanderAbilities.dashAllowed(state), state.name());
-         }
-      }
+      assertTrue(HomelanderAbilities.dashAllowed(FlightState.HOVER));
+      assertFalse(HomelanderAbilities.dashAllowed(FlightState.CRUISE));
+      assertFalse(HomelanderAbilities.dashAllowed(FlightState.SONIC));
    }
 
    @Test
