@@ -5,9 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,32 +29,3 @@ jobs:
           path: |
             viltrumiteflight/build/libs/*.jar
             viltrumitecore/build/libs/*.jar
-
-      - name: Publish v1.14.0-homelander
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/homelander' && contains(github.event.head_commit.message, '[release-v1.14.0]')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          cat > release-notes.md <<'EOF'
-          Homelander вместо Вильтрумита — сборка с ветки PR #8 (до мержа).
-
-          Для игрока:
-          - Вильтрумит заменён Хоумлендером, старые сохранения переходят сами;
-          - полёт, удар, хлопок, удар при приземлении, рывок только в полёте;
-          - лазеры из глаз (≈3,75 сердца/с, поджог, следы гари, перегрев глаз);
-          - фокус: до 8 целей сквозь стены своими цветами, здоровье, маршрут, страх у целей;
-          - рык: конус 60° на 12 блоков, отбрасывание и замедление, перезарядка 15 с;
-          - регенерация, скин и звуки из Codex, новые иконки в стиле Minecraft.
-
-          Установка: положить оба JAR в `mods/` вместе (старый viltrumitecore удалить). Forge 1.20.1.
-          В игре через клиент не проверялось.
-          EOF
-
-          gh release create v1.14.0-homelander \
-            viltrumitecore/build/libs/viltrumitecore-forge-1.14.0.jar \
-            viltrumiteflight/build/libs/viltrumiteflight-forge-1.8.0.jar \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "Homelander — viltrumitecore 1.14.0 + viltrumiteflight 1.8.0" \
-            --prerelease \
-            --notes-file release-notes.md
