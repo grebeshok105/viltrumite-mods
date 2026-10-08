@@ -181,5 +181,20 @@
   "message.viltrumitecore.lion.heart_lost": "一颗心脏熄灭了——狮之心的持续窗口缩短。",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus之拳",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>冷却: <lime>1秒\n<grey>类型: <aqua>瞬发\n\n<grey>由心脏强化的维尔特鲁姆之拳。\n<grey>击碎方块并击飞敌人。\n\n<red>疯狂: <grey>1.5倍伤害,并释放一道冻结空气之刃,\n<grey>切开前方的一切。\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "超级跳跃"
+  "key.viltrumitecore.regulus_super_jump": "超级跳跃",
+  "gui.viltrumitecore.race_selection.become_homelander": "成为祖国人",
+  "hero.viltrumitecore.homelander": "祖国人",
+  "subtitles.viltrumitecore.homelander_laser_charge": "祖国人双眼发光",
+  "subtitles.viltrumitecore.homelander_laser_loop": "激光眼灼烧",
+  "subtitles.viltrumitecore.homelander_laser_release": "激光眼停止",
+  "subtitles.viltrumitecore.homelander_roar": "祖国人怒吼",
+  "subtitles.viltrumitecore.homelander_roar_deep": "祖国人怒吼",
+  "hud.viltrumitecore.homelander.fear": "你感觉到有人在注视着你",
+  "effect.viltrumitecore.fear": "恐惧",
+  "ability.viltrumitecore.homelander_lasers.name": "<red>热射线",
+  "ability.viltrumitecore.homelander_lasers.desc": "<grey>冷却：<lime>-\n<grey>类型：<yellow>按住\n\n<grey>用两道红色光束灼烧视线中的一切。\n<grey>点燃目标并烧焦墙面。\n<grey>会使双眼升温：过热将锁定3秒。\n\n<blue>祖国人",
+  "ability.viltrumitecore.homelander_focus.name": "<aqua>专注",
+  "ability.viltrumitecore.homelander_focus.desc": "<grey>冷却：<lime>-\n<grey>类型：<aqua>切换\n\n<grey>透过墙壁看到最近的8个生物、\n<grey>它们的生命值以及通往它们的路线。\n<grey>它们的脚步更响，其他声音变轻。\n<grey>被注视者会感到恐惧。双眼缓慢升温。\n\n<blue>祖国人",
+  "ability.viltrumitecore.homelander_roar.name": "<gold>怒吼",
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>冷却：<lime>15秒\n<grey>类型：<aqua>瞬发\n\n<grey>愤怒的怒吼击退你面前的所有人\n<grey>（12格）并使其减速3秒。\n\n<blue>祖国人"
 }

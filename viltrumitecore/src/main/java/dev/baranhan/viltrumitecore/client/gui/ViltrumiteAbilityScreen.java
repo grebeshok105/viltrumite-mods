@@ -126,10 +126,10 @@ public class ViltrumiteAbilityScreen extends Screen {
                   guiGraphics.pose().translate((float)(slotX + 8), (float)(slotY + 8), 0.0F);
                   guiGraphics.pose().scale(1.15F, 1.15F, 1.0F);
                   guiGraphics.pose().translate((float)(-(slotX + 8)), (float)(-(slotY + 8)), 0.0F);
-                  guiGraphics.blit(ability.getIcon(), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
+                  guiGraphics.blit(ability.getIcon(this.minecraft.player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
                   guiGraphics.pose().popPose();
                } else {
-                  guiGraphics.blit(ability.getIcon(), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
+                  guiGraphics.blit(ability.getIcon(this.minecraft.player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
                }
             }
          } else {
@@ -164,10 +164,10 @@ public class ViltrumiteAbilityScreen extends Screen {
                guiGraphics.pose().translate((float)(poolX + 8), (float)(poolY + 8), 0.0F);
                guiGraphics.pose().scale(1.15F, 1.15F, 1.0F);
                guiGraphics.pose().translate((float)(-(poolX + 8)), (float)(-(poolY + 8)), 0.0F);
-               guiGraphics.blit(ability.getIcon(), poolX, poolY, 0.0F, 0.0F, 16, 16, 16, 16);
+               guiGraphics.blit(ability.getIcon(this.minecraft.player), poolX, poolY, 0.0F, 0.0F, 16, 16, 16, 16);
                guiGraphics.pose().popPose();
             } else {
-               guiGraphics.blit(ability.getIcon(), poolX, poolY, 0.0F, 0.0F, 16, 16, 16, 16);
+               guiGraphics.blit(ability.getIcon(this.minecraft.player), poolX, poolY, 0.0F, 0.0F, 16, 16, 16, 16);
             }
          } else {
             guiGraphics.fill(poolX, poolY, poolX + 16, poolY + 16, 1073741824);
@@ -185,7 +185,7 @@ public class ViltrumiteAbilityScreen extends Screen {
 
       if (this.draggedAbility != null) {
          guiGraphics.fill(mouseX - 6, mouseY - 6, mouseX + 10, mouseY + 10, 1610612736);
-         guiGraphics.blit(this.draggedAbility.getIcon(), mouseX - 8, mouseY - 8, 0.0F, 0.0F, 16, 16, 16, 16);
+         guiGraphics.blit(this.draggedAbility.getIcon(this.minecraft.player), mouseX - 8, mouseY - 8, 0.0F, 0.0F, 16, 16, 16, 16);
       }
 
       if (hoveredAbility != null) {

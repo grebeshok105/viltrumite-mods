@@ -20,7 +20,7 @@ public class GrabToggleC2SPacket {
       Context context = supplier.get();
       context.enqueueWork(() -> {
          if (context.getSender() instanceof ViltrumiteCorePlayer corePlayer) {
-            if (!corePlayer.isViltrumite() || corePlayer.isBlocking()) {
+            if (!dev.baranhan.viltrumitecore.hero.LegacyKit.allows(context.getSender(), dev.baranhan.viltrumitecore.hero.LegacyKit.GRAB) || corePlayer.isBlocking()) {
                return;
             }
 

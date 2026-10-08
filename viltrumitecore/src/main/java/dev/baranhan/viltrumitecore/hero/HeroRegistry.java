@@ -22,6 +22,7 @@ public final class HeroRegistry {
       register(new HumanHero());
       register(new ViltrumiteHero());
       register(new RegulusHero());
+      register(new dev.baranhan.viltrumitecore.hero.homelander.HomelanderHero());
       installFlightPolicy();
    }
 
@@ -40,6 +41,9 @@ public final class HeroRegistry {
 
    public static void register(HeroDefinition definition) {
       DEFINITIONS.put(definition.id(), definition);
+      for (dev.baranhan.viltrumitecore.ability.ViltrumiteAbility ability : definition.panelAbilities()) {
+         dev.baranhan.viltrumitecore.ability.ViltrumiteAbilities.registerHeroAbility(ability);
+      }
    }
 
    public static HeroDefinition get(HeroId id) {
@@ -147,5 +151,50 @@ public final class HeroRegistry {
             new dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket(snapshot.carrierEntityIds()), player
          );
       }
+   }
+
+   /**
+    * Repair the slots after login / a repeated choice: a slot holding an ability
+    * the current hero does not own (e.g. a migrated Viltrumite save) resets the
+    * whole loadout to the hero's default.
+    */
+   public static void repairLoadout(ServerPlayer player) {
+      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
+         return;
+      }
+
+      HeroDefinition hero = get(player);
+      String[] slots = new String[18];
+      for (int slot = 0; slot < 18; slot++) {
+         slots[slot] = abilityUser.getAbilityInSlot(slot);
+      }
+
+      if (needsLoadoutReset(slots, hero::ownsAbility)) {
+         resetLoadout(player);
+      }
+   }
+
+   /** Put the hero's default loadout into all 18 slots (legacy save migration, repair). */
+   public static void resetLoadout(ServerPlayer player) {
+      if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
+         return;
+      }
+
+      String[] loadout = get(player).defaultLoadout();
+      for (int slot = 0; slot < 18; slot++) {
+         String id = slot < loadout.length ? loadout[slot] : null;
+         abilityUser.setAbilityInSlot(slot, id == null ? "" : id);
+      }
+   }
+
+   /** True when any non-empty slot holds an ability the hero does not own. */
+   public static boolean needsLoadoutReset(String[] slots, java.util.function.Predicate<String> owns) {
+      for (String id : slots) {
+         if (id != null && !id.isEmpty() && !owns.test(id)) {
+            return true;
+         }
+      }
+
+      return false;
    }
 }

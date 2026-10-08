@@ -19,6 +19,36 @@ public interface HeroDefinition {
    /** Whether this hero may use the legacy viltrumite ability kit and stats. */
    boolean allowsLegacyAbilities(Player player);
 
+   /**
+    * May this player start the given legacy kit ability ("viltrumite:*") now.
+    * Read on BOTH sides. Default: kit users that own the ability id.
+    */
+   default boolean allowsLegacyAbility(Player player, String abilityId) {
+      return this.allowsLegacyAbilities(player) && this.ownsAbility(abilityId);
+   }
+
+   /**
+    * Own ability ids whose slot keys send HeroInputC2SPacket on press/release
+    * (client reads this). Default: none.
+    */
+   default String[] heroInputSlots() {
+      return new String[0];
+   }
+
+   /** Input action for one of {@link #heroInputSlots()}, or null. */
+   default HeroAction heroActionFor(String abilityId) {
+      return null;
+   }
+
+   /**
+    * Hero-specific icon for an ability slot (e.g. kit abilities drawn as this
+    * hero), or null for the registry icon. Client reads this.
+    */
+   @javax.annotation.Nullable
+   default net.minecraft.resources.ResourceLocation abilityIcon(String abilityId) {
+      return null;
+   }
+
    /** Whether the legacy three-page ability bar swap is meaningful for this hero. */
    default boolean allowsAbilityPages(Player player) {
       return this.allowsLegacyAbilities(player);
@@ -31,6 +61,16 @@ public interface HeroDefinition {
 
    /** Which registry ability ids this hero owns (and may equip). */
    boolean ownsAbility(String abilityId);
+
+   /** Panel entries this hero registers into the shared ability registry. */
+   default java.util.List<dev.baranhan.viltrumitecore.ability.ViltrumiteAbility> panelAbilities() {
+      return java.util.List.of();
+   }
+
+   /** Does the shared legacy-kit regeneration (every 40 t) apply; heroes with their own regen opt out. */
+   default boolean usesLegacyRegen(Player player) {
+      return true;
+   }
 
    /** Default slot contents applied on hero enter. Length 18, "" for empty. */
    String[] defaultLoadout();
@@ -66,6 +106,14 @@ public interface HeroDefinition {
 
    /** Server: hero-specific sounds/FX after the shared super-jump launch. */
    default void onSuperJump(ServerPlayer player) {
+   }
+
+   /** Server: this hero player took damage (after armor, before health change). */
+   default void onHurt(ServerPlayer player, net.minecraft.world.damagesource.DamageSource source, float amount) {
+   }
+
+   /** Server: the player changed dimension (no full cleanup; stop channels if needed). */
+   default void onDimensionChange(ServerPlayer player) {
    }
 
    /** Whether food exhaustion is currently suspended for this hero (Lion). */

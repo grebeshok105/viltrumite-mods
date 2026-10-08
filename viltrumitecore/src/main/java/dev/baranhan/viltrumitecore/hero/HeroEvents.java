@@ -63,6 +63,7 @@ public final class HeroEvents {
          }
 
          newAbility.setActivePage(oldAbility.getActivePage());
+         HeroRegistry.repairLoadout(newPlayer);
       }
    }
 
@@ -224,6 +225,19 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         if (player instanceof HeroPlayer heroPlayer && heroPlayer.viltrumitecore$consumeLegacyLoadout()) {
+            HeroRegistry.resetLoadout(player);
+         } else {
+            HeroRegistry.repairLoadout(player);
+         }
+      }
+   }
+
+   /** Damage hook for every hero (HeroDefinition.onHurt). */
+   @SubscribeEvent
+   public static void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0.0F) {
+         HeroRegistry.get(player).onHurt(player, event.getSource(), event.getAmount());
       }
    }
 
@@ -247,6 +261,7 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroRegistry.get(player).onDimensionChange(player);
       }
    }
 

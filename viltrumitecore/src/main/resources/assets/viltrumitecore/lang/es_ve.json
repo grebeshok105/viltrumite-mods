@@ -181,5 +181,20 @@
   "message.viltrumitecore.lion.heart_lost": "Un corazón se ha extinguido: la ventana del Corazón de León se acorta.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Puñetazo de Regulus",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>Reutilización: <lime>1s\n<grey>Tipo: <aqua>Instantáneo\n\n<grey>Un puñetazo viltrumita potenciado por tus corazones.\n<grey>Rompe bloques y lanza enemigos.\n\n<red>Locura: <grey>1,5x daño y una hoja de aire congelado\n<grey>que corta todo lo que hay delante.\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "Supersalto"
+  "key.viltrumitecore.regulus_super_jump": "Supersalto",
+  "gui.viltrumitecore.race_selection.become_homelander": "Conviértete en Homelander",
+  "hero.viltrumitecore.homelander": "Homelander",
+  "subtitles.viltrumitecore.homelander_laser_charge": "Los ojos de Homelander brillan",
+  "subtitles.viltrumitecore.homelander_laser_loop": "Los láseres oculares queman",
+  "subtitles.viltrumitecore.homelander_laser_release": "Los láseres oculares se apagan",
+  "subtitles.viltrumitecore.homelander_roar": "Homelander ruge",
+  "subtitles.viltrumitecore.homelander_roar_deep": "Homelander ruge",
+  "hud.viltrumitecore.homelander.fear": "Sientes la mirada de alguien sobre ti",
+  "effect.viltrumitecore.fear": "Miedo",
+  "ability.viltrumitecore.homelander_lasers.name": "<red>Visión calorífica",
+  "ability.viltrumitecore.homelander_lasers.desc": "<grey>Enfriamiento: <lime>-\n<grey>Tipo: <yellow>Mantener\n\n<grey>Quema todo lo que miras con dos rayos rojos.\n<grey>Prende fuego a los objetivos y chamusca paredes.\n<grey>Calienta tus ojos: el sobrecalentamiento los bloquea 3s.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_focus.name": "<aqua>Enfoque",
+  "ability.viltrumitecore.homelander_focus.desc": "<grey>Enfriamiento: <lime>-\n<grey>Tipo: <aqua>Alternar\n\n<grey>Ve hasta 8 criaturas cercanas a través de paredes,\n<grey>su salud y el camino hasta ellas.\n<grey>Sus pasos suenan más fuerte, el resto se apaga.\n<grey>Quien es observado siente miedo. Calienta lento tus ojos.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_roar.name": "<gold>Rugido",
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Enfriamiento: <lime>15s\n<grey>Tipo: <aqua>Instantáneo\n\n<grey>Un rugido furioso empuja a todos\n<grey>frente a ti (12 bloques) y los ralentiza 3s.\n\n<blue>Homelander"
 }

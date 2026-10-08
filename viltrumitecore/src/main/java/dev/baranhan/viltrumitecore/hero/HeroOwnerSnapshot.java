@@ -3,8 +3,9 @@ package dev.baranhan.viltrumitecore.hero;
 import java.util.Arrays;
 
 /**
- * Owner-private hero snapshot: data only the hero's own client may see (heart
- * carrier entity ids, private HUD state). Sent to the owner only.
+ * Owner-private hero snapshot: data only the hero's own client may see. The
+ * id list means "owner-only entity ids" and is read per hero: Regulus heart
+ * carriers, Homelander focus targets. Sent to the owner only.
  */
 public record HeroOwnerSnapshot(int[] carrierEntityIds) {
    public static final HeroOwnerSnapshot EMPTY = new HeroOwnerSnapshot(new int[0]);

@@ -214,13 +214,26 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
 
    @Override
    public boolean isViltrumite() {
-      return (Object)this instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.VILTRUMITE;
+      // "Viltrumite" = user of the shared legacy kit (Homelander replaced the race).
+      Player self = (Player)(Object)this;
+      return dev.baranhan.viltrumitecore.hero.HeroRegistry.get(self).allowsLegacyAbilities(self);
    }
 
    @Override
    public void setViltrumite(boolean isViltrumite) {
       // Legacy adapter: the boolean only ever toggles HUMAN<->VILTRUMITE and
       // can never convert or clear another hero identity.
+      // Live changes on the server run the full hero lifecycle (cleanup, loadout, session).
+      if ((Object)this instanceof net.minecraft.server.level.ServerPlayer serverPlayer && (Object)this instanceof HeroPlayer heroPlayer) {
+         dev.baranhan.viltrumitecore.hero.HeroRegistry.changeHero(serverPlayer, HeroId.legacySet(heroPlayer.getHeroId(), isViltrumite));
+      } else {
+         this.viltrumitecore$setLegacyIdentity(isViltrumite);
+      }
+   }
+
+   /** Identity-only legacy write (NBT load, client): never a lifecycle. */
+   @org.spongepowered.asm.mixin.Unique
+   private void viltrumitecore$setLegacyIdentity(boolean isViltrumite) {
       if ((Object)this instanceof HeroPlayer heroPlayer) {
          heroPlayer.viltrumitecore$setHeroId(HeroId.legacySet(heroPlayer.getHeroId(), isViltrumite));
       }
@@ -1515,7 +1528,7 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
    )
    private void onReadViltrumiteNbt(CompoundTag nbt, CallbackInfo ci) {
       if (nbt.contains("IsViltrumite")) {
-         this.setViltrumite(nbt.getBoolean("IsViltrumite"));
+         this.viltrumitecore$setLegacyIdentity(nbt.getBoolean("IsViltrumite"));
       }
 
       if (nbt.contains("HasChosenRace")) {

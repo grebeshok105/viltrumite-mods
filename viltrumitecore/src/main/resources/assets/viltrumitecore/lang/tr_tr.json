@@ -181,5 +181,20 @@
   "message.viltrumitecore.lion.heart_lost": "Bir kalp söndü — Aslanın Kalbi süresi kısaldı.",
   "ability.viltrumitecore.regulus_punch.name": "<gold>Regulus Yumruğu",
   "ability.viltrumitecore.regulus_punch.desc": "<grey>Bekleme: <lime>1sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Kalplerinle güçlenen Viltrumit yumruğu.\n<grey>Blokları kırar ve düşmanları fırlatır.\n\n<red>Delilik: <grey>1,5x hasar ve önündeki her şeyi\n<grey>kesen donmuş hava bıçağı.\n\n<blue>Regulus",
-  "key.viltrumitecore.regulus_super_jump": "Süper Zıplama"
+  "key.viltrumitecore.regulus_super_jump": "Süper Zıplama",
+  "gui.viltrumitecore.race_selection.become_homelander": "Homelander ol",
+  "hero.viltrumitecore.homelander": "Homelander",
+  "subtitles.viltrumitecore.homelander_laser_charge": "Homelander'ın gözleri parlıyor",
+  "subtitles.viltrumitecore.homelander_laser_loop": "Göz lazerleri yakıyor",
+  "subtitles.viltrumitecore.homelander_laser_release": "Göz lazerleri sönüyor",
+  "subtitles.viltrumitecore.homelander_roar": "Homelander kükrüyor",
+  "subtitles.viltrumitecore.homelander_roar_deep": "Homelander kükrüyor",
+  "hud.viltrumitecore.homelander.fear": "Üzerinde birinin bakışlarını hissediyorsun",
+  "effect.viltrumitecore.fear": "Korku",
+  "ability.viltrumitecore.homelander_lasers.name": "<red>Isı Görüşü",
+  "ability.viltrumitecore.homelander_lasers.desc": "<grey>Bekleme: <lime>-\n<grey>Tür: <yellow>Basılı tut\n\n<grey>Baktığın her şeyi iki kırmızı ışınla yak.\n<grey>Hedefleri tutuşturur, duvarları kavurur.\n<grey>Gözlerini ısıtır: aşırı ısınma onları 3sn kilitler.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_focus.name": "<aqua>Odak",
+  "ability.viltrumitecore.homelander_focus.desc": "<grey>Bekleme: <lime>-\n<grey>Tür: <aqua>Aç/Kapat\n\n<grey>En yakın 8 canlıyı duvarların ardından,\n<grey>canlarını ve onlara giden yolu gör.\n<grey>Adımları yükselir, gerisi sessizleşir.\n<grey>İzlenenler korku duyar. Gözlerini yavaşça ısıtır.\n\n<blue>Homelander",
+  "ability.viltrumitecore.homelander_roar.name": "<gold>Kükreme",
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Bekleme: <lime>15sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Öfkeli bir kükreme önündeki herkesi\n<grey>geri iter (12 blok) ve 3sn yavaşlatır.\n\n<blue>Homelander"
 }

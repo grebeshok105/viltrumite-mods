@@ -41,6 +41,21 @@ public class ViltrumiteCore {
       "infinity_gun_shoot", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "infinity_gun_shoot"))
    );
 
+   public static final RegistryObject<SoundEvent> HOMELANDER_LASER_CHARGE = SOUND_EVENTS.register(
+      "homelander_laser_charge", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "homelander_laser_charge"))
+   );
+   public static final RegistryObject<SoundEvent> HOMELANDER_LASER_LOOP = SOUND_EVENTS.register(
+      "homelander_laser_loop", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "homelander_laser_loop"))
+   );
+   public static final RegistryObject<SoundEvent> HOMELANDER_LASER_RELEASE = SOUND_EVENTS.register(
+      "homelander_laser_release", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "homelander_laser_release"))
+   );
+   public static final RegistryObject<SoundEvent> HOMELANDER_ROAR = SOUND_EVENTS.register(
+      "homelander_roar", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "homelander_roar"))
+   );
+   public static final RegistryObject<SoundEvent> HOMELANDER_ROAR_DEEP = SOUND_EVENTS.register(
+      "homelander_roar_deep", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "homelander_roar_deep"))
+   );
    public static final RegistryObject<SoundEvent> REGULUS_SHARD_WHIZ = SOUND_EVENTS.register(
       "regulus_shard_whiz", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_shard_whiz"))
    );

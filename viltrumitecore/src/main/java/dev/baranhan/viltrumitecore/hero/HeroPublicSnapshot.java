@@ -27,7 +27,13 @@ public record HeroPublicSnapshot(
    int[] cooldowns,
    boolean actionBusy,
    int availableActions,
-   @Nullable Vec3 actionTarget
+   @Nullable Vec3 actionTarget,
+   /** Generic hero resource (Homelander: eye heat x10, 0-1000). */
+   int resource,
+   /** Resource-driven lock (Homelander: overheat). */
+   boolean resourceLocked,
+   /** Generic hero state bits; meaning owned by the hero (see heroFlag). */
+   int heroFlags
 ) {
    public static final int COOLDOWN_COUNT = 6;
    public static final HeroPublicSnapshot EMPTY = new HeroPublicSnapshot(
@@ -39,6 +45,19 @@ public record HeroPublicSnapshot(
       int madnessTicksLeft, int ritualTicks, int controlTargetId, int[] cooldowns, boolean actionBusy) {
       this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
          lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy, -1, null);
+   }
+
+   public HeroPublicSnapshot(HeroId heroId, int actionId, int actionElapsed, int actionLength, int hearts,
+      boolean lionActive, int lionWindowLeft, int lionWindowMax, boolean lionOverheat, boolean madness,
+      int madnessTicksLeft, int ritualTicks, int controlTargetId, int[] cooldowns, boolean actionBusy,
+      int availableActions, @Nullable Vec3 actionTarget) {
+      this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
+         lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy,
+         availableActions, actionTarget, 0, false, 0);
+   }
+
+   public boolean heroFlag(int bit) {
+      return (this.heroFlags & (1 << bit)) != 0;
    }
 
    public boolean actionAvailable(HeroAction action) {
@@ -67,8 +86,18 @@ public record HeroPublicSnapshot(
 
       builder.append(';').append(this.actionBusy ? 1 : 0);
       builder.append(';').append(this.availableActions);
+      boolean hasResource = this.resource != 0 || this.resourceLocked || this.heroFlags != 0;
       if (this.actionTarget != null) {
          builder.append(';').append(this.actionTarget.x).append(';').append(this.actionTarget.y).append(';').append(this.actionTarget.z);
+      } else if (hasResource) {
+         builder.append(";n;n;n");
+      }
+
+      // Resource fields only when set: heroes without a resource keep the v1.13 wire format.
+      if (hasResource) {
+         builder.append(';').append(this.resource);
+         builder.append(';').append(this.resourceLocked ? 1 : 0);
+         builder.append(';').append(this.heroFlags);
       }
       return builder.toString();
    }
@@ -92,7 +121,8 @@ public record HeroPublicSnapshot(
             cooldowns[i] = index < parts.length ? Integer.parseInt(parts[index]) : 0;
          }
 
-         Vec3 target = parts.length >= 24 ? new Vec3(Double.parseDouble(parts[21]), Double.parseDouble(parts[22]), Double.parseDouble(parts[23])) : null;
+         boolean hasTarget = parts.length >= 24 && !"n".equals(parts[21]);
+         Vec3 target = hasTarget ? new Vec3(Double.parseDouble(parts[21]), Double.parseDouble(parts[22]), Double.parseDouble(parts[23])) : null;
          if (target != null && (!Double.isFinite(target.x) || !Double.isFinite(target.y) || !Double.isFinite(target.z))) {
             return EMPTY;
          }
@@ -113,7 +143,10 @@ public record HeroPublicSnapshot(
             cooldowns,
             parts.length > 19 && "1".equals(parts[19]),
             parts.length > 20 ? Integer.parseInt(parts[20]) : -1,
-            target
+            target,
+            parts.length > 24 ? Integer.parseInt(parts[24]) : 0,
+            parts.length > 25 && "1".equals(parts[25]),
+            parts.length > 26 ? Integer.parseInt(parts[26]) : 0
          );
       } catch (NumberFormatException exception) {
          return EMPTY;
@@ -143,7 +176,10 @@ public record HeroPublicSnapshot(
             && Arrays.equals(this.cooldowns, snapshot.cooldowns)
             && this.actionBusy == snapshot.actionBusy
             && this.availableActions == snapshot.availableActions
-            && Objects.equals(this.actionTarget, snapshot.actionTarget);
+            && Objects.equals(this.actionTarget, snapshot.actionTarget)
+            && this.resource == snapshot.resource
+            && this.resourceLocked == snapshot.resourceLocked
+            && this.heroFlags == snapshot.heroFlags;
       }
    }
 
@@ -166,6 +202,9 @@ public record HeroPublicSnapshot(
       result = 31 * result + Boolean.hashCode(this.actionBusy);
       result = 31 * result + this.availableActions;
       result = 31 * result + Objects.hashCode(this.actionTarget);
+      result = 31 * result + this.resource;
+      result = 31 * result + Boolean.hashCode(this.resourceLocked);
+      result = 31 * result + this.heroFlags;
       return result;
    }
 }

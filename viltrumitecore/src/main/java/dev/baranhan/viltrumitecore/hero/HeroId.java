@@ -5,7 +5,9 @@ import javax.annotation.Nullable;
 public enum HeroId {
    HUMAN("human"),
    VILTRUMITE("viltrumite"),
-   REGULUS("regulus");
+   REGULUS("regulus"),
+   /** Replaces the Viltrumite race. Saved "viltrumite" ids load as this hero. */
+   HOMELANDER("homelander");
 
    private final String key;
 
@@ -23,6 +25,10 @@ public enum HeroId {
          return null;
       }
 
+      if (VILTRUMITE.key.equals(key)) {
+         return HOMELANDER;
+      }
+
       for (HeroId id : values()) {
          if (id.key.equals(key)) {
             return id;
@@ -33,7 +39,7 @@ public enum HeroId {
    }
 
    public static HeroId fromLegacyBoolean(boolean isViltrumite) {
-      return isViltrumite ? VILTRUMITE : HUMAN;
+      return isViltrumite ? HOMELANDER : HUMAN;
    }
 
    /**
@@ -41,7 +47,7 @@ public enum HeroId {
     * toggles HUMAN<->VILTRUMITE and must never convert or clear a different hero.
     */
    public static HeroId legacySet(HeroId current, boolean isViltrumite) {
-      if (current == HUMAN || current == VILTRUMITE) {
+      if (current == HUMAN || current == VILTRUMITE || current == HOMELANDER) {
          return fromLegacyBoolean(isViltrumite);
       }
 

@@ -31,6 +31,11 @@ Default hooks (override only when needed):
 | `superJumpVelocity(Player)` | 0 (no super jump); both sides |
 | `onSuperJump(ServerPlayer)` | nothing (hero sounds) |
 | `preventsExhaustion(Player)` | false |
+| `allowsLegacyAbility(Player, String id)` | `allowsLegacyAbilities && ownsAbility(id)`; both sides, read through `LegacyKit.allows` — a hero keeps a subset of the Viltrumite kit by owning those ids |
+| `heroInputSlots()` / `heroActionFor(String id)` | none; slot ids whose keys send `HeroInputC2SPacket` press/release (generic client loop) |
+| `onHurt(ServerPlayer, DamageSource, float)` | nothing; from `HeroEvents` LivingHurtEvent |
+| `onDimensionChange(ServerPlayer)` | nothing; stop channels |
+| `abilityIcon(String id)` | null; hero-specific icon for any slot (kit slots drawn as this hero), read by panel and HUD via `ViltrumiteAbility.getIcon(player)` |
 | `saveHeroState` / `loadHeroState` / `cloneHeroState` | drop state |
 
 New behaviour that shared code must ask about → add a new default hook here. Do not branch on `HeroId` in shared code.
@@ -43,9 +48,9 @@ New behaviour that shared code must ask about → add a new default hook here. D
 | Input actions | `hero/HeroAction.java` (append) |
 | Registration | `hero/HeroRegistry.registerDefaults()` |
 | Hero code | `hero/<id>/` (`<Id>Hero`, `<Id>Rules`, `<Id>State`, `<Id>Abilities`, one class per ability) |
-| Ability panel slots, icons, grey-out | `ability/ViltrumiteAbilities.java` |
-| Input sending | `client/AbilityInputManager.java`, `network/packet/HeroInputC2SPacket.java` |
-| Public sync | `hero/HeroPublicSnapshot.java` |
+| Ability panel slots, icons, grey-out | `hero/<id>/<Id>Abilities.panelAbilities()` registered from `ability/ViltrumiteAbilities.java`; icons via `abilityIcon` |
+| Input sending | `heroInputSlots()/heroActionFor()` hooks (generic loop in `client/ViltrumiteCoreClient`), `network/packet/HeroInputC2SPacket.java` |
+| Public sync | `hero/HeroPublicSnapshot.java` (generic `resource`, `resourceLocked`, `heroFlags`; encoded only when non-default), owner-only ids via `HeroRegistry.pushOwnerSnapshot` |
 | Choosing the hero | `client/gui/RaceSelectionScreen.java` (+ lang `gui.viltrumitecore.race_selection.become_<id>`), items like `item/EvangeliumItem.java` |
 | Skin | `client/<id>/<Id>Client` → `HeroSkins.register`; texture `assets/viltrumitecore/textures/entity/hero/<id>.png` |
 | Client init | `client/ViltrumiteCoreClient.java` |
@@ -63,11 +68,13 @@ These files check `HeroId.REGULUS` directly. When a new hero needs the same beha
 
 - `ability/ViltrumiteAbilities` — Regulus slot registration and grey-out.
 - `client/AbilityInputManager` — Regulus key routing.
-- `client/ViltrumiteCoreClient` — Regulus key block.
+- `client/ViltrumiteCoreClient` — Regulus punch key block (hero input slots are generic now).
 - `client/gui/RaceSelectionScreen` — hero buttons and head preview.
 - `client/mixin/GameRendererDashMixin`, `RegulusFovMixin`, `RegulusHudMixin`, `SilhouetteRendererMixin`.
 - `client/render/vfx/RegulusActionVFXManager`, `RegulusLionVFXManager`.
 - `hero/HeroDamage`, `hero/HeroEvents`, `item/EvangeliumItem`.
 - `hero/HeroPublicSnapshot` — fields are Regulus-shaped (lion, madness, hearts, `COOLDOWN_COUNT = 6`).
 
-Run `grep -rln "HeroId.REGULUS" viltrumitecore/src/main/java` to see the current list.
+Run `grep -rln "HeroId.REGULUS" viltrumitecore/src/main/java` to see the current list. `NoHeroBranchTest` holds the allowlist; shrink it when a file moves behind a hook, never grow it.
+
+Reference new-style hero: `hero/homelander/` + `client/homelander/` (no new shared branches).

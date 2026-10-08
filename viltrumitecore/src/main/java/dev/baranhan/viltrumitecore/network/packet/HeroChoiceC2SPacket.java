@@ -48,6 +48,7 @@ public class HeroChoiceC2SPacket {
          }
 
          HeroRegistry.changeHero(player, id);
+         HeroRegistry.repairLoadout(player);
       });
       context.setPacketHandled(true);
    }

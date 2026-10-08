@@ -24,7 +24,7 @@ public class SpeedToggleC2SPacket {
       context.enqueueWork(() -> {
          ServerPlayer player = context.getSender();
          if (player instanceof ViltrumiteCorePlayer corePlayer) {
-            if (!corePlayer.isViltrumite()) {
+            if (!dev.baranhan.viltrumitecore.hero.LegacyKit.allows(context.getSender(), dev.baranhan.viltrumitecore.hero.LegacyKit.SPEED)) {
                return;
             }
 

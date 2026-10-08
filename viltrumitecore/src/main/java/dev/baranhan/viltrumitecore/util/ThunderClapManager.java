@@ -22,9 +22,9 @@ public class ThunderClapManager {
    public static final List<ThunderClapManager.ActiveClap> ACTIVE_CLAPS = new ArrayList<>();
 
    public static void startThunderclap(ServerPlayer player) {
-      Vec3 origin = player.position().add(0.0, 0.5, 0.0);
-      float yawRad = player.getYRot() * (float) (Math.PI / 180.0);
-      Vec3 direction = new Vec3((double)(-Mth.sin(yawRad)), 0.0, (double)Mth.cos(yawRad)).normalize();
+      // The clap follows the look: forward, down at the ground from the air, up, anywhere.
+      Vec3 direction = player.getLookAngle().normalize();
+      Vec3 origin = player.getEyePosition().subtract(0.0, 0.4, 0.0);
       ACTIVE_CLAPS.add(new ThunderClapManager.ActiveClap(player, origin, direction));
    }
 
@@ -65,7 +65,9 @@ public class ThunderClapManager {
                         target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 1));
                         if (dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE)) {
                            Vec3 pushDir = target.position().subtract(clap.origin).normalize();
-                           target.setDeltaMovement(pushDir.x * 2.5, 1.2, pushDir.z * 2.5);
+                           // Along the clap; a flat clap still lifts its targets like before.
+                           double lift = 1.2 * (1.0 - Math.abs(clap.direction.y));
+                           target.setDeltaMovement(pushDir.x * 2.5, pushDir.y * 2.5 + lift, pushDir.z * 2.5);
                            target.hasImpulse = true;
                         }
                      }
@@ -88,8 +90,7 @@ public class ThunderClapManager {
                            if (distFromAxisSq <= currentRadius * currentRadius) {
                               BlockState state = world.getBlockState(mutablePos);
                               if (!state.isAir() && state.getFluidState().isEmpty() && state.getDestroySpeed(world, mutablePos) >= 0.0F) {
-                                 BlockState upState = world.getBlockState(mutablePos.above());
-                                 if (upState.isAir() || upState.canBeReplaced()) {
+                                 if (exposed(world, mutablePos)) {
                                     if (world.random.nextFloat() < 0.25F) {
                                        Vec3 outward = new Vec3((double)x + 0.5 - clap.origin.x, 0.0, (double)z + 0.5 - clap.origin.z).normalize();
                                        dev.baranhan.viltrumitecore.hero.HeroDebris.launchBlock(
@@ -114,6 +115,18 @@ public class ThunderClapManager {
             }
          }
       }
+   }
+
+   /** A block with open air on any side: the surface the clap tears off, in any direction. */
+   private static boolean exposed(ServerLevel world, BlockPos pos) {
+      for (net.minecraft.core.Direction side : net.minecraft.core.Direction.values()) {
+         BlockState next = world.getBlockState(pos.relative(side));
+         if (next.isAir() || next.canBeReplaced()) {
+            return true;
+         }
+      }
+
+      return false;
    }
 
    public static class ActiveClap {

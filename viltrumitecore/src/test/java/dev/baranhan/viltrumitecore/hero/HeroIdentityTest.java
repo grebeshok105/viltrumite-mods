@@ -29,14 +29,14 @@ class HeroIdentityTest {
 
    @Test
    void migratesLegacyBooleanIdentity() {
-      assertSame(HeroId.VILTRUMITE, HeroId.fromLegacyBoolean(true));
+      assertSame(HeroId.HOMELANDER, HeroId.fromLegacyBoolean(true));
       assertSame(HeroId.HUMAN, HeroId.fromLegacyBoolean(false));
    }
 
    @Test
    void legacySetterCannotConvertOrClearAnotherHero() {
-      // setViltrumite(true/false) only ever toggles HUMAN<->VILTRUMITE.
-      assertSame(HeroId.VILTRUMITE, HeroId.legacySet(HeroId.HUMAN, true));
+      // setViltrumite(true/false) only ever toggles HUMAN<->HOMELANDER (Viltrumite replaced).
+      assertSame(HeroId.HOMELANDER, HeroId.legacySet(HeroId.HUMAN, true));
       assertSame(HeroId.HUMAN, HeroId.legacySet(HeroId.VILTRUMITE, false));
       // A Regulus identity is immune to the legacy writer in both directions.
       assertSame(HeroId.REGULUS, HeroId.legacySet(HeroId.REGULUS, true));
@@ -85,7 +85,7 @@ class HeroIdentityTest {
       CompoundTag nbt = new CompoundTag();
       nbt.putBoolean("IsViltrumite", true);
       HeroSession migrated = HeroSession.load(nbt, HeroId.fromLegacyBoolean(true));
-      assertEquals(HeroId.VILTRUMITE, migrated.heroId());
+      assertEquals(HeroId.HOMELANDER, migrated.heroId());
       assertFalse(migrated.totemConsumed());
       assertFalse(migrated.sessionId().equals(new UUID(0L, 0L)));
    }

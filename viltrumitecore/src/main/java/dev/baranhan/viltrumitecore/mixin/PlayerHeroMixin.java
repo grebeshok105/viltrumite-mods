@@ -31,6 +31,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 )
 public abstract class PlayerHeroMixin implements HeroPlayer {
    @Unique
+   private boolean legacyLoadoutPending;
+   @Unique
    private static final EntityDataAccessor<Integer> HERO_ID = SynchedEntityData.defineId(Player.class, EntityDataSerializers.INT);
    @Unique
    private static final EntityDataAccessor<String> HERO_SNAPSHOT = SynchedEntityData.defineId(Player.class, EntityDataSerializers.STRING);
@@ -51,7 +53,7 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
    @Inject(method = {"defineSynchedData"}, at = {@At("TAIL")})
    private void viltrumitecore$defineHeroData(CallbackInfo ci) {
       Player player = (Player)(Object)this;
-      int defaultId = ViltrumiteCoreConfig.INSTANCE.isViltrumiteByDefault ? HeroId.VILTRUMITE.ordinal() : HeroId.HUMAN.ordinal();
+      int defaultId = ViltrumiteCoreConfig.INSTANCE.isViltrumiteByDefault ? HeroId.HOMELANDER.ordinal() : HeroId.HUMAN.ordinal();
       player.getEntityData().define(HERO_ID, defaultId);
       player.getEntityData().define(HERO_SNAPSHOT, HeroPublicSnapshot.EMPTY.encode());
    }
@@ -141,6 +143,23 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
       HeroRegistry.syncSnapshot(serverPlayer);
    }
 
+   @Override
+   public boolean viltrumitecore$consumeLegacyLoadout() {
+      boolean pending = this.legacyLoadoutPending;
+      this.legacyLoadoutPending = false;
+      return pending;
+   }
+
+   /** A save written before Homelander: hero id "viltrumite", or no hero data and the old flag. */
+   @Unique
+   private static boolean isLegacyViltrumiteSave(CompoundTag nbt) {
+      if (nbt.contains(HeroSession.NBT_KEY)) {
+         return HeroId.VILTRUMITE.key().equals(nbt.getCompound(HeroSession.NBT_KEY).getString("Id"));
+      }
+
+      return nbt.getBoolean("IsViltrumite");
+   }
+
    @Inject(method = {"addAdditionalSaveData"}, at = {@At("TAIL")})
    private void viltrumitecore$writeHeroData(CompoundTag nbt, CallbackInfo ci) {
       Player player = (Player)(Object)this;
@@ -156,6 +175,7 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
       }
 
       HeroId legacy = HeroId.fromLegacyBoolean(nbt.getBoolean("IsViltrumite"));
+      this.legacyLoadoutPending = isLegacyViltrumiteSave(nbt);
       HeroSession session = HeroSession.load(nbt, legacy);
       // Restore path: identity + session fields, never a lifecycle entry.
       this.viltrumitecore$setHeroSession(session);
