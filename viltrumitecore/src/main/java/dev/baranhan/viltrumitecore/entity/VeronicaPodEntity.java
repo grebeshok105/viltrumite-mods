@@ -1,6 +1,5 @@
 package dev.baranhan.viltrumitecore.entity;
 
-import dev.baranhan.viltrumitecore.hero.ironman.IronManMarkSounds;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManState;
 import dev.baranhan.viltrumitecore.hero.ironman.veronica.IronManVeronica;
 import java.util.Optional;
@@ -15,7 +14,6 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ClipContext;
@@ -64,7 +62,6 @@ public class VeronicaPodEntity extends Entity {
       pod.setYRot(owner.getRandom().nextFloat() * 360.0F);
       pod.setDeltaMovement(0.0, -FALL_SPEED, 0.0);
       owner.level().addFreshEntity(pod);
-      owner.level().playSound(null, ground.x, ground.y, ground.z, IronManMarkSounds.VERONICA_FALL.get(), SoundSource.PLAYERS, 4.0F, 1.0F);
       return pod;
    }
 
@@ -163,7 +160,6 @@ public class VeronicaPodEntity extends Entity {
       this.setDeltaMovement(Vec3.ZERO);
       this.setPhase(Phase.LANDED);
       this.level().explode(this, at.x, at.y + 0.5, at.z, IMPACT_POWER, Level.ExplosionInteraction.MOB);
-      this.level().playSound(null, at.x, at.y, at.z, IronManMarkSounds.VERONICA_IMPACT.get(), SoundSource.PLAYERS, 3.0F, 1.0F);
       ServerPlayer owner = IronManOwned.owner(this, this.ownerId());
       if (owner != null) {
          dev.baranhan.viltrumitecore.hero.fx.HeroFx.shockwave(owner, at, 1.2F, this.level().getBlockState(BlockPos.containing(at).below()), 6.0F);
@@ -188,7 +184,6 @@ public class VeronicaPodEntity extends Entity {
       }
 
       this.setPhase(Phase.LEAVING);
-      this.level().playSound(null, this.getX(), this.getY(), this.getZ(), IronManMarkSounds.VERONICA_LEAVE.get(), SoundSource.PLAYERS, 3.0F, 1.0F);
       ServerPlayer owner = IronManOwned.owner(this, this.ownerId());
       if (owner != null) {
          IronManVeronica.onPodLeft(owner, this);

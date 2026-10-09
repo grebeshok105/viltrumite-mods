@@ -810,6 +810,7 @@ public class IronManHero implements HeroDefinition {
    public void cleanup(ServerPlayer player, CleanupReason reason) {
       IronManState state = IronManState.of(player);
       if (state != null) {
+         dev.baranhan.viltrumitecore.hero.ironman.mark.IronManMarks.stopSignature(player, state);
          state.onCleanup(reason);
       }
 
@@ -823,6 +824,7 @@ public class IronManHero implements HeroDefinition {
    public void onDimensionChange(ServerPlayer player) {
       IronManState state = IronManState.of(player);
       if (state != null) {
+         dev.baranhan.viltrumitecore.hero.ironman.mark.IronManMarks.stopSignature(player, state);
          dev.baranhan.viltrumitecore.hero.ironman.mark.IronManMarks.onDimensionChange(player, state);
       }
    }

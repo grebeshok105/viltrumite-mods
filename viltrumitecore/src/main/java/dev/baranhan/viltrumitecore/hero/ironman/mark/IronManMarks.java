@@ -117,7 +117,6 @@ public final class IronManMarks {
          suit.dropMark();
          placeEmptySuit(player, state, old, at, yaw);
          stepOut(player);
-         play(player, IronManMarkSounds.MARK_EXIT.get(), 1.1F);
       } else if (suit.partial()) {
          MarkId old = suit.mark();
          suit.dropMark();
@@ -149,7 +148,6 @@ public final class IronManMarks {
          if (suit.startExit(Suit.EXIT_TICKS)) {
             placeEmptySuit(player, state, mark, at, yaw);
             stepOut(player);
-            play(player, IronManMarkSounds.MARK_EXIT.get(), 1.0F);
          }
 
          return true;
@@ -250,7 +248,6 @@ public final class IronManMarks {
       who.connection.teleport(suit.getX(), suit.getY(), suit.getZ(), suit.getYRot(), who.getXRot());
       state.suit.startEquip(mark, false, 0);
       state.equipSource = null;
-      play(who, IronManMarkSounds.MARK_ENTER.get(), 1.0F);
       return true;
    }
 
@@ -285,7 +282,6 @@ public final class IronManMarks {
          // The helmet closes last with a click and an eye flash (spec §12.4 step 3).
          state.helmet.reset();
          state.signature.clear();
-         play(player, IronManMarkSounds.HELMET_LOCK.get(), 1.0F);
       }
    }
 

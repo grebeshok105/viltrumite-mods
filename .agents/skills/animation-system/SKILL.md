@@ -53,6 +53,7 @@ Pattern: one mixin per ability on `PlayerModel.setupAnim(LivingEntity;FFFFF)V` a
 | `BarrageModelMixin` | 1175 |
 | `HomelanderModelMixin` | 1180 |
 | `IronManModelMixin` (hover, glide, heavy-landing kneel) | 1190 |
+| `SignatureModelMixin` (Iron Man mark signatures) | 1195 |
 | `GrabModelMixin` | 2000 |
 | `BlockModelMixin` | 3000 |
 

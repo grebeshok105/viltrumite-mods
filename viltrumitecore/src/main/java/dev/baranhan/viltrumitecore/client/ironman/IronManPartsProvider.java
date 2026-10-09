@@ -23,6 +23,11 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
          return;
       }
 
+      // Mark 15 camouflage: no suit parts on the invisible body, only the signature's own shimmer.
+      if (dev.baranhan.viltrumitecore.hero.ironman.IronManFlags.is(snapshot.heroFlags(), dev.baranhan.viltrumitecore.hero.ironman.IronManFlags.Field.MARK_CAMO)) {
+         return;
+      }
+
       // Stage 3: an open helmet folds the mask back along the head (HelmetAnim), Tony's face shows.
       int frame = helmetFrame(player, snapshot, partialTick);
       if (!firstPerson && IronManView.helmet(frame) && !MarkState.of(snapshot).markOn()) {
