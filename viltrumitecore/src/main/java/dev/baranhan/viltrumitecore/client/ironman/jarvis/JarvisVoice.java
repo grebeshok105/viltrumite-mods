@@ -2,7 +2,10 @@ package dev.baranhan.viltrumitecore.client.ironman.jarvis;
 
 import dev.baranhan.viltrumitecore.client.hero.ClientHeroData;
 import dev.baranhan.viltrumitecore.client.ironman.HelmetAnim;
+import dev.baranhan.viltrumitecore.client.ironman.HelmetAnim;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import dev.baranhan.viltrumitecore.client.ironman.scan.ScanCardRenderer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.OwnerSection;
@@ -58,7 +61,12 @@ public final class JarvisVoice {
       OVERHEAT(null, "jarvis.viltrumitecore.overheat", 40, 200),
       SECOND_OVERHEAT(null, "hud.viltrumitecore.ironman.overheat_warning", 60, 200),
       OVERDRAFT(null, "hud.viltrumitecore.ironman.overdraft", 60, 100),
-      COUNTERMEASURES(null, "jarvis.viltrumitecore.countermeasures", 30, 300);
+      COUNTERMEASURES(null, "jarvis.viltrumitecore.countermeasures", 30, 300),
+      /** Stage 4: the Veronica pod landed in front of the owner (helmet closed). */
+      VERONICA_POD(null, "jarvis.viltrumitecore.veronica", 100, 900),
+      MARK_READY(null, "jarvis.viltrumitecore.mark_ready", 100, 600),
+      MARK_LOW(null, "jarvis.viltrumitecore.mark_low", 100, 1200),
+      MARK_BROKEN(null, "jarvis.viltrumitecore.mark_broken", 120, 600);
 
       @Nullable
       private final Supplier<SoundEvent> sound;
@@ -94,6 +102,12 @@ public final class JarvisVoice {
    private static Component subtitle;
    private static long subtitleUntil;
    private static long subtitleStart;
+   private static final float MARK_LOW_FRACTION = 0.25F;
+   @Nullable
+   private static MarkId lastMark;
+   private static boolean lastFull;
+   @Nullable
+   private static MarkId lowSaidFor;
 
    private JarvisVoice() {
    }
@@ -123,14 +137,29 @@ public final class JarvisVoice {
       return entity instanceof WitherBoss || entity instanceof EnderDragon || entity instanceof Warden;
    }
 
+   /** The Veronica pod landed in front of its owner (MarkVfx). */
+   public static void onVeronicaLanded() {
+      sayHelmet(Line.VERONICA_POD);
+   }
+
    /** Scan card arrived (ScanCardRenderer). */
    public static void onScanCard() {
       say(Line.SCAN_DONE);
    }
 
    static void say(Line line) {
+      say(line, online(IronManView.of(Minecraft.getInstance().player)));
+   }
+
+   /** Stage 4 lines need only the closed helmet: the suit may be deploying or absent. */
+   static void sayHelmet(Line line) {
+      HeroPublicSnapshot snapshot = IronManView.of(Minecraft.getInstance().player);
+      say(line, snapshot != null && HelmetAnim.closedFlag(snapshot));
+   }
+
+   private static void say(Line line, boolean allowed) {
       Minecraft client = Minecraft.getInstance();
-      if (client.level == null || !online(IronManView.of(client.player))) {
+      if (client.level == null || !allowed) {
          return;
       }
 
@@ -207,12 +236,39 @@ public final class JarvisVoice {
          }
       }
 
+      markLines(snapshot, seen);
       seen = true;
       wasReady = ready;
       lastEnergy = energy;
       lastOverheats = overheats;
       lastOverdraft = overdraft;
       lastCounter = counter;
+   }
+
+   /** Mark lines (spec §11.1): ready, low durability once per wear, mark broken into the nano. */
+   private static void markLines(HeroPublicSnapshot snapshot, boolean announce) {
+      MarkState mark = MarkState.of(snapshot);
+      boolean full = mark.full();
+      if (announce) {
+         if (full && !lastFull) {
+            lowSaidFor = null;
+            sayHelmet(Line.MARK_READY);
+         }
+
+         if (mark.mark() == null) {
+            lowSaidFor = null;
+         } else if (mark.worn() && mark.durabilityFraction() < MARK_LOW_FRACTION && lowSaidFor != mark.mark()) {
+            lowSaidFor = mark.mark();
+            sayHelmet(Line.MARK_LOW);
+         }
+
+         if (lastMark != null && mark.mark() == null && mark.worn()) {
+            sayHelmet(Line.MARK_BROKEN);
+         }
+      }
+
+      lastMark = mark.mark();
+      lastFull = full;
    }
 
    /** New player / boss threats get a line; mobs only get brackets (no spam). */

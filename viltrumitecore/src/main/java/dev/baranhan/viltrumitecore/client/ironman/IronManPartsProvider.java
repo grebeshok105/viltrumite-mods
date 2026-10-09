@@ -1,6 +1,7 @@
 package dev.baranhan.viltrumitecore.client.ironman;
 
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
 
       // Stage 3: an open helmet folds the mask back along the head (HelmetAnim), Tony's face shows.
       int frame = helmetFrame(player, snapshot, partialTick);
-      if (!firstPerson && IronManView.helmet(frame)) {
+      if (!firstPerson && IronManView.helmet(frame) && !MarkState.of(snapshot).markOn()) {
          ResourceLocation cut = IronManSuitTextures.INSTANCE.cut(frame);
          if (cut != null) {
             List<PlayerGeoLayer.Pass> passes = new ArrayList<>(3);

@@ -2,6 +2,7 @@ package dev.baranhan.viltrumitecore.client.ironman;
 
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumiteflight.client.util.ShaderCompat;
 import java.util.WeakHashMap;
@@ -25,6 +26,8 @@ import net.minecraft.world.entity.LivingEntity;
  */
 public final class IronManPoser {
    private static final WeakHashMap<LivingEntity, Weights> WEIGHTS = new WeakHashMap<>();
+   /** Arms-out weight while the suit parts fly and wrap (0..1). */
+   private static final WeakHashMap<LivingEntity, float[]> EQUIP = new WeakHashMap<>();
    /** Kneel geometry (model pixels): body lean and hip height above the ground. */
    private static final float KNEEL_LEAN = 0.7F;
    private static final float KNEEL_HIP = 4.0F;
@@ -59,7 +62,11 @@ public final class IronManPoser {
       w.advance(mode == ThrusterFlames.Mode.HOVER, IronManView.glide(snapshot) && !entity.onGround(), IronManView.heavyLanding(snapshot), 12.0F);
       Combat combat = Combat.of(snapshot, partialTick);
       w.advanceCombat(combat, 18.0F);
-      if (w.hover < 0.001F && w.glide < 0.001F && w.kneel < 0.001F && w.combatIdle() && gesture < 0.001F) {
+      MarkState mark = MarkState.of(snapshot);
+      float[] equip = EQUIP.computeIfAbsent(entity, e -> new float[1]);
+      boolean arming = mark.markOn() && (mark.equipping() || mark.equipPhase() == IronManFlags.EQUIP_PARTIAL);
+      equip[0] = Mth.lerp(0.25F, equip[0], arming ? 1.0F : 0.0F);
+      if (w.hover < 0.001F && w.glide < 0.001F && w.kneel < 0.001F && w.combatIdle() && gesture < 0.001F && equip[0] < 0.001F) {
          return;
       }
 
@@ -77,6 +84,12 @@ public final class IronManPoser {
       }
 
       combat(model, w, combat, time);
+      if (equip[0] > 0.001F) {
+         // Arms slightly out while the parts fly and wrap, like Mark 42 (spec §12.4).
+         rotate(model.rightArm, equip[0], 0.0F, 0.0F, 0.22F);
+         rotate(model.leftArm, equip[0], 0.0F, 0.0F, -0.22F);
+      }
+
       if (gesture > 0.001F) {
          rotate(model.leftArm, gesture, -2.2F + model.head.xRot, 0.35F + model.head.yRot * 0.5F, 0.15F);
       }
