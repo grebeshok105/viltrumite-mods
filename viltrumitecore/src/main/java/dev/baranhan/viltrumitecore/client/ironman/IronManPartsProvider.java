@@ -50,6 +50,8 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
 
       ThrusterFlames.collect(player, snapshot, partialTick, firstPerson, out);
       IronManCombatParts.collect(player, snapshot, partialTick, firstPerson, out);
+      dev.baranhan.viltrumitecore.client.ironman.mark.MarkVisuals.collectParts(player, snapshot, partialTick, firstPerson, out);
+      dev.baranhan.viltrumitecore.client.ironman.mark.sig.SignatureVisuals.collectParts(player, snapshot, partialTick, firstPerson, out);
    }
 
    /** Reveal frame of the helmet part: the suit wave frame, capped by the helmet fold. */

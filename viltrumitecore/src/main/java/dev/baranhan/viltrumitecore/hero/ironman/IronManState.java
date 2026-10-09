@@ -12,6 +12,8 @@ import net.minecraft.world.entity.player.Player;
 public final class IronManState {
    private static final String KEY = "IronMan";
    private static final String FLARE_COOLDOWN_KEY = "FlareCooldown";
+   private static final String VERONICA_COOLDOWN_KEY = "VeronicaCooldown";
+   private static final String SIGNATURE_COOLDOWN_KEY = "SignatureCooldown";
    public final Suit suit = new Suit();
    public final Energy energy = new Energy();
    /** Energy hit 0 in flight: glide profile (Task 9). */
@@ -78,6 +80,21 @@ public final class IronManState {
    public final dev.baranhan.viltrumitecore.hero.ironman.scan.ScanProgress scan = new dev.baranhan.viltrumitecore.hero.ironman.scan.ScanProgress();
    /** Cooldown carries over death (extraCooldowns[1]). */
    public final Countermeasures countermeasures = new Countermeasures();
+
+   // ---- Stage 4: Veronica and marks ----
+   /** Persisted (NBT MarkRoster): durability, cooldown and location of every mark. */
+   public final dev.baranhan.viltrumitecore.hero.ironman.mark.MarkRoster roster = new dev.baranhan.viltrumitecore.hero.ironman.mark.MarkRoster();
+   /** The worn mark's signature; only the cooldown is persisted (SignatureCooldown). */
+   public final dev.baranhan.viltrumitecore.hero.ironman.mark.SignatureState signature = new dev.baranhan.viltrumitecore.hero.ironman.mark.SignatureState();
+   /** Persisted (VeronicaCooldown): starts when the pod leaves (spec §12.2). */
+   public int veronicaCooldown;
+   /** Transient: entity id of this player's pod, -1 = none. */
+   public int podId = -1;
+   /** Transient: entity id of this player's empty suit, -1 = none (one per owner, spec §12.6). */
+   public int emptySuitId = -1;
+   /** Transient: where the flying parts start (pod, old empty suit, sky); synced as actionTarget while equipping. */
+   @Nullable
+   public net.minecraft.world.phys.Vec3 equipSource;
 
    /** Missile marks need the JARVIS targeting: helmet closed (spec §10). */
    public boolean canMarkTargets() {
@@ -175,6 +192,9 @@ public final class IronManState {
       this.overheat.save(tag);
       this.helmet.save(tag);
       tag.putInt(FLARE_COOLDOWN_KEY, this.countermeasures.cooldown());
+      this.roster.save(tag);
+      tag.putInt(VERONICA_COOLDOWN_KEY, this.veronicaCooldown);
+      tag.putInt(SIGNATURE_COOLDOWN_KEY, this.signature.cooldown);
       nbt.put(KEY, tag);
    }
 
@@ -185,7 +205,37 @@ public final class IronManState {
       this.overheat.load(tag);
       this.helmet.load(tag);
       this.countermeasures.setCooldown(tag.getInt(FLARE_COOLDOWN_KEY));
+      this.roster.load(tag);
+      this.veronicaCooldown = Math.max(0, tag.getInt(VERONICA_COOLDOWN_KEY));
+      this.signature.clear();
+      this.signature.cooldown = Math.max(0, tag.getInt(SIGNATURE_COOLDOWN_KEY));
+      this.reconcileMark();
       this.glide = false;
+   }
+
+   /** The roster agrees with the suit: only the mark on the body is WORN. */
+   public void reconcileMark() {
+      dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId onBody = this.suit.markOn() ? this.suit.mark() : null;
+      for (dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId id : dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId.values()) {
+         dev.baranhan.viltrumitecore.hero.ironman.mark.MarkLocation location = this.roster.location(id);
+         if (id == onBody && location != dev.baranhan.viltrumitecore.hero.ironman.mark.MarkLocation.WORN) {
+            this.roster.move(id, location, dev.baranhan.viltrumitecore.hero.ironman.mark.MarkLocation.WORN);
+         } else if (id != onBody && location == dev.baranhan.viltrumitecore.hero.ironman.mark.MarkLocation.WORN) {
+            this.roster.move(id, location, dev.baranhan.viltrumitecore.hero.ironman.mark.MarkLocation.STORED);
+         }
+      }
+   }
+
+   /** Suit numbers for every system: nano defaults or the worn mark (spec §13). */
+   public dev.baranhan.viltrumitecore.hero.ironman.mark.SuitSpec spec() {
+      dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId mark = this.suit.markOn() ? this.suit.mark() : null;
+      if (mark == null) {
+         return dev.baranhan.viltrumitecore.hero.ironman.mark.SuitSpec.NANO;
+      }
+
+      int lost = mark == dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId.MARK_42
+         ? dev.baranhan.viltrumitecore.hero.ironman.mark.Mark42Parts.lostMask(this.roster.durability(mark), this.roster.maxDurability(mark)) : 0;
+      return dev.baranhan.viltrumitecore.hero.ironman.mark.SuitSpec.mark(mark, lost);
    }
 
    @Nullable

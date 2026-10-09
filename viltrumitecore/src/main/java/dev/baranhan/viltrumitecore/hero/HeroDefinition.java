@@ -66,6 +66,24 @@ public interface HeroDefinition {
       return null;
    }
 
+   /**
+    * Icon of an ability slot for this player right now (e.g. a slot whose
+    * ability depends on the worn suit), or null. Client reads this; default:
+    * the player-independent {@link #abilityIcon(String)}.
+    */
+   @javax.annotation.Nullable
+   default net.minecraft.resources.ResourceLocation abilityIcon(String abilityId, Player player) {
+      return this.abilityIcon(abilityId);
+   }
+
+   /**
+    * Factor on the legacy flight speed (no profile): CRUISE/SONIC velocity uses
+    * the player's max flight speed × this. Both sides (movement is client-side).
+    */
+   default float flightSpeedScale(Player player) {
+      return 1.0F;
+   }
+
    /** Whether the legacy three-page ability bar swap is meaningful for this hero. */
    default boolean allowsAbilityPages(Player player) {
       return this.allowsLegacyAbilities(player);
@@ -128,8 +146,13 @@ public interface HeroDefinition {
       return ScanInfo.EMPTY;
    }
 
-   /** Hidden from scans and focus (reserved for the Mark 15 camo, Iron Man stage 4). */
+   /** Hidden from scans (Iron Man scan skips this player). */
    default boolean hiddenFromScan(Player self) {
+      return false;
+   }
+
+   /** Hidden from target-acquiring senses (Homelander focus skips this player). Server side. */
+   default boolean hiddenFromFocus(Player self) {
       return false;
    }
 

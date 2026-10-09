@@ -1,0 +1,227 @@
+{
+ "ability.viltrumitecore.ironman_veronica.name": {
+  "en_us": "<gold>Veronica"
+ },
+ "ability.viltrumitecore.ironman_veronica.desc": {
+  "en_us": "<grey>Type: <aqua>Press\n\n<grey>Calls the Veronica pod: it falls from the sky\n<grey>within 30 blocks (never into water), ~1 TNT.\n<grey>Press again while it stands (up to 64 blocks):\n<grey>the suit menu. The pod stays ~60 s.\n<grey>Cooldown 3 min after it leaves.\n\n<blue>Iron Man"
+ },
+ "mark.viltrumitecore.mark_7.name": {
+  "en_us": "Mark 7"
+ },
+ "mark.viltrumitecore.mark_7.role": {
+  "en_us": "Universal"
+ },
+ "mark.viltrumitecore.mark_7.signature": {
+  "en_us": "Micro-lasers"
+ },
+ "mark.viltrumitecore.mark_7.desc": {
+  "en_us": "<grey>RMB (via MMB) or slot 3: thin precise beam\n<grey>from the forearms. One target, breaks shields."
+ },
+ "mark.viltrumitecore.mark_42.name": {
+  "en_us": "Mark 42"
+ },
+ "mark.viltrumitecore.mark_42.role": {
+  "en_us": "Modular"
+ },
+ "mark.viltrumitecore.mark_42.signature": {
+  "en_us": "Rocket fist"
+ },
+ "mark.viltrumitecore.mark_42.desc": {
+  "en_us": "<grey>The glove flies to the target, hits and returns.\n<grey>Loses parts one by one as it breaks."
+ },
+ "mark.viltrumitecore.mark_15.name": {
+  "en_us": "Mark 15 «Sneaky»"
+ },
+ "mark.viltrumitecore.mark_15.role": {
+  "en_us": "Stealth"
+ },
+ "mark.viltrumitecore.mark_15.signature": {
+  "en_us": "Camouflage"
+ },
+ "mark.viltrumitecore.mark_15.desc": {
+  "en_us": "<grey>~8 s of refraction camo: mobs beyond 8 blocks\n<grey>lose you, the first hit deals x2.\n<grey>Hidden from focus and scans, silent flight."
+ },
+ "mark.viltrumitecore.mark_39.name": {
+  "en_us": "Mark 39 «Starboost»"
+ },
+ "mark.viltrumitecore.mark_39.role": {
+  "en_us": "Speed"
+ },
+ "mark.viltrumitecore.mark_39.signature": {
+  "en_us": "Starboost"
+ },
+ "mark.viltrumitecore.mark_39.desc": {
+  "en_us": "<grey>Back booster: instant dash to sonic speed\n<grey>in any direction, also a vertical take-off.\n<grey>Fastest mark, cheaper sonic, weaker weapons."
+ },
+ "mark.viltrumitecore.mark_17.name": {
+  "en_us": "Mark 17 «Heartbreaker»"
+ },
+ "mark.viltrumitecore.mark_17.role": {
+  "en_us": "Unibeam"
+ },
+ "mark.viltrumitecore.mark_17.signature": {
+  "en_us": "Pulse Unibeam"
+ },
+ "mark.viltrumitecore.mark_17.desc": {
+  "en_us": "<grey>Three short strong Unibeam pulses, no overheat.\n<grey>The normal Unibeam charges in 0.5 s."
+ },
+ "mark.viltrumitecore.war_machine_mk2.name": {
+  "en_us": "War Machine Mk2"
+ },
+ "mark.viltrumitecore.war_machine_mk2.role": {
+  "en_us": "Missiles"
+ },
+ "mark.viltrumitecore.war_machine_mk2.signature": {
+  "en_us": "Shoulder gun"
+ },
+ "mark.viltrumitecore.war_machine_mk2.desc": {
+  "en_us": "<grey>Hold: bursts at the crosshair target, energy\n<grey>instead of ammo. Up to 8 missile marks.\n<grey>Slower flight, sonic drains faster."
+ },
+ "mark.viltrumitecore.iron_heart_mk3.name": {
+  "en_us": "Iron Heart Mk3"
+ },
+ "mark.viltrumitecore.iron_heart_mk3.role": {
+  "en_us": "Heavy"
+ },
+ "mark.viltrumitecore.iron_heart_mk3.signature": {
+  "en_us": "Slam"
+ },
+ "mark.viltrumitecore.iron_heart_mk3.desc": {
+  "en_us": "<grey>Jump or dive into the ground: strong ring shockwave.\n<grey>Most armor, barely pushed, stronger shield.\n<grey>Slower flight."
+ },
+ "gui.viltrumitecore.veronica.title": {
+  "en_us": "VERONICA — SUIT BAY"
+ },
+ "gui.viltrumitecore.veronica.choose": {
+  "en_us": "Deploy"
+ },
+ "gui.viltrumitecore.veronica.worn": {
+  "en_us": "WORN"
+ },
+ "gui.viltrumitecore.veronica.empty": {
+  "en_us": "EMPTY SUIT"
+ },
+ "gui.viltrumitecore.veronica.delivery": {
+  "en_us": "IN FLIGHT"
+ },
+ "gui.viltrumitecore.veronica.cooldown": {
+  "en_us": "REPAIR %s s"
+ },
+ "gui.viltrumitecore.veronica.durability": {
+  "en_us": "Durability %s%%"
+ },
+ "gui.viltrumitecore.veronica.unavailable": {
+  "en_us": "UNAVAILABLE"
+ },
+ "gui.viltrumitecore.veronica.hulkbuster": {
+  "en_us": "Hulkbuster Mk48"
+ },
+ "gui.viltrumitecore.veronica.hulkbuster_soon": {
+  "en_us": "Not in the bay yet"
+ },
+ "gui.viltrumitecore.veronica.pod_time": {
+  "en_us": "Pod leaves in %s s"
+ },
+ "hud.viltrumitecore.ironman.durability": {
+  "en_us": "SUIT"
+ },
+ "hud.viltrumitecore.ironman.veronica_cooldown": {
+  "en_us": "Veronica is recharging: %s s"
+ },
+ "hud.viltrumitecore.ironman.veronica_far": {
+  "en_us": "Veronica is too far away"
+ },
+ "hud.viltrumitecore.ironman.veronica_busy": {
+  "en_us": "Wait until the suit is on"
+ },
+ "hud.viltrumitecore.ironman.enter_refused": {
+  "en_us": "Take off this mark first"
+ },
+ "hud.viltrumitecore.ironman.mark_unavailable": {
+  "en_us": "This suit is not available"
+ },
+ "entity.viltrumitecore.veronica_pod": {
+  "en_us": "Veronica pod"
+ },
+ "entity.viltrumitecore.empty_suit": {
+  "en_us": "Empty suit"
+ },
+ "entity.viltrumitecore.suit_debris": {
+  "en_us": "Suit debris"
+ },
+ "entity.viltrumitecore.rocket_fist": {
+  "en_us": "Rocket fist"
+ },
+ "jarvis.viltrumitecore.veronica": {
+  "en_us": "JARVIS: Veronica deployed."
+ },
+ "jarvis.viltrumitecore.mark_ready": {
+  "en_us": "JARVIS: Mark online."
+ },
+ "jarvis.viltrumitecore.mark_low": {
+  "en_us": "JARVIS: Suit integrity critical."
+ },
+ "jarvis.viltrumitecore.mark_broken": {
+  "en_us": "JARVIS: Suit lost. Nanosuit engaged."
+ },
+ "scan.viltrumitecore.ironman.mark": {
+  "en_us": "%s: durability %s / %s, takes all damage"
+ },
+ "subtitles.viltrumitecore.ironman_veronica_fall": {
+  "en_us": "Veronica pod screams down"
+ },
+ "subtitles.viltrumitecore.ironman_veronica_impact": {
+  "en_us": "Veronica pod lands"
+ },
+ "subtitles.viltrumitecore.ironman_veronica_open": {
+  "en_us": "Veronica pod opens"
+ },
+ "subtitles.viltrumitecore.ironman_veronica_leave": {
+  "en_us": "Veronica pod takes off"
+ },
+ "subtitles.viltrumitecore.ironman_part_fly": {
+  "en_us": "Suit parts fly in"
+ },
+ "subtitles.viltrumitecore.ironman_part_clamp": {
+  "en_us": "Suit plate clamps"
+ },
+ "subtitles.viltrumitecore.ironman_helmet_lock": {
+  "en_us": "Helmet locks"
+ },
+ "subtitles.viltrumitecore.ironman_mark_exit": {
+  "en_us": "Suit opens"
+ },
+ "subtitles.viltrumitecore.ironman_mark_enter": {
+  "en_us": "Suit closes"
+ },
+ "subtitles.viltrumitecore.ironman_mark_break": {
+  "en_us": "Suit breaks apart"
+ },
+ "subtitles.viltrumitecore.ironman_micro_laser": {
+  "en_us": "Micro-laser hisses"
+ },
+ "subtitles.viltrumitecore.ironman_rocket_fist_launch": {
+  "en_us": "Rocket fist launches"
+ },
+ "subtitles.viltrumitecore.ironman_rocket_fist_hit": {
+  "en_us": "Rocket fist hits"
+ },
+ "subtitles.viltrumitecore.ironman_camo_on": {
+  "en_us": "Camouflage engages"
+ },
+ "subtitles.viltrumitecore.ironman_camo_off": {
+  "en_us": "Camouflage drops"
+ },
+ "subtitles.viltrumitecore.ironman_starboost": {
+  "en_us": "Starboost fires"
+ },
+ "subtitles.viltrumitecore.ironman_pulse_unibeam": {
+  "en_us": "Unibeam pulses"
+ },
+ "subtitles.viltrumitecore.ironman_shoulder_gun": {
+  "en_us": "Shoulder gun fires"
+ },
+ "subtitles.viltrumitecore.ironman_slam_impact": {
+  "en_us": "Ground slam"
+ }
+}

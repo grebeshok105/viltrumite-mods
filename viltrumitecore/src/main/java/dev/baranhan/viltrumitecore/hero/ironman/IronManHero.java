@@ -135,6 +135,11 @@ public class IronManHero implements HeroDefinition {
    }
 
    @Override
+   public net.minecraft.resources.ResourceLocation abilityIcon(String abilityId, Player player) {
+      return IronManAbilities.icon(abilityId, player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer ? heroPlayer.getHeroSnapshot() : null);
+   }
+
+   @Override
    public String[] heroInputSlots() {
       return IronManAbilities.slotIds();
    }

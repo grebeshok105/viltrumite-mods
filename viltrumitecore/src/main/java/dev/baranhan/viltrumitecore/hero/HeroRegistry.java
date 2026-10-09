@@ -39,6 +39,7 @@ public final class HeroRegistry {
             && (!(player.level() instanceof ServerLevel level) || !ControlManager.get(level).preventsFlight(player))
       );
       dev.baranhan.viltrumiteflight.util.FlightProfiles.setResolver(player -> get(player).flightProfile(player));
+      dev.baranhan.viltrumiteflight.util.FlightProfiles.setSpeedScaleResolver(player -> get(player).flightSpeedScale(player));
    }
 
    public static void register(HeroDefinition definition) {

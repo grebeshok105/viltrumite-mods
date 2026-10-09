@@ -58,6 +58,8 @@ public class ViltrumiteCoreClient {
             renderer.addLayer(new dev.baranhan.viltrumitecore.client.ironman.ReactorGlowLayer(renderer));
             renderer.addLayer(new dev.baranhan.viltrumitecore.client.ironman.IronManSkinLayer(renderer));
             renderer.addLayer(new dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer(renderer));
+            dev.baranhan.viltrumitecore.client.ironman.mark.MarkVisuals.addLayers(renderer);
+            dev.baranhan.viltrumitecore.client.ironman.mark.sig.SignatureVisuals.addLayers(renderer);
          }
       }
    }
