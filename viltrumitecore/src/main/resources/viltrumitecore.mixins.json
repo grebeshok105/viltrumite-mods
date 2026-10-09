@@ -15,6 +15,7 @@
     "GrabbedEntityPhysicsMixin",
     "LivingEntityGrabFailsafeMixin",
     "LivingEntityHeroDamageMixin",
+    "LivingEntityHurtAccessor",
     "LivingEntityMixin",
     "LivingEntityStatsMixin",
     "MowziesRepelBypassMixin",

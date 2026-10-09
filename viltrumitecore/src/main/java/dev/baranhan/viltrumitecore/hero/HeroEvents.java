@@ -238,6 +238,30 @@ public final class HeroEvents {
       }
    }
 
+   /** Damage layers, step 1: absorbIncoming before armor and knockback (HeroDamageLayers). */
+   @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
+   public static void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0.0F && HeroDamageLayers.onAttack(player, event.getSource(), event.getAmount())) {
+         event.setCanceled(true);
+      }
+   }
+
+   /** Damage layers: partial absorb of this hit and the hero attacker's outgoing hook. */
+   @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
+   public static void onLivingHurtLayers(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+      if (!event.getEntity().level().isClientSide() && event.getAmount() > 0.0F) {
+         event.setAmount(HeroDamageLayers.onHurt(event.getEntity(), event.getSource(), event.getAmount()));
+      }
+   }
+
+   /** Damage layers, last step: clampFinalDamage after armor, enchantments and Resistance. */
+   @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+   public static void onLivingDamage(net.minecraftforge.event.entity.living.LivingDamageEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0.0F) {
+         event.setAmount(HeroDamageLayers.onDamage(player, event.getSource(), event.getAmount()));
+      }
+   }
+
    /** Damage hook for every hero (HeroDefinition.onHurt). */
    @SubscribeEvent
    public static void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {

@@ -120,6 +120,26 @@ public interface HeroDefinition {
    default void onHurt(ServerPlayer player, net.minecraft.world.damagesource.DamageSource source, float amount) {
    }
 
+   /**
+    * Server, LivingAttackEvent (before armor, knockback, hurt animation): this
+    * hero's own damage layers in the fixed order shield → Hulkbuster → mark
+    * (see {@link HeroDamageLayers}). {@link DamageAbsorb#ABSORBED} cancels the
+    * whole hit. Also runs once for the direct path (control payouts).
+    */
+   default DamageAbsorb absorbIncoming(ServerPlayer self, net.minecraft.world.damagesource.DamageSource source, float raw) {
+      return DamageAbsorb.PASS;
+   }
+
+   /** Server, LivingDamageEvent (after armor/enchantments/Resistance): final HP loss, e.g. HP floors. */
+   default float clampFinalDamage(ServerPlayer self, net.minecraft.world.damagesource.DamageSource source, float afterArmor) {
+      return afterArmor;
+   }
+
+   /** Server, LivingHurtEvent: damage this hero deals to {@code target} (multipliers). */
+   default float modifyOutgoingDamage(ServerPlayer attacker, LivingEntity target, net.minecraft.world.damagesource.DamageSource source, float amount) {
+      return amount;
+   }
+
    /** Server: the player changed dimension (no full cleanup; stop channels if needed). */
    default void onDimensionChange(ServerPlayer player) {
    }

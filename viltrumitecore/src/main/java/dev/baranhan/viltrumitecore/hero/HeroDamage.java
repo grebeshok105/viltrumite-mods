@@ -189,6 +189,12 @@ public final class HeroDamage {
          return;
       }
 
+      // No Forge damage event fires on this path: run the hero layers here, once.
+      amount = HeroDamageLayers.onClean(target, source, amount);
+      if (amount <= 0.0F) {
+         return;
+      }
+
       float newHealth = target.getHealth() - amount;
       if (newHealth <= 0.0F) {
          if (target instanceof ServerPlayer player && tryHeroTotem(player, source)) {
