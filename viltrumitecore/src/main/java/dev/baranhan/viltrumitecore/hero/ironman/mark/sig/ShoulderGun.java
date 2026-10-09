@@ -14,6 +14,16 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class ShoulderGun implements MarkSignature {
    @Override
+   public boolean onRmb() {
+      return true;
+   }
+
+   @Override
+   public boolean held() {
+      return true;
+   }
+
+   @Override
    public void press(ServerPlayer player, IronManState state) {
       if (state.energy.weaponsLocked() || state.energy.value() < SignatureRules.GUN_COST_PER_TICK) {
          SignatureTrace.sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F, 1.0F);

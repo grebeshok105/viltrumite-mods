@@ -12,6 +12,16 @@ import net.minecraft.world.item.Items;
 /** MARK_7: micro-lasers from the forearms: thin precise RMB beam, one target, breaks shields (spec §13.2). */
 public final class MicroLaser implements MarkSignature {
    @Override
+   public boolean onRmb() {
+      return true;
+   }
+
+   @Override
+   public boolean held() {
+      return true;
+   }
+
+   @Override
    public void press(ServerPlayer player, IronManState state) {
       if (state.energy.weaponsLocked() || state.energy.empty()) {
          SignatureTrace.sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F, 1.0F);
