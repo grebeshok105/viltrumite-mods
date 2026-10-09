@@ -57,6 +57,25 @@ public final class IronManRules {
    public static final double RAM_KNOCKBACK = 1.5;
    public static final int RAM_REHIT_TICKS = 10;
 
+   // Landings and air strike (spec §8.6).
+   /** Airborne ticks before the next touchdown classifies again. */
+   public static final int LANDING_REARM_TICKS = 5;
+   /** Equivalent fall (blocks) from which a flight touchdown is HEAVY. */
+   public static final float HEAVY_FALL = 8.0F;
+   /** Kneel pose flag duration after a heavy landing / air strike. */
+   public static final int HEAVY_POSE_TICKS = 20;
+   public static final dev.baranhan.viltrumitecore.hero.HeroShockwave.Landing HEAVY_LANDING =
+      new dev.baranhan.viltrumitecore.hero.HeroShockwave.Landing(HEAVY_FALL, 24.0F, 3.0, 6.0, 3.0F, 8.0F);
+   public static final float AIR_STRIKE_PITCH = 35.0F;
+   public static final double AIR_STRIKE_ARM_DIST = 8.0;
+   public static final int AIR_STRIKE_ARM_TICKS = 30;
+   /** Air strike shockwave: always full power (fall passed = fullPowerFall). */
+   public static final dev.baranhan.viltrumitecore.hero.HeroShockwave.Landing AIR_STRIKE_LANDING =
+      new dev.baranhan.viltrumitecore.hero.HeroShockwave.Landing(0.0F, 16.0F, 5.0, 8.0, 8.0F, 14.0F);
+   public static final dev.baranhan.viltrumitecore.hero.HeroDebris.Eruption AIR_STRIKE_CRATER =
+      new dev.baranhan.viltrumitecore.hero.HeroDebris.Eruption(3.0, 2.0, 0.0, 24, 1.1, 1.0);
+   public static final float AIR_STRIKE_DEBRIS_DAMAGE = 4.0F;
+
    // Flight profile (spec §7.2, §18). speedMul scales the player's synced max
    // flight speed (server config, default 9.0 → ~6 b/t): below Homelander on purpose.
    public static final float FLIGHT_SPEED_MUL = 0.67F;

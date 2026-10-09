@@ -14,6 +14,13 @@ public final class IronManState {
    public final Energy energy = new Energy();
    /** Energy hit 0 in flight: glide profile (Task 9). */
    public boolean glide;
+   /** Transient: touchdown classification and air strike arming (Task 9). */
+   public final LandingTracker landing = new LandingTracker();
+   public final AirStrike airStrike = new AirStrike();
+   /** Transient: kneel-pose ticks left (HEAVY_LANDING flag). */
+   public int heavyPoseTicks;
+   /** Transient: game time of the last flight touchdown effect (no double effect with onLanded). */
+   public long landedAt = Long.MIN_VALUE;
    /** Transient: sonic-ram rehit timestamps per target (bounded). */
    public final java.util.Map<java.util.UUID, Long> ramHits = new dev.baranhan.viltrumitecore.hero.control.BoundedMap<>(64);
    /** Transient: ticks until the next fly-by punch may land. */
@@ -26,6 +33,10 @@ public final class IronManState {
 
    /** Pure part of HeroDefinition.cleanup (spec §16). */
    public void onCleanup(CleanupReason reason) {
+      this.landing.reset();
+      this.airStrike.consume();
+      this.heavyPoseTicks = 0;
+      this.ramHits.clear();
       switch (reason) {
          case DEATH -> {
             this.suit.clear();

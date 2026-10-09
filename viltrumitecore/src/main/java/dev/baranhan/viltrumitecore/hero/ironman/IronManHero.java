@@ -205,6 +205,42 @@ public class IronManHero implements HeroDefinition {
       return player instanceof dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer flightPlayer ? flightPlayer.getFlightState() : null;
    }
 
+   /**
+    * Flight energy per tick (spec §5.1, §5.3): HOVER/CRUISE drain, SONIC
+    * drains more, grounded regen (Energy.tick after its delay). At 0 the
+    * flight turns into a glide (no thrust, no drain) until the bar is back
+    * at WEAPONS_UNLOCK or the player lands.
+    */
+   static void flightEnergyTick(IronManState state, @javax.annotation.Nullable dev.baranhan.viltrumiteflight.util.FlightState flight) {
+      boolean flying = state.suit.worn() && flight != null && flight != dev.baranhan.viltrumiteflight.util.FlightState.NONE;
+      if (!flying) {
+         state.glide = false;
+      } else if (state.glide) {
+         if (state.energy.value() >= IronManRules.WEAPONS_UNLOCK) {
+            state.glide = false;
+         }
+      } else {
+         state.energy.drain(switch (flight) {
+            case SONIC -> IronManRules.DRAIN_SONIC;
+            case CRUISE -> IronManRules.DRAIN_CRUISE;
+            default -> IronManRules.DRAIN_HOVER;
+         });
+         state.glide = state.energy.empty();
+      }
+
+      state.energy.tick();
+   }
+
+   /** Fall without flight (e.g. after the suit's flight ended mid-air): real fall distance. */
+   @Override
+   public void onLanded(ServerPlayer player, float fallDistance) {
+      IronManState state = IronManState.of(player);
+      if (state != null && state.suit.armored() && fallDistance >= IronManRules.HEAVY_FALL
+         && player.level().getGameTime() - state.landedAt > 1L) {
+         IronManLandings.heavy(player, state, fallDistance);
+      }
+   }
+
    /** Nano punch on the ground (server-side melee). */
    @Override
    public float meleeDamageFactor(Player player) {
@@ -220,8 +256,21 @@ public class IronManHero implements HeroDefinition {
       }
 
       state.suit.tick();
-      state.energy.tick();
+      dev.baranhan.viltrumiteflight.util.FlightState flight = flightState(player);
+      flightEnergyTick(state, flight);
       syncArmor(player, state.suit.armored());
+      state.airStrike.tick();
+      if (state.heavyPoseTicks > 0) {
+         state.heavyPoseTicks--;
+      }
+
+      net.minecraft.world.phys.Vec3 velocity = FlyBy.velocityOf(player);
+      LandingKind kind = state.landing.tick(player.onGround(), velocity.length(), velocity.y, flight, state.airStrike.armed());
+      long now = player.level().getGameTime();
+      // onLanded (packet-time fall event) may already have played this touchdown.
+      if (kind != LandingKind.NONE && state.suit.armored() && now - state.landedAt > 1L) {
+         IronManLandings.land(player, state, kind, state.landing.impactSpeed());
+      }
       if (!state.suit.worn()) {
          // Suit off / wave: every held mouse action ends (spec §16).
          dev.baranhan.viltrumitecore.hero.HeldInputs.releaseAll(player);
@@ -242,7 +291,11 @@ public class IronManHero implements HeroDefinition {
          IronManState.ensure(player).suit.toggle();
       } else if (action == HeroAction.PRIMARY_ATTACK && pressed && this.canAct(player, action)) {
          IronManState state = IronManState.ensure(player);
-         if (state.flyByCooldown <= 0) {
+         dev.baranhan.viltrumiteflight.util.FlightState flight = flightState(player);
+         if (AirStrike.canArm(flight, player.getXRot(), IronManLandings.groundAhead(player))) {
+            // This LMB arms the air strike instead of a fly-by (spec §8.6).
+            state.airStrike.arm();
+         } else if (state.flyByCooldown <= 0) {
             state.flyByCooldown = IronManRules.FLYBY_COOLDOWN;
             FlyBy.hit(player);
          }
@@ -268,6 +321,7 @@ public class IronManHero implements HeroDefinition {
       flags = IronManFlags.set(flags, IronManFlags.Field.DEPLOYING, suit.state() == SuitState.DEPLOYING);
       flags = IronManFlags.set(flags, IronManFlags.Field.RETRACTING, suit.state() == SuitState.RETRACTING);
       flags = IronManFlags.set(flags, IronManFlags.Field.GLIDE, state.glide);
+      flags = IronManFlags.set(flags, IronManFlags.Field.HEAVY_LANDING, state.heavyPoseTicks > 0);
       boolean wave = suit.transitioning();
       return new HeroPublicSnapshot(HeroId.IRON_MAN, wave ? HeroAction.SUIT.ordinal() : -1, wave ? suit.ticks() : 0, wave ? suit.waveLength() : 0,
          0, false, 0, 0, false, false, 0, 0, -1, new int[HeroPublicSnapshot.COOLDOWN_COUNT], false,
