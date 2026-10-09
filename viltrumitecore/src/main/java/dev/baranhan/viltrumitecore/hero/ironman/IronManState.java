@@ -69,6 +69,20 @@ public final class IronManState {
    public int damagedZones;
    public int repairTicks;
 
+   // ---- Stage 3: helmet, JARVIS, scan, countermeasures ----
+   /** Persisted (NBT HelmetOpen). */
+   public final Helmet helmet = new Helmet();
+   /** Transient: JARVIS threat ids (nearest first), mirrored in the THREATS owner section. */
+   public final java.util.List<Integer> threats = new java.util.ArrayList<>();
+   public final dev.baranhan.viltrumitecore.hero.ironman.scan.ScanProgress scan = new dev.baranhan.viltrumitecore.hero.ironman.scan.ScanProgress();
+   /** Cooldown carries over death (extraCooldowns[1]). */
+   public final Countermeasures countermeasures = new Countermeasures();
+
+   /** Missile marks need the JARVIS targeting: helmet closed (spec §10). */
+   public boolean canMarkTargets() {
+      return this.helmet.closed();
+   }
+
    /** Flight grant: only while fully worn. */
    public boolean wantsFlight() {
       return this.suit.worn();
@@ -81,6 +95,9 @@ public final class IronManState {
       this.heavyPoseTicks = 0;
       this.ramHits.clear();
       this.stopCombat();
+      this.scan.cancel();
+      this.threats.clear();
+      this.countermeasures.clearForget();
       switch (reason) {
          case DEATH -> {
             this.suit.clear();
@@ -100,6 +117,8 @@ public final class IronManState {
             this.overdraft.cancel();
             this.overheat.resetByDeath();
             this.suit.setNanoLock(0);
+            this.countermeasures.setCooldown(0);
+            this.helmet.reset();
          }
       }
    }
@@ -135,6 +154,7 @@ public final class IronManState {
    public static IronManState cloneForRespawn(IronManState original) {
       IronManState state = new IronManState();
       state.suit.setNanoLock(original.suit.nanoLockTicks());
+      state.countermeasures.setCooldown(original.countermeasures.cooldown());
       return state;
    }
 
@@ -143,6 +163,7 @@ public final class IronManState {
       this.suit.save(tag);
       this.energy.save(tag);
       this.overheat.save(tag);
+      this.helmet.save(tag);
       nbt.put(KEY, tag);
    }
 
@@ -151,6 +172,7 @@ public final class IronManState {
       this.suit.load(tag);
       this.energy.load(tag);
       this.overheat.load(tag);
+      this.helmet.load(tag);
       this.glide = false;
    }
 

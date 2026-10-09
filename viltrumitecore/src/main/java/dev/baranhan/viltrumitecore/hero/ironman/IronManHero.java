@@ -167,7 +167,7 @@ public class IronManHero implements HeroDefinition {
 
       return switch (action) {
          case SUIT -> true;
-         case SECONDARY_USE, TOOL_CYCLE, UNIBEAM, MISSILES, NANO_ARSENAL, GUARD -> {
+         case SECONDARY_USE, TOOL_CYCLE, UNIBEAM, MISSILES, NANO_ARSENAL, GUARD, HELMET, SCAN, COUNTERMEASURES -> {
             IronManState state = IronManState.of(player);
             yield state != null && state.suit.worn();
          }
@@ -338,6 +338,7 @@ public class IronManHero implements HeroDefinition {
       }
 
       IronManCombat.tick(player, state, controlled(player));
+      IronManJarvis.tick(player, state);
 
       if (state.flyByCooldown > 0) {
          state.flyByCooldown--;
@@ -410,6 +411,9 @@ public class IronManHero implements HeroDefinition {
          case MISSILES -> IronManCombat.missilesPress(player, state);
          case NANO_ARSENAL -> IronManCombat.arsenalPress(player, state);
          case GUARD -> IronManCombat.guardPress(player, state);
+         case HELMET -> IronManJarvis.helmetPress(player, state);
+         case SCAN -> IronManJarvis.scanPress(player, state);
+         case COUNTERMEASURES -> IronManJarvis.countermeasuresPress(player, state);
          default -> {
          }
       }
@@ -478,6 +482,7 @@ public class IronManHero implements HeroDefinition {
       IronManState state = IronManState.of(player);
       if (state != null) {
          IronManCombat.onHurt(player, state, amount);
+         IronManJarvis.onHurt(player, state, source);
       }
    }
 
@@ -517,6 +522,8 @@ public class IronManHero implements HeroDefinition {
       flags = IronManFlags.set(flags, IronManFlags.Field.RECOIL, state.recoilTicks > 0);
       flags = IronManFlags.set(flags, IronManFlags.Field.SHOT_HAND, state.recoilRight);
       flags = IronManFlags.set(flags, IronManFlags.Field.OVERDRAFT, state.overdraft.active());
+      flags = IronManFlags.set(flags, IronManFlags.Field.HELMET_CLOSED, suit.state() != SuitState.NONE && state.helmet.closed());
+      flags = IronManFlags.set(flags, IronManFlags.Field.SCAN_ACTIVE, state.scan.active());
       int actionId = -1;
       int elapsed = 0;
       int length = 0;
@@ -556,13 +563,65 @@ public class IronManHero implements HeroDefinition {
          actionId = HeroAction.NANO_ARSENAL.ordinal();
          elapsed = IronManRules.NANO_FORM_TICKS - Math.max(state.arsenal.formTicks(), state.arsenal.dissolveTicks());
          length = IronManRules.NANO_FORM_TICKS;
+      } else if (state.scan.active() && state.scan.targetId() >= 0) {
+         // Lowest priority: the scan reticle fill (spec §11.2).
+         actionId = HeroAction.SCAN.ordinal();
+         elapsed = state.scan.ticks();
+         length = IronManRules.SCAN_TICKS;
       }
 
-      int[] extra = suit.nanoLockTicks() > 0 ? new int[]{suit.nanoLockTicks()} : new int[0];
+      int[] extra = extraCooldowns(suit.nanoLockTicks(), state.countermeasures.cooldown());
+      // controlTargetId = the entity being scanned (reticle), -1 otherwise.
+      int scanTarget = state.scan.active() ? state.scan.targetId() : -1;
       return new HeroPublicSnapshot(HeroId.IRON_MAN, actionId, elapsed, length,
-         0, false, 0, 0, false, false, 0, 0, -1, new int[HeroPublicSnapshot.COOLDOWN_COUNT], false,
+         0, false, 0, 0, false, false, 0, 0, scanTarget, new int[HeroPublicSnapshot.COOLDOWN_COUNT], false,
          -1, state.unibeam.phase() == dev.baranhan.viltrumitecore.hero.ironman.combat.UnibeamTimeline.Phase.BEAM ? state.beamEnd : null,
          Math.round(state.energy.value() * 10.0F), state.energy.weaponsLocked(), flags, extra);
+   }
+
+   /** extraCooldowns: [0] nano lock, [1] countermeasures; empty when both are 0. */
+   static int[] extraCooldowns(int nanoLock, int countermeasures) {
+      if (countermeasures > 0) {
+         return new int[]{nanoLock, countermeasures};
+      }
+
+      return nanoLock > 0 ? new int[]{nanoLock} : new int[0];
+   }
+
+   /** Scan card hero part: only what the suit really does to damage (IronManCombat.absorb, nano armor attributes). */
+   @Override
+   public dev.baranhan.viltrumitecore.hero.ScanInfo scanInfo(Player self) {
+      IronManState state = IronManState.of(self);
+      return state == null ? dev.baranhan.viltrumitecore.hero.ScanInfo.EMPTY
+         : scanInfoFor(state.suit.armored(), state.shield.raised(), state.overheat.count(), state.energy.weaponsLocked(), state.helmet.closed());
+   }
+
+   static dev.baranhan.viltrumitecore.hero.ScanInfo scanInfoFor(boolean armored, boolean shieldUp, int overheats, boolean weaponsOffline, boolean helmetClosed) {
+      java.util.List<dev.baranhan.viltrumitecore.hero.ScanLine> protections = new java.util.ArrayList<>();
+      java.util.List<dev.baranhan.viltrumitecore.hero.ScanLine> conditions = new java.util.ArrayList<>();
+      if (armored) {
+         protections.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.ironman.nano_armor",
+            Math.round(IronManRules.NANO_ARMOR), Math.round(IronManRules.NANO_TOUGHNESS), Math.round(IronManRules.NANO_KNOCKBACK_RES * 100.0)));
+         protections.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.ironman.no_fall"));
+      }
+
+      if (shieldUp) {
+         protections.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.ironman.shield", Math.round(IronManRules.SHIELD_CONE_DEG)));
+      }
+
+      if (overheats > 0) {
+         conditions.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.ironman.overheats", overheats));
+      }
+
+      if (weaponsOffline) {
+         conditions.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.ironman.weapons_offline"));
+      }
+
+      if (armored && !helmetClosed) {
+         conditions.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.ironman.helmet_open"));
+      }
+
+      return new dev.baranhan.viltrumitecore.hero.ScanInfo(protections, java.util.List.of(), conditions);
    }
 
    @Override

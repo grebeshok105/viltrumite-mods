@@ -488,4 +488,20 @@ public class RegulusHero implements HeroDefinition {
       RegulusState state = stateOf(player);
       return state == null ? null : state.channelTargetId;
    }
+
+   /** Scan: Lion's Heart blocks every external hit (the same state HeroDamage.decide reads). */
+   @Override
+   public dev.baranhan.viltrumitecore.hero.ScanInfo scanInfo(Player self) {
+      RegulusState state = stateOf(self);
+      return scanInfoFor(state != null && state.lionActive);
+   }
+
+   public static dev.baranhan.viltrumitecore.hero.ScanInfo scanInfoFor(boolean lionActive) {
+      if (!lionActive) {
+         return dev.baranhan.viltrumitecore.hero.ScanInfo.EMPTY;
+      }
+
+      return new dev.baranhan.viltrumitecore.hero.ScanInfo(java.util.List.of(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.regulus.lion_heart")),
+         java.util.List.of(), java.util.List.of());
+   }
 }

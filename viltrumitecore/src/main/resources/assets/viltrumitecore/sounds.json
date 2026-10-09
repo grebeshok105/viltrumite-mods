@@ -329,5 +329,87 @@
     "sounds": [
       "viltrumitecore:ironman/jarvis_warning"
     ]
+  },
+  "ironman_helmet_close": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_helmet_close",
+    "sounds": [
+      "viltrumitecore:ironman/helmet_close"
+    ]
+  },
+  "ironman_helmet_open": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_helmet_open",
+    "sounds": [
+      "viltrumitecore:ironman/helmet_open"
+    ]
+  },
+  "ironman_scan_loop": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_scan_loop",
+    "sounds": [
+      "viltrumitecore:ironman/scan_loop"
+    ]
+  },
+  "ironman_scan_complete": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_scan_complete",
+    "sounds": [
+      "viltrumitecore:ironman/scan_complete"
+    ]
+  },
+  "ironman_flare_launch": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_flare_launch",
+    "sounds": [
+      "viltrumitecore:ironman/flare_launch"
+    ]
+  },
+  "ironman_flare_burn": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_flare_burn",
+    "sounds": [
+      "viltrumitecore:ironman/flare_burn"
+    ]
+  },
+  "ironman_jarvis_detect": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_jarvis_detect",
+    "sounds": [
+      {
+        "name": "viltrumitecore:ironman/jarvis_detect",
+        "stream": true
+      }
+    ]
+  },
+  "ironman_jarvis_detect_excited": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_jarvis_detect_excited",
+    "sounds": [
+      {
+        "name": "viltrumitecore:ironman/jarvis_detect_excited",
+        "stream": true
+      }
+    ]
+  },
+  "ironman_jarvis_diagnostic": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_jarvis_diagnostic",
+    "sounds": [
+      {
+        "name": "viltrumitecore:ironman/jarvis_diagnostic",
+        "stream": true
+      }
+    ]
+  },
+  "ironman_jarvis_suit_preset": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_jarvis_suit_preset",
+    "sounds": [
+      {
+        "name": "viltrumitecore:ironman/jarvis_mark85_preset",
+        "stream": true
+      }
+    ]
   }
 }
