@@ -18,12 +18,13 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 /**
- * Suit HUD (spec §15, Stage 1 without the helmet system): left — energy bar
+ * Suit HUD (spec §15): left — energy bar
  * (cyan, amber below 30, red blinking at 0, "gliding" label) and three
  * overheat pips (Unibeam overheat counter, red on the last), the overheat
  * lock bar, the overdraft warning and "weapons offline"; in flight — speed and altitude below
  * (the right edge belongs to the ability panel).
- * Hidden while the suit is off.
+ * Hidden while the suit is off. Stage 3: with the helmet open only the energy
+ * bar (+ weapons offline / gliding) stays; the JARVIS rows need the closed helmet.
  */
 @EventBusSubscriber(
    modid = "viltrumitecore",
@@ -90,6 +91,21 @@ public final class IronManHud {
       graphics.fill(mark, barY - 1, mark + 1, barY + HEIGHT + 1, 0xC0FFFFFF);
       String value = Math.round(energy) + "%";
       graphics.drawString(font, value, x + WIDTH + 4, barY - 2, color & 0xFFFFFF, true);
+      // Stage 3 (spec §15.2): without the closed helmet only energy, durability and the panel.
+      if (!HelmetAnim.closedFlag(snapshot)) {
+         int bareY = barY + HEIGHT + 4;
+         if (snapshot.resourceLocked()) {
+            graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.weapons_offline"), x, bareY, blink ? 0xFF4030 : 0x903020, true);
+            bareY += 10;
+         }
+
+         if (IronManView.glide(snapshot)) {
+            graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.glide"), x, bareY, blink ? 0xFFB020 : 0xFF6030, true);
+         }
+
+         return;
+      }
+
       // Overheat pips: Unibeam overheats so far (spec §9.1); the third one is the overdraft.
       int pipY = barY + HEIGHT + 4;
       int overheats = IronManView.flag(snapshot, IronManFlags.Field.OVERHEAT_COUNT);

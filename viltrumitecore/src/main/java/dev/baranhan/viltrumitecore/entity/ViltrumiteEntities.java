@@ -27,6 +27,11 @@ public class ViltrumiteEntities {
       () -> Builder.<MicroMissileEntity>of(MicroMissileEntity::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(10).updateInterval(1).fireImmune().noSave().build("micro_missile")
    );
 
+   public static final RegistryObject<EntityType<FlareEntity>> FLARE = ENTITIES.register(
+      "flare",
+      () -> Builder.<FlareEntity>of(FlareEntity::new, MobCategory.MISC).sized(0.2F, 0.2F).clientTrackingRange(8).updateInterval(1).fireImmune().noSave().build("flare")
+   );
+
    public static void register(IEventBus eventBus) {
       ENTITIES.register(eventBus);
    }

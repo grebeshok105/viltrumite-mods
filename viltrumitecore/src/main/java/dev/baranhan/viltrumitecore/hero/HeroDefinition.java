@@ -119,6 +119,20 @@ public interface HeroDefinition {
       return false;
    }
 
+   /**
+    * Descriptive protections / weak spots / conditions of this hero right now
+    * for analysis (Iron Man scan). Must mirror the real damage code; never
+    * invent. Server side. Default: nothing known.
+    */
+   default ScanInfo scanInfo(Player self) {
+      return ScanInfo.EMPTY;
+   }
+
+   /** Hidden from scans and focus (reserved for the Mark 15 camo, Iron Man stage 4). */
+   default boolean hiddenFromScan(Player self) {
+      return false;
+   }
+
    /** A claimed press was refused by canAct (feedback only, e.g. a locked message). */
    default void onInputRefused(ServerPlayer player, HeroAction action) {
    }

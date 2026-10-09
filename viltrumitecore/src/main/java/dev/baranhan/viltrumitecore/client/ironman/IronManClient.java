@@ -56,6 +56,7 @@ public final class IronManClient {
          }
       });
       PlayerGeoLayer.register(new IronManPartsProvider());
+      dev.baranhan.viltrumitecore.client.render.vfx.OutlineTargets.register(ScanHighlight::colorOf);
       PanelStyles.register(HeroId.IRON_MAN, new IronManPanelStyle());
    }
 }

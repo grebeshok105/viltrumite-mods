@@ -46,8 +46,10 @@ Default hooks (override only when needed):
 | `onInputRefused(ServerPlayer, HeroAction)` | nothing; feedback when a claimed press fails `canAct` |
 | `guardAction(Player)` | null = vanilla swap-hands key (F); non-null: client consumes the key, edges go through `HeldInputs` as `MouseButton.GUARD`; both sides |
 | `blocksHandSwap(Player)` | false; server cancels `LivingSwapItemsEvent.Hands` (also forged packets) |
+| `scanInfo(Player)` | `ScanInfo.EMPTY`; server-side extra lines for the Iron Man scan card (`protections` / `weakSpots` / `conditions` as translatable `ScanLine`s). Read by scanners on the server only; never send secrets the player could not see |
+| `hiddenFromScan(Player)` | false; true = the scan skips this player (no progress, no card) |
 
-Snapshots: `HeroPublicSnapshot.extraCooldowns` (max `EXTRA_COOLDOWN_MAX`, per-hero meaning; Iron Man index 0 = nano-lost lock ticks). Owner-only data: `HeroRegistry.pushOwnerSection(player, OwnerSection, Section)` replaces one typed section (`CARRIERS`, `THREATS`, `MARKS`, `SCAN`; enum is append-only, wire = ordinal); client reads `ClientHeroData.section(...)`.
+Snapshots: `HeroPublicSnapshot.extraCooldowns` (max `EXTRA_COOLDOWN_MAX`, per-hero meaning; Iron Man index 0 = nano-lost lock ticks, 1 = countermeasures cooldown). Owner-only data: `HeroRegistry.pushOwnerSection(player, OwnerSection, Section)` replaces one typed section (`CARRIERS`, `THREATS`, `MARKS`, `SCAN`; enum is append-only, wire = ordinal); client reads `ClientHeroData.section(...)`.
 
 New behaviour that shared code must ask about → add a new default hook here. Do not branch on `HeroId` in shared code.
 

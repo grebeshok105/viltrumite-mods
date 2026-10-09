@@ -25,6 +25,7 @@ public class ClientModEvents {
       // Iron Man projectiles are drawn as pixels by IronManCombatVfx.
       event.registerEntityRenderer(ViltrumiteEntities.REPULSOR_BLAST.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
       event.registerEntityRenderer(ViltrumiteEntities.MICRO_MISSILE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+      event.registerEntityRenderer(ViltrumiteEntities.FLARE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
    }
 
    @SubscribeEvent

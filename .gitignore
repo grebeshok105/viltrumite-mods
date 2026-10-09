@@ -15,4 +15,4 @@ build-tmp/
 .classpath
 .project
 .settings/
-bin/
+bin/__pycache__/

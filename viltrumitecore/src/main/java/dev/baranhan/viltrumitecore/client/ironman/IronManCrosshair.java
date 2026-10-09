@@ -63,7 +63,8 @@ public final class IronManCrosshair {
       }
 
       HeroPublicSnapshot snapshot = IronManView.of(player);
-      if (snapshot == null || !IronManView.worn(snapshot)) {
+      // Stage 3: the tool crosshair is part of the helmet display; open helmet → vanilla crosshair.
+      if (snapshot == null || !IronManView.worn(snapshot) || !HelmetAnim.closedFlag(snapshot)) {
          return;
       }
 

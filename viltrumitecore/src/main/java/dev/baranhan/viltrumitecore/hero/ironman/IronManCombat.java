@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -210,10 +209,7 @@ final class IronManCombat {
 
       state.overheat.add();
       sound(player, IronManCombatSounds.UNIBEAM_OVERHEAT.get(), 1.0F);
-      if (state.overheat.warn()) {
-         sound(player, IronManCombatSounds.JARVIS_WARNING.get(), 1.0F);
-         player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.overheat_warning"), true);
-      }
+      // The second-overheat warning is a JARVIS line on the owner's client (helmet closed, JarvisVoice).
    }
 
    static void unibeamTick(ServerPlayer player, IronManState state) {
@@ -226,8 +222,8 @@ final class IronManCombat {
                state.beamDir = player.getLookAngle();
                flash(player, overdraft ? 0.35F : 0.18F, IronManRules.FLASH_OWNER_TICKS);
                if (overdraft) {
+                  // JARVIS line on the owner's client (JarvisVoice); the HUD shows it always.
                   state.overdraft.start();
-                  player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.overdraft"), true);
                }
             } else {
                state.unibeam.refuse();
@@ -247,8 +243,6 @@ final class IronManCombat {
       Overdraft.Event core = state.overdraft.tick();
       if (core == Overdraft.Event.SPUTTER) {
          sound(player, IronManCombatSounds.OVERDRAFT_SPUTTER.get(), 1.0F);
-         sound(player, IronManCombatSounds.JARVIS_WARNING.get(), 1.2F);
-         player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.overdraft_critical"), true);
       } else if (core == Overdraft.Event.EXPLODE) {
          coreExplosion(player, state);
       }
@@ -396,7 +390,8 @@ final class IronManCombat {
          }
       }
 
-      if (state.missiles.flapsOpen()) {
+      // Spec §10: marks need the JARVIS targeting (helmet closed), also against forged input.
+      if (state.missiles.flapsOpen() && state.canMarkTargets()) {
          Vec3 eye = player.getEyePosition();
          Vec3 look = player.getLookAngle();
          double range = IronManRules.MISSILE_LOCK_RANGE;
@@ -430,6 +425,14 @@ final class IronManCombat {
 
       ServerLevel level = player.serverLevel();
       List<Integer> targets = volley.targets();
+      if (targets.isEmpty()) {
+         // Spec §11.1: JARVIS auto-lock on the nearest threat (helmet closed, missiles only).
+         Integer auto = IronManJarvis.autoLock(player, state);
+         if (auto != null) {
+            targets = List.of(auto);
+         }
+      }
+
       int count = MissileLock.missileCount(targets.size());
       Vec3 look = player.getLookAngle();
       Vec3 right = right(look);

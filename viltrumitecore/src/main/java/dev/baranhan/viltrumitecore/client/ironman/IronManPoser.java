@@ -46,16 +46,20 @@ public final class IronManPoser {
       }
 
       float partialTick = minecraft.getFrameTime();
-      if (IronManView.helmet(IronManView.frame(snapshot, partialTick))) {
+      if (IronManView.helmet(IronManPartsProvider.helmetFrame(entity, snapshot, partialTick))) {
          model.hat.visible = false;
       }
+
+      // Stage 3: hand to the face while the helmet folds / unfolds (spec §10).
+      float toggle = HelmetAnim.toggleProgress(entity);
+      float gesture = toggle < 0.0F ? 0.0F : Mth.sin(toggle * Mth.PI);
 
       ThrusterFlames.Mode mode = entity instanceof AbstractClientPlayer player ? ThrusterFlames.mode(player, snapshot) : ThrusterFlames.Mode.NONE;
       Weights w = WEIGHTS.computeIfAbsent(entity, e -> new Weights());
       w.advance(mode == ThrusterFlames.Mode.HOVER, IronManView.glide(snapshot) && !entity.onGround(), IronManView.heavyLanding(snapshot), 12.0F);
       Combat combat = Combat.of(snapshot, partialTick);
       w.advanceCombat(combat, 18.0F);
-      if (w.hover < 0.001F && w.glide < 0.001F && w.kneel < 0.001F && w.combatIdle()) {
+      if (w.hover < 0.001F && w.glide < 0.001F && w.kneel < 0.001F && w.combatIdle() && gesture < 0.001F) {
          return;
       }
 
@@ -73,6 +77,9 @@ public final class IronManPoser {
       }
 
       combat(model, w, combat, time);
+      if (gesture > 0.001F) {
+         rotate(model.leftArm, gesture, -2.2F + model.head.xRot, 0.35F + model.head.yRot * 0.5F, 0.15F);
+      }
 
       model.hat.copyFrom(model.head);
       model.jacket.copyFrom(model.body);

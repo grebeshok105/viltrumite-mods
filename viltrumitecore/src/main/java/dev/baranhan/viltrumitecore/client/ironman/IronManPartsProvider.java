@@ -22,7 +22,8 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
          return;
       }
 
-      int frame = IronManView.frame(snapshot, partialTick);
+      // Stage 3: an open helmet folds the mask back along the head (HelmetAnim), Tony's face shows.
+      int frame = helmetFrame(player, snapshot, partialTick);
       if (!firstPerson && IronManView.helmet(frame)) {
          ResourceLocation cut = IronManSuitTextures.INSTANCE.cut(frame);
          if (cut != null) {
@@ -49,5 +50,10 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
 
       ThrusterFlames.collect(player, snapshot, partialTick, firstPerson, out);
       IronManCombatParts.collect(player, snapshot, partialTick, firstPerson, out);
+   }
+
+   /** Reveal frame of the helmet part: the suit wave frame, capped by the helmet fold. */
+   public static int helmetFrame(net.minecraft.world.entity.Entity player, HeroPublicSnapshot snapshot, float partialTick) {
+      return Math.min(IronManView.frame(snapshot, partialTick), HelmetAnim.frame(HelmetAnim.progress(player, snapshot, partialTick)));
    }
 }

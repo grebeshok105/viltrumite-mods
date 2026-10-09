@@ -36,7 +36,7 @@ import org.joml.Matrix4f;
 /**
  * Focus on the owner's client (spec §6.4): target ids come owner-only through
  * ClientHeroData; colours stick per target. Outlines use the vanilla glowing
- * path (HomelanderGlowMixin / HomelanderTeamColorMixin), plus HP labels,
+ * path (client/render/vfx/OutlineTargets), plus HP labels,
  * a warm vignette and muffling of every sound that is not a target's.
  */
 @EventBusSubscriber(

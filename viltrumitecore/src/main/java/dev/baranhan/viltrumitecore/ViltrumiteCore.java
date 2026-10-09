@@ -103,6 +103,7 @@ public class ViltrumiteCore {
       IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
       ViltrumiteCoreConfig.load();
       dev.baranhan.viltrumitecore.hero.ironman.IronManCombatSounds.init();
+      dev.baranhan.viltrumitecore.hero.ironman.IronManJarvisSounds.init();
       SOUND_EVENTS.register(modEventBus);
       modEventBus.addListener(this::commonSetup);
       MinecraftForge.EVENT_BUS.addListener(this::onCommandRegister);

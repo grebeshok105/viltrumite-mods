@@ -14,14 +14,21 @@ public final class IronManAbilities {
    public static final String UNIBEAM = "ironman:unibeam";
    public static final String MISSILES = "ironman:missiles";
    public static final String NANO_ARSENAL = "ironman:nano_arsenal";
+   public static final String SCAN = "ironman:scan";
+   public static final String COUNTERMEASURES = "ironman:countermeasures";
+   public static final String HELMET = "ironman:helmet";
    /** Page 1 (slots 0-5): Unibeam, missiles, nano arsenal (spec §6.2). */
    public static final int UNIBEAM_SLOT = 0;
    public static final int MISSILES_SLOT = 1;
    public static final int NANO_ARSENAL_SLOT = 2;
    /** Page 2 (slots 6-11), index 4 = fifth key (B): Scan, Countermeasures, Veronica, Helmet, Suit, Legion reserve. */
+   public static final int SCAN_SLOT = 6;
+   public static final int COUNTERMEASURES_SLOT = 6 + 1;
+   /** 6 + 2 = Veronica (stage 4). */
+   public static final int HELMET_SLOT = 6 + 3;
    public static final int SUIT_SLOT = 6 + 4;
    /** Own slots in panel order. Later stages append. */
-   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, SUIT};
+   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, SUIT, SCAN, COUNTERMEASURES, HELMET};
 
    private IronManAbilities() {
    }
@@ -72,6 +79,9 @@ public final class IronManAbilities {
       loadout[UNIBEAM_SLOT] = UNIBEAM;
       loadout[MISSILES_SLOT] = MISSILES;
       loadout[NANO_ARSENAL_SLOT] = NANO_ARSENAL;
+      loadout[SCAN_SLOT] = SCAN;
+      loadout[COUNTERMEASURES_SLOT] = COUNTERMEASURES;
+      loadout[HELMET_SLOT] = HELMET;
       return loadout;
    }
 
@@ -86,6 +96,9 @@ public final class IronManAbilities {
          case UNIBEAM -> HeroAction.UNIBEAM;
          case MISSILES -> HeroAction.MISSILES;
          case NANO_ARSENAL -> HeroAction.NANO_ARSENAL;
+         case SCAN -> HeroAction.SCAN;
+         case COUNTERMEASURES -> HeroAction.COUNTERMEASURES;
+         case HELMET -> HeroAction.HELMET;
          default -> null;
       };
    }
@@ -111,6 +124,10 @@ public final class IronManAbilities {
          case SUIT -> snapshot.extraCooldown(0) > 0;
          case UNIBEAM -> !worn || snapshot.resourceLocked() || IronManFlags.is(flags, IronManFlags.Field.OVERHEAT_LOCK);
          case MISSILES, NANO_ARSENAL -> !worn || snapshot.resourceLocked();
+         // Scan needs the closed helmet (spec §10); flares: cooldown in extra [1], no energy.
+         case SCAN -> !worn || !IronManFlags.is(flags, IronManFlags.Field.HELMET_CLOSED);
+         case COUNTERMEASURES -> !worn || snapshot.extraCooldown(1) > 0;
+         case HELMET -> !worn;
          default -> false;
       };
    }
