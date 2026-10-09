@@ -102,6 +102,22 @@ public class PlayerGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerMode
       }
    }
 
+   /** One part alone on a first-person arm (Hulkbuster arm): the other providers stay out. */
+   public static void renderArmPart(PoseStack poseStack, MultiBufferSource buffers, int light, PlayerModel<AbstractClientPlayer> model, ModelPart arm,
+      Part part) {
+      PlayerBoneMap.Part side = arm == model.rightArm ? PlayerBoneMap.Part.RIGHT_ARM : arm == model.leftArm ? PlayerBoneMap.Part.LEFT_ARM : null;
+      BakedGeoModel geo = side == null ? null : model(part);
+      if (geo == null) {
+         return;
+      }
+
+      for (GeoBone bone : geo.topLevelBones()) {
+         if (map(part, bone) == side) {
+            draw(poseStack, buffers, arm, side, bone, part, light, OverlayTexture.NO_OVERLAY);
+         }
+      }
+   }
+
    private static List<Part> collect(AbstractClientPlayer player, float partialTick, boolean firstPerson) {
       List<Part> parts = new ArrayList<>(4);
       for (Provider provider : PROVIDERS) {

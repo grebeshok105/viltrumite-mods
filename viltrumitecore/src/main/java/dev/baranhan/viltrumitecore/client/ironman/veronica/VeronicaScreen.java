@@ -3,6 +3,7 @@ package dev.baranhan.viltrumitecore.client.ironman.veronica;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import dev.baranhan.viltrumitecore.client.ironman.hulkbuster.HulkbusterPreview;
 import dev.baranhan.viltrumitecore.client.ironman.mark.MarkTextures;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkLocation;
@@ -19,7 +20,9 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.model.geom.ModelLayers;
+import java.util.List;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
 /**
@@ -114,13 +117,12 @@ public final class VeronicaScreen extends Screen {
       int x = cardX(index);
       int y = cardY(index);
       boolean hulk = index == MARKS.length;
-      boolean ok = !hulk && choosable(index);
+      boolean ok = hulk ? this.view.hulkbuster() == 0 : choosable(index);
       boolean hover = ok && mouseX >= x && mouseX < x + CARD_W && mouseY >= y && mouseY < y + CARD_H;
       graphics.fill(x, y, x + CARD_W, y + CARD_H, ok ? (hover ? 0x9028608A : CELL) : LOCKED);
       graphics.fill(x, y, x + CARD_W, y + 1, ok ? EDGE : 0x40406070);
       if (hulk) {
-         graphics.drawCenteredString(this.font, Component.translatable("gui.viltrumitecore.veronica.hulkbuster"), x + CARD_W / 2, y + 40, DIM);
-         graphics.drawCenteredString(this.font, Component.translatable("gui.viltrumitecore.veronica.hulkbuster_soon"), x + CARD_W / 2, y + 56, DIM);
+         renderHulkCard(graphics, x, y, time);
          return;
       }
 
@@ -182,6 +184,53 @@ public final class VeronicaScreen extends Screen {
       pose.popPose();
    }
 
+   /** Hulkbuster card (spec §12.3, §14.1): turning Mark 48, name, description fitted to the card, synced state. */
+   private void renderHulkCard(GuiGraphics graphics, int x, int y, float time) {
+      int state = this.view.hulkbuster();
+      boolean on = state == VeronicaView.HULKBUSTER_ON;
+      boolean ready = state == 0;
+      PoseStack pose = graphics.pose();
+      pose.pushPose();
+      pose.translate(x + CARD_W / 2.0F, y + 40.0F, 100.0F);
+      MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
+      HulkbusterPreview.draw(pose, buffers, time * 40.0F, ready || on ? 1.0F : 0.45F);
+      buffers.endBatch();
+      pose.popPose();
+      drawFitted(graphics, Component.translatable("gui.viltrumitecore.veronica.hulkbuster"), x + CARD_W / 2, y + 44, ready || on ? ACCENT : DIM);
+      drawWrapped(graphics, Component.translatable("gui.viltrumitecore.veronica.hulkbuster_desc"), x + 4, y + 53, 26, DIM);
+      if (state > 0) {
+         graphics.fill(x, y, x + CARD_W, y + CARD_H, 0xA0000810);
+         long seconds = (state + 19) / 20;
+         graphics.drawCenteredString(this.font, Component.translatable("gui.viltrumitecore.veronica.cooldown", seconds), x + CARD_W / 2, y + CARD_H / 2 - 4, RED);
+         return;
+      }
+
+      Component status = on ? Component.translatable("gui.viltrumitecore.veronica.hulkbuster_on")
+         : ready ? Component.translatable("gui.viltrumitecore.veronica.choose") : Component.translatable("gui.viltrumitecore.veronica.unavailable");
+      graphics.drawCenteredString(this.font, status, x + CARD_W / 2, y + 81, on ? AMBER : ready ? ACCENT : DIM);
+   }
+
+   /** Wrapped text shrunk until its lines fit the box (the description length depends on the language). */
+   private void drawWrapped(GuiGraphics graphics, Component text, int left, int top, int height, int color) {
+      int width = CARD_W - 8;
+      float scale = 0.8F;
+      List<FormattedCharSequence> lines = this.font.split(text, Math.round(width / scale));
+      while (scale > 0.5F && lines.size() * this.font.lineHeight * scale > height) {
+         scale -= 0.05F;
+         lines = this.font.split(text, Math.round(width / scale));
+      }
+
+      PoseStack pose = graphics.pose();
+      pose.pushPose();
+      pose.translate(left, top, 0.0F);
+      pose.scale(scale, scale, 1.0F);
+      for (int i = 0; i < lines.size(); i++) {
+         graphics.drawString(this.font, lines.get(i), 0, i * this.font.lineHeight, color, false);
+      }
+
+      pose.popPose();
+   }
+
    /** Turning preview of the player model in the mark skin (rest pose, arms slightly out). */
    private void drawPreview(GuiGraphics graphics, MarkId mark, int cx, int cy, float yaw, boolean active) {
       PoseStack pose = graphics.pose();
@@ -210,6 +259,14 @@ public final class VeronicaScreen extends Screen {
                this.onClose();
                return true;
             }
+         }
+
+         int hx = cardX(MARKS.length);
+         int hy = cardY(MARKS.length);
+         if (mouseX >= hx && mouseX < hx + CARD_W && mouseY >= hy && mouseY < hy + CARD_H && this.view.hulkbuster() == 0) {
+            CoreMessages.sendToServer(new VeronicaChooseC2SPacket(VeronicaView.HULKBUSTER));
+            this.onClose();
+            return true;
          }
       }
 
