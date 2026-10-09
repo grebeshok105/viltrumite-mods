@@ -38,6 +38,7 @@ public final class HeroRegistry {
             && player.getAbilities().mayfly
             && (!(player.level() instanceof ServerLevel level) || !ControlManager.get(level).preventsFlight(player))
       );
+      dev.baranhan.viltrumiteflight.util.FlightProfiles.setResolver(player -> get(player).flightProfile(player));
    }
 
    public static void register(HeroDefinition definition) {

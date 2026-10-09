@@ -238,7 +238,10 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
       if (currentState != FlightState.NONE) {
          this.setSprinting(false);
          float throttleBeforeTick = this.getFlightThrottle();
-         if (!this.isSpeedLocked()) {
+         dev.baranhan.viltrumiteflight.util.FlightProfile profile = dev.baranhan.viltrumiteflight.util.FlightProfiles.of((Player)(Object)this);
+         if (profile != null) {
+            this.viltrumiteflight$profileThrottle(profile, currentState);
+         } else if (!this.isSpeedLocked()) {
             float throttleSpeed = this.getThrottleSpeed();
             if (this.isFlightAccelerating()) {
                this.setFlightThrottle(Math.min(1.0F, this.getFlightThrottle() + throttleSpeed));
@@ -287,7 +290,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
                );
          }
 
-         if (currentState == FlightState.CRUISE || currentState == FlightState.SONIC) {
+         if (profile != null) {
+            this.viltrumiteflight$profileMotion(profile, currentState);
+         } else if (currentState == FlightState.CRUISE || currentState == FlightState.SONIC) {
             this.setDeltaMovement(dev.baranhan.viltrumiteflight.util.FlightMotion.legacyVelocity(this.getLookAngle(), this.getFlightThrottle(), this.getMaxFlightSpeed()));
          }
 
@@ -317,6 +322,50 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
          }
       } else if (this.getFlightTicks() > 0) {
          this.setFlightTicks(Math.max(0, this.getFlightTicks() - 2));
+      }
+   }
+
+   /**
+    * Profile throttle: same thrust rules on both sides (server for state, SONIC
+    * and drain; the local client for its own prediction). The Shift lock caps
+    * below sonic and glide beats the lock (FlightMotion.throttle).
+    */
+   @Unique
+   private void viltrumiteflight$profileThrottle(dev.baranhan.viltrumiteflight.util.FlightProfile profile, FlightState currentState) {
+      boolean ctrl = this.isFlightAccelerating();
+      boolean locked = this.isSpeedLocked();
+      this.setFlightThrottle(dev.baranhan.viltrumiteflight.util.FlightMotion.throttle(this.getFlightThrottle(), ctrl, locked, profile));
+      if (this.level().isClientSide() && this.isClientLocalPlayer()) {
+         this.clientLocalThrottle = dev.baranhan.viltrumiteflight.util.FlightMotion.throttle(this.clientLocalThrottle, ctrl, locked, profile);
+         if (this.getFlightThrottle() != 0.0F
+            && (!this.onGround() && !this.horizontalCollision || currentState != FlightState.CRUISE && currentState != FlightState.SONIC)) {
+            if (Math.abs(this.clientLocalThrottle - this.getFlightThrottle()) > 0.2F) {
+               this.clientLocalThrottle = this.getFlightThrottle();
+            }
+         } else {
+            this.clientLocalThrottle = 0.0F;
+            this.prevClientLocalThrottle = 0.0F;
+         }
+      }
+   }
+
+   /**
+    * Profile motion. Movement of the local player is computed on its client
+    * (the server does not own a player's velocity), so inertia, turn radius,
+    * hover damping and glide run on the local client; the server keeps the
+    * same CRUISE/SONIC velocity for its own reads (ram, fly-by).
+    */
+   @Unique
+   private void viltrumiteflight$profileMotion(dev.baranhan.viltrumiteflight.util.FlightProfile profile, FlightState currentState) {
+      boolean local = this.level().isClientSide() && this.isClientLocalPlayer();
+      if (currentState == FlightState.CRUISE || currentState == FlightState.SONIC) {
+         if (!this.level().isClientSide() || local) {
+            this.setDeltaMovement(dev.baranhan.viltrumiteflight.util.FlightMotion.velocity(
+               this.getDeltaMovement(), this.getLookAngle(), this.getFlightThrottle(), this.getMaxFlightSpeed(), profile));
+         }
+      } else if (currentState == FlightState.HOVER && local) {
+         Vec3 input = new Vec3(this.getHoverSideways(), this.jumping ? 1.0 : (this.isShiftKeyDown() ? -1.0 : 0.0), this.getHoverForward());
+         this.setDeltaMovement(dev.baranhan.viltrumiteflight.util.FlightMotion.hover(this.getDeltaMovement(), input, profile));
       }
    }
 

@@ -24,6 +24,15 @@ public interface HeroDefinition {
       return false;
    }
 
+   /**
+    * Flight tuning for this player, or null for the original flight. Read on
+    * BOTH sides from synced data (installed as the FlightProfiles resolver).
+    */
+   @javax.annotation.Nullable
+   default dev.baranhan.viltrumiteflight.util.FlightProfile flightProfile(Player player) {
+      return null;
+   }
+
    /** Whether this hero may use the legacy viltrumite ability kit and stats. */
    boolean allowsLegacyAbilities(Player player);
 

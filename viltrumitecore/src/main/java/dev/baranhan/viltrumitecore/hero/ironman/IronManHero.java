@@ -52,6 +52,35 @@ public class IronManHero implements HeroDefinition {
       return state != null && state.wantsFlight();
    }
 
+   /**
+    * Iron Man flight profile while the suit is worn; glide at 0 energy.
+    * Both sides: the client reads the synced flags (≤ 1 tick behind).
+    */
+   @Override
+   public dev.baranhan.viltrumiteflight.util.FlightProfile flightProfile(Player player) {
+      if (player == null) {
+         return null;
+      }
+
+      if (player.level().isClientSide()) {
+         return profileFor(suitWornFlag(player), glideFlag(player));
+      }
+
+      IronManState state = IronManState.of(player);
+      return state == null ? null : profileFor(state.wantsFlight(), state.glide);
+   }
+
+   @javax.annotation.Nullable
+   static dev.baranhan.viltrumiteflight.util.FlightProfile profileFor(boolean worn, boolean glide) {
+      return worn ? IronManRules.profile(glide) : null;
+   }
+
+   static boolean glideFlag(Player player) {
+      return player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+         && heroPlayer.getHeroSnapshot().heroId() == HeroId.IRON_MAN
+         && IronManFlags.is(heroPlayer.getHeroSnapshot().heroFlags(), IronManFlags.Field.GLIDE);
+   }
+
    /** Synced SUIT_WORN bit of an Iron Man snapshot (any side). */
    static boolean suitWornFlag(Player player) {
       if (!(player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer)) {
