@@ -39,7 +39,13 @@ public class MicroMissileEntity extends Projectile implements Homing {
    }
 
    public static MicroMissileEntity launch(ServerPlayer owner, Vec3 from, Vec3 direction, @Nullable Entity target) {
+      return launch(owner, from, direction, target, 1.0F);
+   }
+
+   /** {@code damageMul}: suit missile factor (spec §13.7: War Machine ×1.4). */
+   public static MicroMissileEntity launch(ServerPlayer owner, Vec3 from, Vec3 direction, @Nullable Entity target, float damageMul) {
       MicroMissileEntity missile = new MicroMissileEntity(ViltrumiteEntities.MICRO_MISSILE.get(), owner.level());
+      missile.damageMul = damageMul;
       missile.setOwner(owner);
       missile.setPos(from);
       missile.setDeltaMovement(direction.normalize().scale(IronManRules.MISSILE_SPEED * 0.6));
@@ -47,6 +53,9 @@ public class MicroMissileEntity extends Projectile implements Homing {
       owner.level().addFreshEntity(missile);
       return missile;
    }
+
+   /** Server: suit missile factor. */
+   private float damageMul = 1.0F;
 
    @Override
    protected void defineSynchedData() {
@@ -137,13 +146,13 @@ public class MicroMissileEntity extends Projectile implements Homing {
       LivingEntity shooter = owner instanceof LivingEntity living ? living : null;
       if (direct instanceof LivingEntity living) {
          living.invulnerableTime = 0;
-         living.hurt(this.damageSources().explosion(this, shooter), IronManRules.MISSILE_HIT);
+         living.hurt(this.damageSources().explosion(this, shooter), IronManRules.MISSILE_HIT * this.damageMul);
       }
 
       AABB box = new AABB(at, at).inflate(IronManRules.MISSILE_SPLASH_RADIUS);
       for (LivingEntity near : this.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != direct && e != owner && e.isAlive())) {
          if (near.position().distanceTo(at) <= IronManRules.MISSILE_SPLASH_RADIUS + near.getBbWidth()) {
-            if (near.hurt(this.damageSources().explosion(this, shooter), IronManRules.MISSILE_SPLASH)
+            if (near.hurt(this.damageSources().explosion(this, shooter), IronManRules.MISSILE_SPLASH * this.damageMul)
                && dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsImpulse(near)) {
                Vec3 push = near.position().subtract(at).normalize().scale(0.5);
                near.push(push.x, 0.25, push.z);

@@ -133,9 +133,11 @@ final class IronManCombat {
       }
 
       Vec3 aim = aimPoint(player, IronManRules.REPULSOR_RANGE);
-      boolean volley = shot.kind() == Repulsor.Kind.VOLLEY;
+      // Mark 42: while the rocket fist is away only the left palm fires (spec §13.3).
+      boolean rightAway = state.suit.markWorn() && state.suit.mark() == dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId.MARK_42 && state.signature.entityId >= 0;
+      boolean volley = shot.kind() == Repulsor.Kind.VOLLEY && !rightAway;
       double knockback = Repulsor.knockback(shot.power());
-      for (boolean rightHand : volley ? new boolean[]{true, false} : new boolean[]{shot.rightHand()}) {
+      for (boolean rightHand : volley ? new boolean[]{true, false} : new boolean[]{shot.rightHand() && !rightAway}) {
          Vec3 from = hand(player, rightHand);
          Vec3 dir = aim.subtract(from);
          dir = dir.lengthSqr() < 1.0E-4 ? player.getLookAngle() : dir.normalize();
@@ -144,18 +146,20 @@ final class IronManCombat {
 
       sound(player, volley ? IronManCombatSounds.REPULSOR_VOLLEY.get() : IronManCombatSounds.REPULSOR_SHOT.get(), 0.9F + player.getRandom().nextFloat() * 0.2F);
       state.recoilTicks = IronManRules.REPULSOR_RECOIL_TICKS;
-      state.recoilRight = volley || shot.rightHand();
+      state.recoilRight = volley || shot.rightHand() && !rightAway;
       // Movement: brake backwards in flight, lift when firing down in a hover, ground shockwave.
       FlightState flight = IronManHero.flightState(player);
       boolean flying = flight != null && flight != FlightState.NONE;
       Vec3 look = player.getLookAngle();
       Vec3 velocity = player.getDeltaMovement();
       double speed = velocity.length();
+      // Heavy marks barely move from their own shots (spec §13.8: recoil ×0.2).
+      double recoil = state.spec().recoilMul();
       if (Repulsor.brakes(flying, speed < 1.0E-4 ? 0.0 : look.dot(velocity.scale(1.0 / speed)), speed)) {
-         player.setDeltaMovement(velocity.scale(Repulsor.brakeFactor(shot.power())));
+         player.setDeltaMovement(velocity.scale(Mth.lerp(recoil, 1.0, Repulsor.brakeFactor(shot.power()))));
          player.hurtMarked = true;
       } else if (Repulsor.lifts(flight == FlightState.HOVER, player.getXRot())) {
-         player.setDeltaMovement(velocity.x, Math.max(velocity.y, Repulsor.liftVelocity(shot.power())), velocity.z);
+         player.setDeltaMovement(velocity.x, Math.max(velocity.y, Repulsor.liftVelocity(shot.power()) * recoil), velocity.z);
          player.hurtMarked = true;
       }
 
@@ -186,7 +190,13 @@ final class IronManCombat {
    // ---- Unibeam and overdraft (§8.2, §9) ----
 
    static void unibeamPress(ServerPlayer player, IronManState state) {
-      if (state.unibeam.press(state.energy.weaponsLocked())) {
+      // Mark 42 without its chest plate has no Unibeam (spec §13.3).
+      if (!state.spec().unibeamOnline()) {
+         sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F);
+         return;
+      }
+
+      if (state.unibeam.press(state.energy.weaponsLocked(), state.spec().unibeamCharge())) {
          sound(player, IronManCombatSounds.UNIBEAM_CHARGE.get(), 1.0F);
       } else if (state.energy.weaponsLocked() || state.unibeam.overheated()) {
          sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F);
@@ -360,7 +370,13 @@ final class IronManCombat {
          }
       }
 
-      state.suit.scatter(IronManRules.NANO_LOST_TICKS);
+      if (state.suit.markOn()) {
+         // Spec §9.4: a mark falls apart like a break and Tony gets the nano; no nano lock then.
+         dev.baranhan.viltrumitecore.hero.ironman.mark.IronManMarks.breakMark(player, state);
+      } else {
+         state.suit.scatter(IronManRules.NANO_LOST_TICKS);
+      }
+
       state.overheat.resetByExplosion();
       state.stopCombat();
       sound(player, IronManCombatSounds.NANITE_DISSOLVE.get(), 0.7F);
@@ -375,7 +391,7 @@ final class IronManCombat {
    // ---- missiles (§8.3) ----
 
    static void missilesPress(ServerPlayer player, IronManState state) {
-      if (!state.missiles.press(state.energy.weaponsLocked())) {
+      if (!state.missiles.press(state.energy.weaponsLocked(), state.spec().missileMarks())) {
          sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F);
       }
    }
@@ -441,7 +457,8 @@ final class IronManCombat {
          }
       }
 
-      int count = MissileLock.missileCount(targets.size());
+      int count = MissileLock.missileCount(targets.size(), state.spec().missileMarks());
+      float damageMul = state.spec().missileMul();
       Vec3 look = player.getLookAngle();
       Vec3 right = right(look);
       for (int i = 0; i < count; i++) {
@@ -449,7 +466,7 @@ final class IronManCombat {
          float offset = MissileLock.fanOffset(i, count);
          Vec3 dir = look.yRot((float)Math.toRadians(-offset)).add(0.0, 0.12, 0.0).normalize();
          Vec3 from = player.getEyePosition().add(0.0, -0.25, 0.0).add(right.scale(i % 2 == 0 ? 0.35 : -0.35)).add(look.scale(0.2));
-         MicroMissileEntity.launch(player, from, dir, target);
+         MicroMissileEntity.launch(player, from, dir, target, damageMul);
       }
 
       sound(player, IronManCombatSounds.MISSILE_LAUNCH.get(), 1.0F);
@@ -474,7 +491,10 @@ final class IronManCombat {
          return;
       }
 
-      RightTool next = ToolCycle.next(state.rightTool, state.arsenal.weapon(), null);
+      // A mark passes its signature as the RMB alternative when it has one (spec §6.1).
+      RightTool alternative = state.suit.markWorn() && dev.baranhan.viltrumitecore.hero.ironman.mark.MarkSignatures.of(state.suit.mark()).onRmb()
+         ? RightTool.SIGNATURE : null;
+      RightTool next = ToolCycle.next(state.rightTool, state.arsenal.weapon(), alternative);
       if (next == state.rightTool) {
          return;
       }
@@ -737,7 +757,7 @@ final class IronManCombat {
       }
 
       Vec3 toSource = source.getSourcePosition().subtract(self.getEyePosition());
-      Shield.Block block = state.shield.hit(self.level().getGameTime(), self.getLookAngle(), toSource, state.energy);
+      Shield.Block block = state.shield.hit(self.level().getGameTime(), self.getLookAngle(), toSource, state.energy, state.spec().shieldMul());
       if (block == Shield.Block.PASS) {
          return DamageAbsorb.PASS;
       }
@@ -761,7 +781,7 @@ final class IronManCombat {
    // ---- nano damage (§4.2) ----
 
    static void onHurt(ServerPlayer player, IronManState state, float amount) {
-      if (!state.suit.worn() || amount < IronManRules.NANO_DAMAGE_HIT) {
+      if (!state.suit.nano() || amount < IronManRules.NANO_DAMAGE_HIT) {
          return;
       }
 

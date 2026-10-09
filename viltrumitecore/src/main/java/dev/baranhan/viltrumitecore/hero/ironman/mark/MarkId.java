@@ -40,6 +40,19 @@ public enum MarkId {
       return null;
    }
 
+   /** Proper name (same in every language). */
+   public String displayName() {
+      return switch (this) {
+         case MARK_7 -> "Mark 7";
+         case MARK_42 -> "Mark 42";
+         case MARK_15 -> "Mark 15";
+         case MARK_39 -> "Mark 39";
+         case MARK_17 -> "Mark 17";
+         case WAR_MACHINE_MK2 -> "War Machine Mk2";
+         case IRON_HEART_MK3 -> "Iron Heart Mk3";
+      };
+   }
+
    public static int count() {
       return VALUES.length;
    }

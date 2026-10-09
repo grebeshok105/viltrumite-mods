@@ -68,11 +68,16 @@ public final class Shield {
 
    /** One incoming hit. Spends energy; no energy → the hit passes. */
    public Block hit(long now, Vec3 look, @Nullable Vec3 toSource, Energy energy) {
+      return this.hit(now, look, toSource, energy, 1.0F);
+   }
+
+   /** As {@link #hit(long, Vec3, Vec3, Energy)}; a stronger shield ({@code strength} &gt; 1) costs less per hit (spec §13.8). */
+   public Block hit(long now, Vec3 look, @Nullable Vec3 toSource, Energy energy, float strength) {
       if (!this.raised || energy.weaponsLocked() || !inFront(look, toSource)) {
          return Block.PASS;
       }
 
-      if (!energy.spend(IronManRules.COST_SHIELD_HIT)) {
+      if (!energy.spend(IronManRules.COST_SHIELD_HIT / Math.max(0.1F, strength))) {
          return Block.PASS;
       }
 

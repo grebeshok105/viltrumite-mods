@@ -1,8 +1,6 @@
 package dev.baranhan.viltrumitecore.entity;
 
-import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManState;
-import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.IronManMarks;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import java.util.Optional;
@@ -192,14 +190,7 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
          return false;
       }
 
-      if (!(who instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer)
-         || heroPlayer.getHeroSnapshot().heroId() != dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN) {
-         return false;
-      }
-
-      // Client-readable gate: no mark on, no equip/exit running (from no armor or nano, spec §12.6).
-      int flags = heroPlayer.getHeroSnapshot().heroFlags();
-      return IronManVariant.mark(heroPlayer.getHeroSnapshot().variant()) == null && IronManFlags.get(flags, IronManFlags.Field.EQUIP_PHASE) == IronManFlags.EQUIP_NONE;
+      return IronManMarks.mayEnter(who);
    }
 
    @Override

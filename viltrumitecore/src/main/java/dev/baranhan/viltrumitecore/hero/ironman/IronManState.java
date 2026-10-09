@@ -116,6 +116,10 @@ public final class IronManState {
       this.scan.cancel();
       this.threats.clear();
       this.countermeasures.clearForget();
+      this.signature.clear();
+      this.podId = -1;
+      this.emptySuitId = -1;
+      this.equipSource = null;
       switch (reason) {
          case DEATH -> {
             this.suit.clear();
@@ -137,8 +141,15 @@ public final class IronManState {
             this.suit.setNanoLock(0);
             this.countermeasures.setCooldown(0);
             this.helmet.reset();
+            this.roster.reset();
+            this.veronicaCooldown = 0;
+            this.signature.cooldown = 0;
          }
       }
+
+      // Spec §16: the pod and the empty suit fly away, a delivery goes back; durability is kept.
+      this.roster.recallWorld();
+      this.reconcileMark();
    }
 
    /**
@@ -168,11 +179,16 @@ public final class IronManState {
       this.repairTicks = 0;
    }
 
-   /** Death: suit off, energy full; cooldowns carry over (nano lock), the overheat counter resets. */
+   /** Death: suit off, energy full; cooldowns and mark durability carry over, the overheat counter resets. */
    public static IronManState cloneForRespawn(IronManState original) {
       IronManState state = new IronManState();
       state.suit.setNanoLock(original.suit.nanoLockTicks());
       state.countermeasures.setCooldown(original.countermeasures.cooldown());
+      state.roster.copyFrom(original.roster);
+      state.roster.recallWorld();
+      state.reconcileMark();
+      state.veronicaCooldown = original.veronicaCooldown;
+      state.signature.cooldown = original.signature.cooldown;
       return state;
    }
 

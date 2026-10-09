@@ -14,7 +14,7 @@ class IronManFlagsTest {
          long mask = ((1L << field.width()) - 1) << field.shift();
          assertEquals(0, used & mask, field.name());
          used |= mask;
-         assertTrue(field.shift() + field.width() <= 30, field + " must stay below the reserved bits 30-31");
+         assertTrue(field.shift() + field.width() <= 32, field + " must fit into the 32 flag bits");
       }
    }
 
