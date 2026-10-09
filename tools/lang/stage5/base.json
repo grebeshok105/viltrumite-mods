@@ -1,0 +1,56 @@
+{
+ "hud.viltrumitecore.ironman.hulkbuster": {
+  "en_us": "HULKBUSTER"
+ },
+ "hud.viltrumitecore.ironman.hulkbuster_no_room": {
+  "en_us": "No room for the Hulkbuster here"
+ },
+ "gui.viltrumitecore.veronica.hulkbuster_desc": {
+  "en_us": "Mark 48 over your suit: huge punches, jackhammer, grab and throw, jump slam, thruster hop. No flight."
+ },
+ "gui.viltrumitecore.veronica.hulkbuster_on": {
+  "en_us": "ON TONY"
+ },
+ "jarvis.viltrumitecore.hulkbuster": {
+  "en_us": "JARVIS: Hulkbuster online."
+ },
+ "jarvis.viltrumitecore.hulkbuster_broken": {
+  "en_us": "JARVIS: Hulkbuster lost."
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_drop": {
+  "en_us": "Hulkbuster parts drop"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_assemble": {
+  "en_us": "Hulkbuster locks together"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_exit": {
+  "en_us": "Hulkbuster opens"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_break": {
+  "en_us": "Hulkbuster falls apart"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_step": {
+  "en_us": "Heavy Hulkbuster step"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_servo": {
+  "en_us": "Hulkbuster servos whine"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_punch": {
+  "en_us": "Hulkbuster punches"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_jackhammer": {
+  "en_us": "Jackhammer pounds"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_grab": {
+  "en_us": "Hulkbuster grabs"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_throw": {
+  "en_us": "Hulkbuster throws"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_slam": {
+  "en_us": "Hulkbuster slams the ground"
+ },
+ "subtitles.viltrumitecore.ironman_hulkbuster_hop": {
+  "en_us": "Hulkbuster thrusters fire"
+ }
+}
