@@ -15,7 +15,9 @@ public enum HeroAction {
    ASSIGN_HEART,
    LASERS,
    FOCUS,
-   ROAR;
+   ROAR,
+   /** Iron Man "Костюм" key: put on / take off the suit. */
+   SUIT;
 
    public static HeroAction byId(int ordinal) {
       HeroAction[] values = values();

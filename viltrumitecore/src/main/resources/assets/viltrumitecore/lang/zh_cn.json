@@ -196,5 +196,9 @@
   "ability.viltrumitecore.homelander_focus.name": "<aqua>专注",
   "ability.viltrumitecore.homelander_focus.desc": "<grey>冷却：<lime>-\n<grey>类型：<aqua>切换\n\n<grey>透过墙壁看到最近的8个生物、\n<grey>它们的生命值以及通往它们的路线。\n<grey>它们的脚步更响，其他声音变轻。\n<grey>被注视者会感到恐惧。双眼缓慢升温。\n\n<blue>祖国人",
   "ability.viltrumitecore.homelander_roar.name": "<gold>怒吼",
-  "ability.viltrumitecore.homelander_roar.desc": "<grey>冷却：<lime>15秒\n<grey>类型：<aqua>瞬发\n\n<grey>愤怒的怒吼击退你面前的所有人\n<grey>（12格）并使其减速3秒。\n\n<blue>祖国人"
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>冷却：<lime>15秒\n<grey>类型：<aqua>瞬发\n\n<grey>愤怒的怒吼击退你面前的所有人\n<grey>（12格）并使其减速3秒。\n\n<blue>祖国人",
+  "gui.viltrumitecore.race_selection.become_ironman": "成为钢铁侠",
+  "hero.viltrumitecore.ironman": "钢铁侠",
+  "ability.viltrumitecore.ironman_suit.name": "<gold>战衣",
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>类型：<aqua>切换\n\n<grey>无装甲时：Mark 50 纳米战衣\n<grey>从反应堆中流出（约1秒）。\n<grey>穿着纳米战衣时：纳米机器人回到反应堆。\n\n<blue>钢铁侠"
 }

@@ -196,5 +196,9 @@
   "ability.viltrumitecore.homelander_focus.name": "<aqua>Focus",
   "ability.viltrumitecore.homelander_focus.desc": "<grey>Cooldown: <lime>-\n<grey>Type: <aqua>Toggle\n\n<grey>See up to 8 nearest creatures through walls,\n<grey>their health and the way to reach them.\n<grey>Their steps get louder, the rest goes quiet.\n<grey>Those you watch feel fear. Slowly heats your eyes.\n\n<blue>Homelander",
   "ability.viltrumitecore.homelander_roar.name": "<gold>Roar",
-  "ability.viltrumitecore.homelander_roar.desc": "<grey>Cooldown: <lime>15s\n<grey>Type: <aqua>Instant\n\n<grey>A furious roar knocks back everyone\n<grey>in front of you (12 blocks) and slows them for 3s.\n\n<blue>Homelander"
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Cooldown: <lime>15s\n<grey>Type: <aqua>Instant\n\n<grey>A furious roar knocks back everyone\n<grey>in front of you (12 blocks) and slows them for 3s.\n\n<blue>Homelander",
+  "gui.viltrumitecore.race_selection.become_ironman": "Become Iron Man",
+  "hero.viltrumitecore.ironman": "Iron Man",
+  "ability.viltrumitecore.ironman_suit.name": "<gold>Suit",
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>Type: <aqua>Toggle\n\n<grey>Without armor: the Mark 50 nanosuit\n<grey>flows out of the reactor (~1s).\n<grey>In the nanosuit: the nanites return to the reactor.\n\n<blue>Iron Man"
 }

@@ -196,5 +196,9 @@
   "ability.viltrumitecore.homelander_focus.name": "<aqua>Fokus",
   "ability.viltrumitecore.homelander_focus.desc": "<grey>Abklingzeit: <lime>-\n<grey>Typ: <aqua>Umschalten\n\n<grey>Sieh bis zu 8 nächste Wesen durch Wände,\n<grey>ihre Gesundheit und den Weg zu ihnen.\n<grey>Ihre Schritte werden lauter, der Rest leiser.\n<grey>Wen du beobachtest, fürchtet sich. Erhitzt langsam die Augen.\n\n<blue>Homelander",
   "ability.viltrumitecore.homelander_roar.name": "<gold>Brüllen",
-  "ability.viltrumitecore.homelander_roar.desc": "<grey>Abklingzeit: <lime>15s\n<grey>Typ: <aqua>Sofort\n\n<grey>Ein wütendes Brüllen stößt alle vor dir\n<grey>zurück (12 Blöcke) und verlangsamt sie 3s.\n\n<blue>Homelander"
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Abklingzeit: <lime>15s\n<grey>Typ: <aqua>Sofort\n\n<grey>Ein wütendes Brüllen stößt alle vor dir\n<grey>zurück (12 Blöcke) und verlangsamt sie 3s.\n\n<blue>Homelander",
+  "gui.viltrumitecore.race_selection.become_ironman": "Iron Man werden",
+  "hero.viltrumitecore.ironman": "Iron Man",
+  "ability.viltrumitecore.ironman_suit.name": "<gold>Anzug",
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>Typ: <aqua>Umschalten\n\n<grey>Ohne Rüstung: Der Nanoanzug Mark 50\n<grey>fließt aus dem Reaktor (~1s).\n<grey>Im Nanoanzug: Die Naniten kehren in den Reaktor zurück.\n\n<blue>Iron Man"
 }

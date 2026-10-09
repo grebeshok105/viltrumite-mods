@@ -196,5 +196,9 @@
   "ability.viltrumitecore.homelander_focus.name": "<aqua>Odak",
   "ability.viltrumitecore.homelander_focus.desc": "<grey>Bekleme: <lime>-\n<grey>Tür: <aqua>Aç/Kapat\n\n<grey>En yakın 8 canlıyı duvarların ardından,\n<grey>canlarını ve onlara giden yolu gör.\n<grey>Adımları yükselir, gerisi sessizleşir.\n<grey>İzlenenler korku duyar. Gözlerini yavaşça ısıtır.\n\n<blue>Homelander",
   "ability.viltrumitecore.homelander_roar.name": "<gold>Kükreme",
-  "ability.viltrumitecore.homelander_roar.desc": "<grey>Bekleme: <lime>15sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Öfkeli bir kükreme önündeki herkesi\n<grey>geri iter (12 blok) ve 3sn yavaşlatır.\n\n<blue>Homelander"
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Bekleme: <lime>15sn\n<grey>Tür: <aqua>Anlık\n\n<grey>Öfkeli bir kükreme önündeki herkesi\n<grey>geri iter (12 blok) ve 3sn yavaşlatır.\n\n<blue>Homelander",
+  "gui.viltrumitecore.race_selection.become_ironman": "Iron Man ol",
+  "hero.viltrumitecore.ironman": "Iron Man",
+  "ability.viltrumitecore.ironman_suit.name": "<gold>Zırh",
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>Tür: <aqua>Aç/Kapat\n\n<grey>Zırhsızken: Mark 50 nano zırh\n<grey>reaktörden yayılır (~1sn).\n<grey>Nano zırhtayken: nanitler reaktöre döner.\n\n<blue>Iron Man"
 }

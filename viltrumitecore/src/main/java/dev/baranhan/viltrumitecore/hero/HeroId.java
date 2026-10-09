@@ -7,7 +7,9 @@ public enum HeroId {
    VILTRUMITE("viltrumite"),
    REGULUS("regulus"),
    /** Replaces the Viltrumite race. Saved "viltrumite" ids load as this hero. */
-   HOMELANDER("homelander");
+   HOMELANDER("homelander"),
+   /** Tony Stark: nano Mark 50, marks, Hulkbuster (spec docs/design/2026-10-09-ironman-design.md). */
+   IRON_MAN("ironman");
 
    private final String key;
 

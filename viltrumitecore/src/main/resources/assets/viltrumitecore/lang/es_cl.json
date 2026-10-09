@@ -196,5 +196,9 @@
   "ability.viltrumitecore.homelander_focus.name": "<aqua>Enfoque",
   "ability.viltrumitecore.homelander_focus.desc": "<grey>Enfriamiento: <lime>-\n<grey>Tipo: <aqua>Alternar\n\n<grey>Ve hasta 8 criaturas cercanas a través de paredes,\n<grey>su salud y el camino hasta ellas.\n<grey>Sus pasos suenan más fuerte, el resto se apaga.\n<grey>Quien es observado siente miedo. Calienta lento tus ojos.\n\n<blue>Homelander",
   "ability.viltrumitecore.homelander_roar.name": "<gold>Rugido",
-  "ability.viltrumitecore.homelander_roar.desc": "<grey>Enfriamiento: <lime>15s\n<grey>Tipo: <aqua>Instantáneo\n\n<grey>Un rugido furioso empuja a todos\n<grey>frente a ti (12 bloques) y los ralentiza 3s.\n\n<blue>Homelander"
+  "ability.viltrumitecore.homelander_roar.desc": "<grey>Enfriamiento: <lime>15s\n<grey>Tipo: <aqua>Instantáneo\n\n<grey>Un rugido furioso empuja a todos\n<grey>frente a ti (12 bloques) y los ralentiza 3s.\n\n<blue>Homelander",
+  "gui.viltrumitecore.race_selection.become_ironman": "Conviértete en Iron Man",
+  "hero.viltrumitecore.ironman": "Iron Man",
+  "ability.viltrumitecore.ironman_suit.name": "<gold>Traje",
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>Tipo: <aqua>Alternar\n\n<grey>Sin armadura: el nanotraje Mark 50\n<grey>brota del reactor (~1s).\n<grey>Con el nanotraje: los nanobots vuelven al reactor.\n\n<blue>Iron Man"
 }

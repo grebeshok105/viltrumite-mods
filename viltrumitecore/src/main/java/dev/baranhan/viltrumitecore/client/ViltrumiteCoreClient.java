@@ -64,6 +64,7 @@ public class ViltrumiteCoreClient {
       event.enqueueWork(() -> {
          RegulusClient.registerSkins();
          dev.baranhan.viltrumitecore.client.homelander.HomelanderClient.registerSkins();
+         dev.baranhan.viltrumitecore.client.ironman.IronManClient.registerSkins();
          CosmeticLoader.init();
          ViltrumiteCameraConfig.load();
          ViltrumitePostProcessingConfig.load();
