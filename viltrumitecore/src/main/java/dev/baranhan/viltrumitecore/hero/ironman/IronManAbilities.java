@@ -11,10 +11,17 @@ import net.minecraft.resources.ResourceLocation;
 /** Iron Man ability ids and default slot order (spec §6.2). */
 public final class IronManAbilities {
    public static final String SUIT = "ironman:suit";
+   public static final String UNIBEAM = "ironman:unibeam";
+   public static final String MISSILES = "ironman:missiles";
+   public static final String NANO_ARSENAL = "ironman:nano_arsenal";
+   /** Page 1 (slots 0-5): Unibeam, missiles, nano arsenal (spec §6.2). */
+   public static final int UNIBEAM_SLOT = 0;
+   public static final int MISSILES_SLOT = 1;
+   public static final int NANO_ARSENAL_SLOT = 2;
    /** Page 2 (slots 6-11), index 4 = fifth key (B): Scan, Countermeasures, Veronica, Helmet, Suit, Legion reserve. */
    public static final int SUIT_SLOT = 6 + 4;
    /** Own slots in panel order. Later stages append. */
-   private static final String[] OWN = {SUIT};
+   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, SUIT};
 
    private IronManAbilities() {
    }
@@ -43,7 +50,7 @@ public final class IronManAbilities {
          return null;
       }
 
-      // Icons are drawn in Stage 1b (panel art).
+      // Panel art: tools/assets/make_ironman_icons.py.
       return new ResourceLocation("viltrumitecore", "textures/gui/ability/ironman/" + abilityId.substring(abilityId.indexOf(':') + 1) + ".png");
    }
 

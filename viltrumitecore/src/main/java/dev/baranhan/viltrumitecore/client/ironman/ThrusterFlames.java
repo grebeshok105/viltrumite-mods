@@ -31,6 +31,11 @@ public final class ThrusterFlames {
    private ThrusterFlames() {
    }
 
+   /** One flame texture frame (shared with the repulsor palm glow). */
+   public static ResourceLocation texture(int frame) {
+      return TEXTURES[Math.floorMod(frame, TEXTURE_FRAMES)];
+   }
+
    public enum Mode {
       NONE,
       HOVER,

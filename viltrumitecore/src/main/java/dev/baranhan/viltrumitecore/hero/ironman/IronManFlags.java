@@ -2,7 +2,7 @@ package dev.baranhan.viltrumitecore.hero.ironman;
 
 /**
  * The single bit layout of {@code HeroPublicSnapshot.heroFlags} for Iron Man,
- * for all stages. Append new fields into the reserved bits 27-31; never move
+ * for all stages. Append new fields into the reserved bits 30-31 (27-29 are Stage 2 pose bits); never move
  * an existing field (clients of the same version decode the same layout).
  */
 public final class IronManFlags {

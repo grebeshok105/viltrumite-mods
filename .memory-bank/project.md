@@ -38,6 +38,15 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Iron Man poses `IronManModelMixin` priority 1190 → `IronManPoser`; suit sounds own synthesis `tools/sfx/ironman_stage1.sh`; asset conversion `tools/assets/convert_ironman_stage1b.py`.
 - Static init order: a `static final INSTANCE = new X()` must come after the static fields its constructor reads (crashed the client once).
 
+## Iron Man combat (Stage 2)
+- Server driver `hero/ironman/IronManCombat` (repulsors, unibeam + overdraft, missiles with lock, nano arsenal, shield); input routing in `IronManHero`. Rules are pure classes with tests (`CoreOverheat`, tool cycle, unibeam timeline, missile lock, nano arsenal, shield).
+- Guard key seam: `HeroDefinition.guardAction` (F → `MouseButton.GUARD`, client `HeroGuardInput`) + `blocksHandSwap` (server cancels `LivingSwapItemsEvent`).
+- Owner snapshot sections: `HeroRegistry.pushOwnerSection` / `ClientHeroData.section`; Iron Man uses `MARKS` (missile locks). `extraCooldowns[0]` = nano-lost lock.
+- `IronManFlags` bits 27-29 = stage 2 pose bits, 30-31 reserved.
+- `client/render/vfx/ScorchRenderer` + `ScorchBuffer` are shared (beam scorch marks).
+- Client: `IronManCrosshair` (per tool), `IronManCombatParts` (own nano blade/hammer/shield/missile pod geo in `geo/ironman/nano/`, made by `tools/assets/make_ironman_stage2_parts.py`; no Satsu sources), `NanoDamageVisuals` (baked damage masks, reload listener). Missiles are pixel VFX only. Arm swing poses are third person only.
+- Sounds: `tools/sfx/ironman_stage2.sh`; icons/crosshairs: `tools/assets/make_ironman_stage2_icons.py`.
+
 ## Rendering gotchas
 - Through-wall entity highlights: use the vanilla glowing path. Per-entity colour, client-only: mixin `Minecraft.shouldEntityAppearGlowing` → true and `Entity.getTeamColor` → colour (guard `level().isClientSide`), see `HomelanderGlowMixin`. Drawing into `outlineBufferSource()` by hand is unreliable (the outline post pass runs only when some entity glows). `RenderStateShard` constants (`NO_DEPTH_TEST` etc.) are protected and unavailable to mod code.
 - `SilhouetteManager.getState(entity, shouldDraw)` consumes a per-frame delta (max 0.1 s). Call it at most once per entity per frame; a second caller zeros the first caller's alpha lerp.

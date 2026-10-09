@@ -44,6 +44,10 @@ Default hooks (override only when needed):
 | `modifyOutgoingDamage(ServerPlayer, LivingEntity, DamageSource, float)` | unchanged; this hero as attacker |
 | `mouseAction(MouseButton, Player)` | null = vanilla; claimed buttons go through `HeldInputs` (press gated once, release always routed); both sides |
 | `onInputRefused(ServerPlayer, HeroAction)` | nothing; feedback when a claimed press fails `canAct` |
+| `guardAction(Player)` | null = vanilla swap-hands key (F); non-null: client consumes the key, edges go through `HeldInputs` as `MouseButton.GUARD`; both sides |
+| `blocksHandSwap(Player)` | false; server cancels `LivingSwapItemsEvent.Hands` (also forged packets) |
+
+Snapshots: `HeroPublicSnapshot.extraCooldowns` (max `EXTRA_COOLDOWN_MAX`, per-hero meaning; Iron Man index 0 = nano-lost lock ticks). Owner-only data: `HeroRegistry.pushOwnerSection(player, OwnerSection, Section)` replaces one typed section (`CARRIERS`, `THREATS`, `MARKS`, `SCAN`; enum is append-only, wire = ordinal); client reads `ClientHeroData.section(...)`.
 
 New behaviour that shared code must ask about → add a new default hook here. Do not branch on `HeroId` in shared code.
 

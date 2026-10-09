@@ -19,6 +19,7 @@ import net.minecraft.resources.ResourceLocation;
  * follows every pose and the first-person arm. This layer adds the glow map
  * (reactor, joints) and the cyan wave front of the frame. The head is hidden
  * here: the helmet is a geo part with its own glow (IronManPartsProvider).
+ * Stage 2: the nano damage pass (NanoDamageVisuals) is drawn here too.
  */
 public class IronManSkinLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
    public IronManSkinLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent) {
@@ -48,6 +49,12 @@ public class IronManSkinLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
          if (glow != null) {
             float pulse = 0.85F + 0.15F * (float)Math.sin(ageInTicks * 0.12F);
             model.renderToBuffer(poseStack, buffers.getBuffer(RenderType.eyes(glow)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, pulse, pulse, pulse, 1.0F);
+         }
+
+         // Nano damage (spec §4.2): broken pixels show Tony's skin, then close up (visual only).
+         ResourceLocation damage = NanoDamageVisuals.INSTANCE.texture(player, snapshot);
+         if (damage != null) {
+            model.renderToBuffer(poseStack, buffers.getBuffer(RenderType.entityCutoutNoCull(damage)), light, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
          }
 
          ResourceLocation rim = IronManSuitTextures.INSTANCE.rim(frame);

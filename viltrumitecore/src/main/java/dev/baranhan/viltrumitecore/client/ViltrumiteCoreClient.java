@@ -65,6 +65,7 @@ public class ViltrumiteCoreClient {
    @SubscribeEvent
    public static void onRegisterReloadListeners(net.minecraftforge.client.event.RegisterClientReloadListenersEvent event) {
       event.registerReloadListener(dev.baranhan.viltrumitecore.client.ironman.IronManSuitTextures.INSTANCE);
+      event.registerReloadListener(dev.baranhan.viltrumitecore.client.ironman.NanoDamageVisuals.INSTANCE);
    }
 
    @SubscribeEvent
