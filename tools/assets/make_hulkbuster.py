@@ -122,15 +122,15 @@ def fp_bones():
 def parts_bones():
     """Docking shells for the normal-size player: legs, torso, arms, helmet (armor bones)."""
     return [
-        bone('armorRightLeg', None, (-1.9, 12, 0), [cube((-6, 0, -4), (6, 13, 8), 'armor')]),
-        bone('armorLeftLeg', None, (1.9, 12, 0), [cube((0, 0, -4), (6, 13, 8), 'armor')]),
-        bone('armorBody', None, (0, 24, 0), [
+        bone('armorRightLeg', None, (-3, 6.5, 0), [cube((-6, 0, -4), (6, 13, 8), 'armor')]),
+        bone('armorLeftLeg', None, (3, 6.5, 0), [cube((0, 0, -4), (6, 13, 8), 'armor')]),
+        bone('armorBody', None, (0, 18.5, 0), [
             cube((-7, 12, -5), (14, 13, 10), 'armor'),
             cube((-2, 18, -6), (4, 4, 1), 'steel', glow='reactor'),
         ]),
-        bone('armorRightArm', None, (-5, 22, 0), [cube((-9, 11, -4), (6, 14, 8), 'armor')]),
-        bone('armorLeftArm', None, (5, 22, 0), [cube((3, 11, -4), (6, 14, 8), 'armor')]),
-        bone('armorHead', None, (0, 24, 0), [cube((-5, 24, -5), (10, 10, 10), 'armor', glow='visor')]),
+        bone('armorRightArm', None, (-6, 18, 0), [cube((-9, 11, -4), (6, 14, 8), 'armor')]),
+        bone('armorLeftArm', None, (6, 18, 0), [cube((3, 11, -4), (6, 14, 8), 'armor')]),
+        bone('armorHead', None, (0, 29, 0), [cube((-5, 24, -5), (10, 10, 10), 'armor', glow='visor')]),
     ]
 
 
