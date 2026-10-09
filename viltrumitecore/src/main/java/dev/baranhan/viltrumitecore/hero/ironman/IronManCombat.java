@@ -104,6 +104,10 @@ final class IronManCombat {
    }
 
    static void push(Entity target, Vec3 velocity) {
+      if (target instanceof LivingEntity living && !HeroRegistry.allowsImpulse(living)) {
+         return;
+      }
+
       target.setDeltaMovement(target.getDeltaMovement().add(velocity));
       target.hurtMarked = true;
    }
@@ -172,9 +176,10 @@ final class IronManCombat {
             continue;
          }
 
-         target.hurt(player.damageSources().playerAttack(player), IronManRules.REPULSOR_SHOCKWAVE_DAMAGE);
-         Vec3 out = distance < 1.0E-3 ? Vec3.ZERO : new Vec3(away.x / distance, 0.0, away.z / distance);
-         push(target, out.scale(IronManRules.REPULSOR_SHOCKWAVE_KNOCKBACK).add(0.0, 0.5, 0.0));
+         if (target.hurt(player.damageSources().playerAttack(player), IronManRules.REPULSOR_SHOCKWAVE_DAMAGE)) {
+            Vec3 out = distance < 1.0E-3 ? Vec3.ZERO : new Vec3(away.x / distance, 0.0, away.z / distance);
+            push(target, out.scale(IronManRules.REPULSOR_SHOCKWAVE_KNOCKBACK).add(0.0, 0.5, 0.0));
+         }
       }
    }
 
@@ -294,12 +299,15 @@ final class IronManCombat {
          }
 
          target.invulnerableTime = 0;
-         target.hurt(player.damageSources().playerAttack(player), UnibeamTimeline.damageAt(from.distanceTo(center), overdraft));
-         push(target, dir.scale(IronManRules.UNIBEAM_PUSH));
-         if (target instanceof Mob mob) {
-            mob.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, IronManRules.UNIBEAM_MOB_BLIND_TICKS, 0, false, false));
-            mob.setTarget(null);
-         } else if (target instanceof ServerPlayer victim) {
+         if (target.hurt(player.damageSources().playerAttack(player), UnibeamTimeline.damageAt(from.distanceTo(center), overdraft))) {
+            push(target, dir.scale(IronManRules.UNIBEAM_PUSH));
+            if (target instanceof Mob mob) {
+               mob.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, IronManRules.UNIBEAM_MOB_BLIND_TICKS, 0, false, false));
+               mob.setTarget(null);
+            }
+         }
+
+         if (target instanceof ServerPlayer victim) {
             flash(victim, overdraft ? 1.0F : 0.9F, UnibeamTimeline.flashTicks(IronManRules.FLASH_BEAM_TICKS, true));
          }
       }
@@ -524,14 +532,15 @@ final class IronManCombat {
       LivingEntity target = entityInReach(player, IronManRules.HAMMER_REACH);
       if (target != null) {
          double height = heightAboveGround(level, target);
-         target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER);
-         if (HammerLaunch.slamsDown(target.onGround(), height)) {
-            Vec3 v = target.getDeltaMovement();
-            target.setDeltaMovement(v.x * 0.3, IronManRules.HAMMER_SLAM_DOWN, v.z * 0.3);
-            target.hurtMarked = true;
-         } else {
-            Vec3 look = player.getLookAngle();
-            push(target, new Vec3(look.x, 0.0, look.z).normalize().scale(IronManRules.HAMMER_KNOCKBACK).add(0.0, 0.45, 0.0));
+         if (target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER)) {
+            if (!HammerLaunch.slamsDown(target.onGround(), height)) {
+               Vec3 look = player.getLookAngle();
+               push(target, new Vec3(look.x, 0.0, look.z).normalize().scale(IronManRules.HAMMER_KNOCKBACK).add(0.0, 0.45, 0.0));
+            } else if (HeroRegistry.allowsImpulse(target)) {
+               Vec3 v = target.getDeltaMovement();
+               target.setDeltaMovement(v.x * 0.3, IronManRules.HAMMER_SLAM_DOWN, v.z * 0.3);
+               target.hurtMarked = true;
+            }
          }
 
          sound(player, IronManCombatSounds.HAMMER_HIT.get(), 1.0F);
@@ -565,10 +574,11 @@ final class IronManCombat {
             continue;
          }
 
-         target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM);
-         Vec3 v = target.getDeltaMovement();
-         target.setDeltaMovement(v.x, Math.max(v.y, IronManRules.HAMMER_SLAM_LIFT), v.z);
-         target.hurtMarked = true;
+         if (target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM) && HeroRegistry.allowsImpulse(target)) {
+            Vec3 v = target.getDeltaMovement();
+            target.setDeltaMovement(v.x, Math.max(v.y, IronManRules.HAMMER_SLAM_LIFT), v.z);
+            target.hurtMarked = true;
+         }
       }
    }
 
@@ -646,11 +656,13 @@ final class IronManCombat {
          return;
       }
 
-      target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM);
-      Vec3 velocity = player.getLookAngle().scale(HammerLaunch.speed(charge)).add(0.0, 0.25, 0.0);
-      target.setDeltaMovement(velocity);
-      target.hurtMarked = true;
-      state.hammerLaunch.launch(target.getId());
+      if (target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM) && HeroRegistry.allowsImpulse(target)) {
+         Vec3 velocity = player.getLookAngle().scale(HammerLaunch.speed(charge)).add(0.0, 0.25, 0.0);
+         target.setDeltaMovement(velocity);
+         target.hurtMarked = true;
+         state.hammerLaunch.launch(target.getId());
+      }
+
       sound(player, IronManCombatSounds.HAMMER_HIT.get(), 0.8F);
    }
 

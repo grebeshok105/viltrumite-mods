@@ -96,11 +96,11 @@ public class RepulsorBlastEntity extends Projectile {
          int previous = living.invulnerableTime;
          living.invulnerableTime = 0;
          boolean hurt = living.hurt(this.damageSources().mobProjectile(this, owner instanceof LivingEntity shooter ? shooter : null), this.damage);
-         if (hurt) {
+         if (hurt && dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsImpulse(living)) {
             Vec3 push = this.getDeltaMovement().normalize().scale(this.knockback);
             living.push(push.x, Math.max(0.1, push.y * 0.5 + 0.15 * this.knockback), push.z);
             living.hurtMarked = true;
-         } else {
+         } else if (!hurt) {
             living.invulnerableTime = previous;
          }
       }

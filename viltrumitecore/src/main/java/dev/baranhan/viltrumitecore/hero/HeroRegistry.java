@@ -70,6 +70,11 @@ public final class HeroRegistry {
       return !(target instanceof Player player) || get(player).allowsExternalControl(target, kind);
    }
 
+   /** Knockback gate for hero pushes: IMPULSE allowed and the target is not anchored by a control. */
+   public static boolean allowsImpulse(net.minecraft.world.entity.LivingEntity target) {
+      return allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE) && !HeroDamage.isAnchored(target);
+   }
+
    /**
     * Explicit hero transition: full lifecycle. No-op when the id is unchanged,
     * so selecting the current hero is never an exit/re-entry exploit.

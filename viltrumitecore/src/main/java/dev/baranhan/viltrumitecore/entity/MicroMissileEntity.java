@@ -143,10 +143,12 @@ public class MicroMissileEntity extends Projectile implements Homing {
       AABB box = new AABB(at, at).inflate(IronManRules.MISSILE_SPLASH_RADIUS);
       for (LivingEntity near : this.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != direct && e != owner && e.isAlive())) {
          if (near.position().distanceTo(at) <= IronManRules.MISSILE_SPLASH_RADIUS + near.getBbWidth()) {
-            near.hurt(this.damageSources().explosion(this, shooter), IronManRules.MISSILE_SPLASH);
-            Vec3 push = near.position().subtract(at).normalize().scale(0.5);
-            near.push(push.x, 0.25, push.z);
-            near.hurtMarked = true;
+            if (near.hurt(this.damageSources().explosion(this, shooter), IronManRules.MISSILE_SPLASH)
+               && dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsImpulse(near)) {
+               Vec3 push = near.position().subtract(at).normalize().scale(0.5);
+               near.push(push.x, 0.25, push.z);
+               near.hurtMarked = true;
+            }
          }
       }
 

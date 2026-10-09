@@ -56,6 +56,10 @@ public final class FlyBy {
    }
 
    static void push(LivingEntity target, Vec3 impulse) {
+      if (!dev.baranhan.viltrumitecore.hero.HeroRegistry.allowsImpulse(target)) {
+         return;
+      }
+
       double resist = 1.0 - target.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
       if (resist <= 0.0) {
          return;
