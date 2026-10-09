@@ -55,6 +55,7 @@ public class ViltrumiteCoreClient {
       for (String skin : event.getSkins()) {
          if (event.getSkin(skin) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer renderer) {
             renderer.addLayer(new dev.baranhan.viltrumitecore.client.homelander.HomelanderEyesLayer(renderer));
+            renderer.addLayer(new dev.baranhan.viltrumitecore.client.ironman.ReactorGlowLayer(renderer));
          }
       }
    }
