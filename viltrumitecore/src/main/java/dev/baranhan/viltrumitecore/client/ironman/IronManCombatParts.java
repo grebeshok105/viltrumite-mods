@@ -3,6 +3,8 @@ package dev.baranhan.viltrumitecore.client.ironman;
 import dev.baranhan.viltrumitecore.client.anim.geo.BakedGeoModel;
 import dev.baranhan.viltrumitecore.client.anim.geo.GeoBone;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkTextures;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
@@ -26,6 +28,7 @@ public final class IronManCombatParts {
    public static final ResourceLocation HAMMER = geo("nano_hammer");
    public static final ResourceLocation SHIELD = geo("nano_shield");
    public static final ResourceLocation PODS = geo("missile_pods");
+   public static final ResourceLocation ENERGY_SHIELD = new ResourceLocation("viltrumitecore", "geo/ironman/marks/energy_shield.geo.json");
    public static final ResourceLocation TEXTURE = new ResourceLocation("viltrumitecore", "textures/entity/hero/ironman_nano_parts.png");
    public static final ResourceLocation GLOW = new ResourceLocation("viltrumitecore", "textures/entity/hero/ironman_nano_parts_glow.png");
    private static final List<PlayerGeoLayer.Pass> PASSES = List.of(PlayerGeoLayer.Pass.cutout(TEXTURE), PlayerGeoLayer.Pass.glow(GLOW));
@@ -56,7 +59,8 @@ public final class IronManCombatParts {
       RightTool tool = IronManView.tool(snapshot);
       boolean wave = IronManView.channel(snapshot, HeroAction.NANO_ARSENAL);
       float waveProgress = IronManView.progress(snapshot, HeroAction.NANO_ARSENAL, partialTick);
-      RightTool weapon = tool.nanoWeapon() ? tool : null;
+      boolean mark = MarkState.of(snapshot).markOn();
+      RightTool weapon = tool.nanoWeapon() && !mark ? tool : null;
       if (weapon != null) {
          LAST_WEAPON.put(player, weapon);
       }
@@ -72,7 +76,12 @@ public final class IronManCombatParts {
       }
 
       if (IronManFlags.is(snapshot.heroFlags(), IronManFlags.Field.SHIELD_UP)) {
-         out.add(new PlayerGeoLayer.Part(SHIELD, PASSES));
+         // A mark raises an energy hex shield from the forearm instead of the nano plate.
+         if (mark) {
+            out.add(new PlayerGeoLayer.Part(ENERGY_SHIELD, List.of(PlayerGeoLayer.Pass.glow(MarkTextures.ENERGY_HEX))));
+         } else {
+            out.add(new PlayerGeoLayer.Part(SHIELD, PASSES));
+         }
       }
 
       // Palm glow while the repulsor charges (reuses the palm flame geo, short and bright).

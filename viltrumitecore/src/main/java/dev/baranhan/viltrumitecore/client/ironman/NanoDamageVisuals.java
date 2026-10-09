@@ -90,6 +90,11 @@ public final class NanoDamageVisuals implements ResourceManagerReloadListener {
 
    @Nullable
    public ResourceLocation texture(AbstractClientPlayer player, HeroPublicSnapshot snapshot) {
+      if (dev.baranhan.viltrumitecore.client.ironman.mark.MarkState.of(snapshot).markOn()) {
+         this.since.remove(player);
+         return null;
+      }
+
       int mask = IronManFlags.get(snapshot.heroFlags(), IronManFlags.Field.DAMAGED_ZONES);
       if (mask == 0 || !IronManView.worn(snapshot)) {
          this.since.remove(player);
