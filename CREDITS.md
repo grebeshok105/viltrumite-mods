@@ -11,6 +11,8 @@ Sources list: `tools/assets/ironman_sources.md`. Permission texts: `docs/license
 
 - Stage 3: helmet, scan and flare sounds (`tools/sfx/ironman_stage3.sh`), scan / countermeasures / helmet icons and the helmet HUD frame (`tools/assets/make_ironman_stage3_assets.py`).
 
+- Stage 4: seven mark skins and glow maps (recoloured from the Satsu Mark 50 skin, see Satsu below), suit interior skin, Veronica and signature icons (`tools/assets/make_ironman_stage4_assets.py`), and 19 suit sounds (`tools/sfx/ironman_stage4.sh`).
+
 ### Codex-Superheroes — JARVIS voice lines
 - Source: Codex-Superheroes repository, `assets/superheroes/sounds/ironman/`. License: CC0 1.0 (public domain, see its `LICENSE`).
 - Used (Stage 3): `jarvis_detect`, `jarvis_detect_excited`, `jarvis_diagnostic`, `jarvis_mark85_preset` — re-encoded to mono 44.1 kHz by `tools/sfx/ironman_stage3.sh --jarvis`.
@@ -18,6 +20,7 @@ Sources list: `tools/assets/ironman_sources.md`. Permission texts: `docs/license
 ### Satsu — Iron Man Addon 3.6.1
 - Author: Satsu.
 - Used (Stage 1b): Mark 50 suit skin and glow map, Mark 50 head mask geometry, feet / palm / stabilizer flame geometry, `new_thruster_white` flame textures.
+- Used (Stage 4): the Mark 50 skin and glow map as the base (palette-mapped, same layout and alpha) of the seven mark skins.
 - Planned: Mark 50 animations, marks, nano weapons, shields, `each_part` cut, `suit_expulsion`.
 - Permission: received by the repository owner, 2026-10-09 (spec §3.1). Text: pending in `docs/licenses/ironman/`.
 

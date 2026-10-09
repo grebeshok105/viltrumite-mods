@@ -6,6 +6,8 @@
 # Default OUT_DIR writes base64 files for decodeBinaryAssets. Mono 44.1 kHz
 # Ogg Vorbis. Each sound is scaled to TARGET_MEAN dB (the level of the stage 1-3
 # sounds) and its decoded peak is kept at or below -1.5 dB (Vorbis overshoot).
+# alimiter runs with level=disabled (its default auto-level changes the mix) and
+# delays the output by its 5 ms look-ahead, so fades that must reach zero go last.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="${1:-$ROOT/viltrumitecore/src/main/binassets/assets/viltrumitecore/sounds/ironman}"
