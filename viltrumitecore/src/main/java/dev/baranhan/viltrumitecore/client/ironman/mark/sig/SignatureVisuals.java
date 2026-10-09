@@ -38,7 +38,6 @@ public final class SignatureVisuals {
    private static final List<PlayerGeoLayer.Pass> BOOSTER_PASSES = List.of(cutout("booster"), glow("booster_glow", 1.0F));
    private static final List<PlayerGeoLayer.Pass> TURRET_PASSES = List.of(cutout("turret"), glow("turret_glow", 1.0F));
    private static final List<PlayerGeoLayer.Pass> GLOVE_PASSES = List.of(cutout("glove"));
-   private static final List<PlayerGeoLayer.Pass> CAMO_PASSES = List.of(new PlayerGeoLayer.Pass(texture("camo_ripple"), PlayerGeoLayer.Pass.Kind.GLOW, 0.75F, 0.92F, 1.0F, 0.8F));
 
    private SignatureVisuals() {
    }
@@ -74,7 +73,7 @@ public final class SignatureVisuals {
          }
          case MARK_15 -> {
             if (IronManFlags.is(flags, IronManFlags.Field.MARK_CAMO) && !firstPerson) {
-               out.add(new PlayerGeoLayer.Part(CAMO, CAMO_PASSES));
+               out.add(new PlayerGeoLayer.Part(CAMO, List.of(camoPass(player))));
             }
          }
          case MARK_39 -> {
@@ -114,6 +113,13 @@ public final class SignatureVisuals {
             flame.hidden = length <= 0.01F;
          }
       });
+   }
+
+   /** Ripple strength: faint in hover, stronger while moving or attacking (spec §13.4). */
+   private static PlayerGeoLayer.Pass camoPass(AbstractClientPlayer player) {
+      float speed = (float)Mth.clamp(player.getDeltaMovement().horizontalDistance() * 4.0, 0.0, 1.0);
+      float alpha = 0.12F + 0.5F * speed + (player.swinging ? 0.3F : 0.0F);
+      return new PlayerGeoLayer.Pass(texture("camo_ripple"), PlayerGeoLayer.Pass.Kind.GLOW, 0.75F, 0.92F, 1.0F, alpha);
    }
 
    /** Turret yaw (radians) that turns the barrel towards the synced aim point, relative to the body. */
