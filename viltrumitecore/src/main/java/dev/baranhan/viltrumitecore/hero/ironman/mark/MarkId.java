@@ -53,6 +53,19 @@ public enum MarkId {
       };
    }
 
+   /** Signature asset key (panel icon {@code sig_<key>.png}, spec §13). */
+   public String signatureKey() {
+      return switch (this) {
+         case MARK_7 -> "micro_laser";
+         case MARK_42 -> "rocket_fist";
+         case MARK_15 -> "camouflage";
+         case MARK_39 -> "starboost";
+         case MARK_17 -> "pulse_unibeam";
+         case WAR_MACHINE_MK2 -> "shoulder_gun";
+         case IRON_HEART_MK3 -> "slam";
+      };
+   }
+
    public static int count() {
       return VALUES.length;
    }

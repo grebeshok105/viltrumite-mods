@@ -67,7 +67,7 @@ public final class IronManAbilities {
 
    /** Panel art of a mark signature: tools/assets/make_ironman_stage4_assets.py. */
    public static ResourceLocation signatureIcon(dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId mark) {
-      return new ResourceLocation("viltrumitecore", "textures/gui/ability/ironman/sig_" + mark.key() + ".png");
+      return new ResourceLocation("viltrumitecore", "textures/gui/ability/ironman/sig_" + mark.signatureKey() + ".png");
    }
 
    @Nullable
