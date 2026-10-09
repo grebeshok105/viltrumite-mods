@@ -4,11 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.baranhan.viltrumitecore.ability.ViltrumiteAbilities;
 import dev.baranhan.viltrumitecore.ability.ViltrumiteAbility;
 import dev.baranhan.viltrumitecore.client.AbilityInputManager;
+import dev.baranhan.viltrumitecore.client.hero.PanelStyle;
+import dev.baranhan.viltrumitecore.client.hero.PanelStyles;
 import dev.baranhan.viltrumitecore.util.ViltrumiteAbilityUser;
 import dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,9 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin({ForgeGui.class})
 public class ViltrumiteInGameHudMixin {
-   @Unique
-   private static final ResourceLocation HOTBAR_TEXTURE = new ResourceLocation("viltrumitecore", "textures/gui/ability_hotbar.png");
-
    @Inject(
       method = {"render"},
       at = {@At("TAIL")}
@@ -50,8 +48,8 @@ public class ViltrumiteInGameHudMixin {
             int offset = activePage * 6;
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            guiGraphics.blit(HOTBAR_TEXTURE, rightBarX, barY, 0.0F, 22.0F, rightWidth, barHeight, 128, 186);
-            guiGraphics.blit(HOTBAR_TEXTURE, vertBarX, vertBarY, 0.0F, 44.0F, vertWidth, vertHeight, 128, 186);
+            PanelStyle style = PanelStyles.of(player);
+            style.drawFrames(guiGraphics, new PanelStyle.Bounds(rightBarX, barY, rightWidth, barHeight), new PanelStyle.Bounds(vertBarX, vertBarY, vertWidth, vertHeight));
 
             for (int i = 0; i < 6; i++) {
                int slotX = vertBarX + 3;
@@ -85,13 +83,12 @@ public class ViltrumiteInGameHudMixin {
                   guiGraphics.drawString(client.font, keyName, highlightX + 2, slotY + 4, 16777215, true);
                }
 
-               if (abilityId != null && !abilityId.isEmpty()) {
-                  ViltrumiteAbility ability = ViltrumiteAbilities.get(abilityId);
-                  if (ability != null) {
-                     guiGraphics.blit(ability.getIcon(player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
-                     if (ability.isGrey(player)) {
-                        guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, -1875692749);
-                     }
+               ViltrumiteAbility ability = abilityId != null && !abilityId.isEmpty() ? ViltrumiteAbilities.get(abilityId) : null;
+               style.drawSlot(guiGraphics, slotX, slotY, ability == null);
+               if (ability != null) {
+                  guiGraphics.blit(ability.getIcon(player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
+                  if (ability.isGrey(player)) {
+                     style.drawCooldown(guiGraphics, slotX, slotY);
                   }
                }
             }
@@ -99,17 +96,19 @@ public class ViltrumiteInGameHudMixin {
             int indicatorX = vertBarX + 5;
             int indicatorY = vertBarY - 14;
             guiGraphics.fill(indicatorX, indicatorY, indicatorX + 13, indicatorY + 12, 1610612736);
-            guiGraphics.drawString(client.font, String.valueOf(activePage + 1), indicatorX + 4, indicatorY + 2, 16769280, true);
+            guiGraphics.drawString(client.font, String.valueOf(activePage + 1), indicatorX + 4, indicatorY + 2, style.accentColor(), true);
             String[] rightIds = new String[]{"viltrumite:speed_lock", "viltrumite:fast_takeoff", "viltrumite:supersonic_flight"};
 
             for (int i = 0; i < 3; i++) {
                int slotX = rightBarX + 3 + i * 20;
                int slotY = barY + 3;
                ViltrumiteAbility ability = ViltrumiteAbilities.get(rightIds[i]);
-               if (ability != null && dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).ownsAbility(rightIds[i])) {
+               boolean owned = ability != null && dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).ownsAbility(rightIds[i]);
+               style.drawSlot(guiGraphics, slotX, slotY, !owned);
+               if (owned) {
                   guiGraphics.blit(ability.getIcon(player), slotX, slotY, 0.0F, 0.0F, 16, 16, 16, 16);
                   if (ability.isGrey(player)) {
-                     guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, -1875692749);
+                     style.drawCooldown(guiGraphics, slotX, slotY);
                   }
                }
             }

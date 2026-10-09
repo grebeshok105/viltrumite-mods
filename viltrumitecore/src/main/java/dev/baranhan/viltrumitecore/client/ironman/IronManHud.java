@@ -1,0 +1,104 @@
+package dev.baranhan.viltrumitecore.client.ironman;
+
+import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManRules;
+import dev.baranhan.viltrumiteflight.util.FlightState;
+import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+
+/**
+ * Suit HUD (spec §15, Stage 1 without the helmet system): left — energy bar
+ * (cyan, amber below 30, red blinking at 0, "gliding" label) and three
+ * overheat pips (empty until Stage 2); in flight — speed and altitude below
+ * (the right edge belongs to the ability panel).
+ * Hidden while the suit is off.
+ */
+@EventBusSubscriber(
+   modid = "viltrumitecore",
+   bus = Bus.FORGE,
+   value = {Dist.CLIENT}
+)
+public final class IronManHud {
+   private static final int WIDTH = 80;
+   private static final int HEIGHT = 5;
+   private static final int LOW_ENERGY = 30;
+
+   private IronManHud() {
+   }
+
+   /** Bar colour (ARGB) for an energy value; blink = current blink phase at 0. */
+   public static int energyColor(float energy, boolean blinkOn) {
+      if (energy <= 0.0F) {
+         return blinkOn ? 0xFFFF3030 : 0xFF601010;
+      }
+
+      return energy < LOW_ENERGY ? 0xFFFFB020 : 0xFF50D8FF;
+   }
+
+   @SubscribeEvent
+   public static void onRenderGui(RenderGuiEvent.Post event) {
+      Minecraft client = Minecraft.getInstance();
+      LocalPlayer player = client.player;
+      if (client.options.hideGui || player == null || player.isSpectator()) {
+         return;
+      }
+
+      HeroPublicSnapshot snapshot = IronManView.of(player);
+      if (snapshot == null || !IronManView.worn(snapshot) && !IronManView.transitioning(snapshot)) {
+         return;
+      }
+
+      GuiGraphics graphics = event.getGuiGraphics();
+      Font font = client.font;
+      float energy = IronManView.energy(snapshot);
+      boolean blink = (player.tickCount / 5) % 2 == 0;
+      int x = 8;
+      int y = graphics.guiHeight() / 2 - 20;
+      graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.energy"), x, y, 0x9FE8FF, true);
+      int barY = y + 11;
+      graphics.fill(x - 1, barY - 1, x + WIDTH + 1, barY + HEIGHT + 1, 0xA0081420);
+      int fill = Math.round(WIDTH * energy / IronManRules.ENERGY_MAX);
+      int color = energyColor(energy, blink);
+      // Empty: the whole bar blinks red.
+      graphics.fill(x, barY, x + (energy <= 0.0F ? WIDTH : fill), barY + HEIGHT, color);
+      graphics.fill(x, barY, x + fill, barY + 1, 0x60FFFFFF);
+      // Weapons unlock mark (energy needed for repulsors, Stage 2).
+      int mark = x + Math.round(WIDTH * IronManRules.WEAPONS_UNLOCK / IronManRules.ENERGY_MAX);
+      graphics.fill(mark, barY - 1, mark + 1, barY + HEIGHT + 1, 0xC0FFFFFF);
+      String value = Math.round(energy) + "%";
+      graphics.drawString(font, value, x + WIDTH + 4, barY - 2, color & 0xFFFFFF, true);
+      // Overheat pips (wired in Stage 2).
+      int pipY = barY + HEIGHT + 4;
+      for (int i = 0; i < 3; i++) {
+         int px = x + i * 8;
+         graphics.fill(px, pipY, px + 6, pipY + 3, 0x80103040);
+         graphics.fill(px, pipY, px + 6, pipY + 1, 0x8060D8FF);
+      }
+
+      if (IronManView.glide(snapshot)) {
+         graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.glide"), x, pipY + 7, blink ? 0xFFB020 : 0xFF6030, true);
+      }
+
+      if (player instanceof ViltrumiteFlightPlayer flyer && flyer.getFlightState() != FlightState.NONE) {
+         double speed = player.getDeltaMovement().length() * 20.0;
+         int ground = player.level().getHeight(Heightmap.Types.MOTION_BLOCKING, player.getBlockX(), player.getBlockZ());
+         int altitude = Math.max(0, (int)Math.floor(player.getY()) - ground);
+         String speedText = Component.translatable("hud.viltrumitecore.ironman.speed", Math.round(speed)).getString();
+         String altText = Component.translatable("hud.viltrumitecore.ironman.altitude", altitude).getString();
+         // Below the energy block: the right edge belongs to the ability panel.
+         int flightY = pipY + 19;
+         graphics.drawString(font, speedText, x, flightY, 0x9FE8FF, true);
+         graphics.drawString(font, altText, x, flightY + 10, 0x9FE8FF, true);
+      }
+   }
+}
