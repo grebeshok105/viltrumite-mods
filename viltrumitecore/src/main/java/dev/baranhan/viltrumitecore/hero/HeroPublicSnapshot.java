@@ -33,9 +33,17 @@ public record HeroPublicSnapshot(
    /** Resource-driven lock (Homelander: overheat). */
    boolean resourceLocked,
    /** Generic hero state bits; meaning owned by the hero (see heroFlag). */
-   int heroFlags
+   int heroFlags,
+   /**
+    * Generic extra cooldowns (page 2 / hero systems), ticks left, at most
+    * {@link #EXTRA_COOLDOWN_MAX}. Index meaning is owned by the hero. Encoded
+    * only when non-empty: older encodings decode as empty.
+    */
+   int[] extraCooldowns
 ) {
    public static final int COOLDOWN_COUNT = 6;
+   public static final int EXTRA_COOLDOWN_MAX = 16;
+   private static final int[] NO_EXTRA = new int[0];
    public static final HeroPublicSnapshot EMPTY = new HeroPublicSnapshot(
       HeroId.HUMAN, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1, new int[COOLDOWN_COUNT], false
    );
@@ -54,6 +62,25 @@ public record HeroPublicSnapshot(
       this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
          lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy,
          availableActions, actionTarget, 0, false, 0);
+   }
+
+   public HeroPublicSnapshot(HeroId heroId, int actionId, int actionElapsed, int actionLength, int hearts,
+      boolean lionActive, int lionWindowLeft, int lionWindowMax, boolean lionOverheat, boolean madness,
+      int madnessTicksLeft, int ritualTicks, int controlTargetId, int[] cooldowns, boolean actionBusy,
+      int availableActions, @Nullable Vec3 actionTarget, int resource, boolean resourceLocked, int heroFlags) {
+      this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
+         lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy,
+         availableActions, actionTarget, resource, resourceLocked, heroFlags, NO_EXTRA);
+   }
+
+   public HeroPublicSnapshot {
+      extraCooldowns = extraCooldowns == null ? NO_EXTRA
+         : extraCooldowns.length > EXTRA_COOLDOWN_MAX ? Arrays.copyOf(extraCooldowns, EXTRA_COOLDOWN_MAX) : extraCooldowns;
+   }
+
+   /** Extra cooldown ticks at an index; 0 when absent. */
+   public int extraCooldown(int index) {
+      return index >= 0 && index < this.extraCooldowns.length ? this.extraCooldowns[index] : 0;
    }
 
    public boolean heroFlag(int bit) {
@@ -86,7 +113,8 @@ public record HeroPublicSnapshot(
 
       builder.append(';').append(this.actionBusy ? 1 : 0);
       builder.append(';').append(this.availableActions);
-      boolean hasResource = this.resource != 0 || this.resourceLocked || this.heroFlags != 0;
+      boolean hasExtra = this.extraCooldowns.length > 0;
+      boolean hasResource = this.resource != 0 || this.resourceLocked || this.heroFlags != 0 || hasExtra;
       if (this.actionTarget != null) {
          builder.append(';').append(this.actionTarget.x).append(';').append(this.actionTarget.y).append(';').append(this.actionTarget.z);
       } else if (hasResource) {
@@ -98,6 +126,14 @@ public record HeroPublicSnapshot(
          builder.append(';').append(this.resource);
          builder.append(';').append(this.resourceLocked ? 1 : 0);
          builder.append(';').append(this.heroFlags);
+      }
+
+      // Extra cooldowns only when present: count, then the values.
+      if (hasExtra) {
+         builder.append(';').append(this.extraCooldowns.length);
+         for (int value : this.extraCooldowns) {
+            builder.append(';').append(value);
+         }
       }
       return builder.toString();
    }
@@ -126,6 +162,16 @@ public record HeroPublicSnapshot(
          if (target != null && (!Double.isFinite(target.x) || !Double.isFinite(target.y) || !Double.isFinite(target.z))) {
             return EMPTY;
          }
+
+         int[] extra = NO_EXTRA;
+         if (parts.length > 27) {
+            int count = Math.max(0, Math.min(EXTRA_COOLDOWN_MAX, Integer.parseInt(parts[27])));
+            extra = new int[count];
+            for (int i = 0; i < count; i++) {
+               int index = 28 + i;
+               extra[i] = index < parts.length ? Integer.parseInt(parts[index]) : 0;
+            }
+         }
          return new HeroPublicSnapshot(
             heroId,
             Integer.parseInt(parts[1]),
@@ -146,7 +192,8 @@ public record HeroPublicSnapshot(
             target,
             parts.length > 24 ? Integer.parseInt(parts[24]) : 0,
             parts.length > 25 && "1".equals(parts[25]),
-            parts.length > 26 ? Integer.parseInt(parts[26]) : 0
+            parts.length > 26 ? Integer.parseInt(parts[26]) : 0,
+            extra
          );
       } catch (NumberFormatException exception) {
          return EMPTY;
@@ -179,7 +226,8 @@ public record HeroPublicSnapshot(
             && Objects.equals(this.actionTarget, snapshot.actionTarget)
             && this.resource == snapshot.resource
             && this.resourceLocked == snapshot.resourceLocked
-            && this.heroFlags == snapshot.heroFlags;
+            && this.heroFlags == snapshot.heroFlags
+            && Arrays.equals(this.extraCooldowns, snapshot.extraCooldowns);
       }
    }
 
@@ -205,6 +253,7 @@ public record HeroPublicSnapshot(
       result = 31 * result + this.resource;
       result = 31 * result + Boolean.hashCode(this.resourceLocked);
       result = 31 * result + this.heroFlags;
+      result = 31 * result + Arrays.hashCode(this.extraCooldowns);
       return result;
    }
 }

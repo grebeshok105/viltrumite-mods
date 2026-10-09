@@ -18,6 +18,15 @@ public class ViltrumiteEntities {
       () -> Builder.of(BloodDropEntity::new, MobCategory.MISC).sized(0.12F, 0.12F).clientTrackingRange(4).updateInterval(1).fireImmune().build("blood_drop")
    );
 
+   public static final RegistryObject<EntityType<RepulsorBlastEntity>> REPULSOR_BLAST = ENTITIES.register(
+      "repulsor_blast",
+      () -> Builder.<RepulsorBlastEntity>of(RepulsorBlastEntity::new, MobCategory.MISC).sized(0.3F, 0.3F).clientTrackingRange(8).updateInterval(1).fireImmune().noSave().build("repulsor_blast")
+   );
+   public static final RegistryObject<EntityType<MicroMissileEntity>> MICRO_MISSILE = ENTITIES.register(
+      "micro_missile",
+      () -> Builder.<MicroMissileEntity>of(MicroMissileEntity::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(10).updateInterval(1).fireImmune().noSave().build("micro_missile")
+   );
+
    public static void register(IEventBus eventBus) {
       ENTITIES.register(eventBus);
    }

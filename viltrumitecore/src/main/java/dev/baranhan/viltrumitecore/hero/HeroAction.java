@@ -19,7 +19,18 @@ public enum HeroAction {
    /** Iron Man "Костюм" key: put on / take off the suit. */
    SUIT,
    /** Claimed LMB (Iron Man in flight: fly-by punch; air strike in Task 9). */
-   PRIMARY_ATTACK;
+   PRIMARY_ATTACK,
+   /** Claimed RMB: the current right tool (Iron Man repulsor / nano weapon). */
+   SECONDARY_USE,
+   /** Claimed MMB: cycle the right tool. */
+   TOOL_CYCLE,
+   UNIBEAM,
+   MISSILES,
+   NANO_ARSENAL,
+   /** Guard key (F) held: shield. */
+   GUARD,
+   /** RMB on a HeroInteractable entity instead of the tool. */
+   INTERACT;
 
    public static HeroAction byId(int ordinal) {
       HeroAction[] values = values();

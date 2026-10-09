@@ -240,6 +240,17 @@ public final class HeroEvents {
       }
    }
 
+   /**
+    * Guard seam: a hero that owns the swap-hands key cancels the vanilla swap
+    * on the server too, so a forged swap packet does nothing.
+    */
+   @SubscribeEvent
+   public static void onSwapHands(net.minecraftforge.event.entity.living.LivingSwapItemsEvent.Hands event) {
+      if (event.getEntity() instanceof ServerPlayer player && HeroRegistry.get(player).blocksHandSwap(player)) {
+         event.setCanceled(true);
+      }
+   }
+
    /** Damage layers, step 1: absorbIncoming before armor and knockback (HeroDamageLayers). */
    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
    public static void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {

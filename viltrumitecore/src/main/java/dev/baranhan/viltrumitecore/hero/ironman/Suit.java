@@ -5,13 +5,40 @@ import net.minecraft.nbt.CompoundTag;
 /** Nano Mark 50 state machine: put on / take off as a ~1 s wave (spec §4.2, §4.5). */
 public final class Suit {
    private static final String KEY = "Suit";
+   private static final String NANO_LOCK_KEY = "NanoLock";
    private SuitState state = SuitState.NONE;
    private int ticks;
+   /** After a core explosion the nano cannot be put on (spec §9.4). */
+   private int nanoLockTicks;
 
-   /** "Костюм" key: NONE → DEPLOYING, NANO → RETRACTING. Ignored mid-wave. */
+   public int nanoLockTicks() {
+      return this.nanoLockTicks;
+   }
+
+   public void setNanoLock(int ticks) {
+      this.nanoLockTicks = Math.max(0, ticks);
+   }
+
+   public boolean nanoLocked() {
+      return this.nanoLockTicks > 0;
+   }
+
+   /** Core explosion: the nanites scatter, the suit is gone at once. */
+   public void scatter(int lockTicks) {
+      this.set(SuitState.NONE);
+      this.nanoLockTicks = Math.max(this.nanoLockTicks, lockTicks);
+   }
+
+   /** "Костюм" key: NONE → DEPLOYING, NANO → RETRACTING. Ignored mid-wave and while the nano is locked. */
    public boolean toggle() {
       switch (this.state) {
-         case NONE -> this.start(SuitState.DEPLOYING);
+         case NONE -> {
+            if (this.nanoLocked()) {
+               return false;
+            }
+
+            this.start(SuitState.DEPLOYING);
+         }
          case NANO -> this.start(SuitState.RETRACTING);
          default -> {
             return false;
@@ -22,6 +49,10 @@ public final class Suit {
    }
 
    public void tick() {
+      if (this.nanoLockTicks > 0) {
+         this.nanoLockTicks--;
+      }
+
       if (this.state == SuitState.DEPLOYING && ++this.ticks >= IronManRules.SUIT_DEPLOY_TICKS) {
          this.set(SuitState.NANO);
       } else if (this.state == SuitState.RETRACTING && ++this.ticks >= IronManRules.SUIT_RETRACT_TICKS) {
@@ -83,6 +114,7 @@ public final class Suit {
 
    public void save(CompoundTag tag) {
       tag.putString(KEY, target(this.state).name());
+      tag.putInt(NANO_LOCK_KEY, this.nanoLockTicks);
    }
 
    public void load(CompoundTag tag) {
@@ -96,6 +128,7 @@ public final class Suit {
       }
 
       this.set(loaded);
+      this.nanoLockTicks = Math.max(0, tag.getInt(NANO_LOCK_KEY));
    }
 
    private static SuitState target(SuitState state) {

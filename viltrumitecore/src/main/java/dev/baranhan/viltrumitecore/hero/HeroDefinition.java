@@ -104,6 +104,21 @@ public interface HeroDefinition {
       return null;
    }
 
+   /**
+    * Action for the guard key (vanilla swap-hands, default F) right now, or
+    * null for the vanilla swap. Both sides, synced data only on the client:
+    * when non-null the client consumes the swap key and sends held edges.
+    */
+   @javax.annotation.Nullable
+   default HeroAction guardAction(Player player) {
+      return null;
+   }
+
+   /** Server: cancel the vanilla main/off-hand swap for this player right now (also forged packets). */
+   default boolean blocksHandSwap(Player player) {
+      return false;
+   }
+
    /** A claimed press was refused by canAct (feedback only, e.g. a locked message). */
    default void onInputRefused(ServerPlayer player, HeroAction action) {
    }

@@ -91,7 +91,7 @@ public final class HeldInputs {
       return new Sink() {
          @Override
          public HeroAction claim(MouseButton button) {
-            return hero.mouseAction(button, player);
+            return button == MouseButton.GUARD ? hero.guardAction(player) : hero.mouseAction(button, player);
          }
 
          @Override

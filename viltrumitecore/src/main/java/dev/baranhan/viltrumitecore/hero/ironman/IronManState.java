@@ -3,6 +3,7 @@ package dev.baranhan.viltrumitecore.hero.ironman;
 import dev.baranhan.viltrumitecore.hero.CleanupReason;
 import dev.baranhan.viltrumitecore.hero.HeroId;
 import dev.baranhan.viltrumitecore.hero.HeroPlayer;
+import dev.baranhan.viltrumitecore.hero.ironman.combat.*;
 import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -26,6 +27,48 @@ public final class IronManState {
    /** Transient: ticks until the next fly-by punch may land. */
    public int flyByCooldown;
 
+   // ---- Stage 2: nano combat (plan Tasks 1-10) ----
+   /** Persisted (NBT CoreOverheats): only a core explosion or death resets it. */
+   public final CoreOverheat overheat = new CoreOverheat();
+   /** Transient: current RMB tool (server authority; synced in RMB_TOOL bits). */
+   public RightTool rightTool = RightTool.REPULSOR;
+   /** Transient: the tool the held RMB started with (release goes there). */
+   @Nullable
+   public RightTool heldTool;
+   public final Repulsor repulsor = new Repulsor();
+   public int recoilTicks;
+   public boolean recoilRight;
+   public final UnibeamTimeline unibeam = new UnibeamTimeline();
+   public final Overdraft overdraft = new Overdraft();
+   /** Beam direction (slow turn) and the synced beam end point. */
+   @Nullable
+   public net.minecraft.world.phys.Vec3 beamDir;
+   @Nullable
+   public net.minecraft.world.phys.Vec3 beamEnd;
+   /** Own core explosion window: damage from it is floored (spec §9.4). */
+   public int coreExplosionWindow;
+   public final MissileLock missiles = new MissileLock();
+   public final NanoArsenal arsenal = new NanoArsenal();
+   /** LMB weapon strike pose timeline. */
+   public int strikeTicks;
+   public int strikeLength;
+   /** Hammer RMB charge ticks; -1 = not charging. */
+   public int hammerCharge = -1;
+   /** Blade dash: ticks left and the path. */
+   public int dashTicks;
+   @Nullable
+   public net.minecraft.world.phys.Vec3 dashFrom;
+   @Nullable
+   public net.minecraft.world.phys.Vec3 dashTo;
+   public int dashTargetId = -1;
+   public final HammerLaunch hammerLaunch = new HammerLaunch();
+   public final Shield shield = new Shield();
+   /** Projectiles to redirect next tick after a perfect block (entity id → speed). */
+   public final java.util.Map<Integer, Double> reflect = new java.util.HashMap<>();
+   /** Nano damage zones (bit 0 mask, 1 shoulder, 2 chest) and repair ticks left. */
+   public int damagedZones;
+   public int repairTicks;
+
    /** Flight grant: only while fully worn. */
    public boolean wantsFlight() {
       return this.suit.worn();
@@ -37,29 +80,69 @@ public final class IronManState {
       this.airStrike.consume();
       this.heavyPoseTicks = 0;
       this.ramHits.clear();
+      this.stopCombat();
       switch (reason) {
          case DEATH -> {
             this.suit.clear();
             this.glide = false;
+            // Spec §9.1/§16: death cancels a pending core explosion and resets the counter.
+            this.overdraft.cancel();
+            this.overheat.resetByDeath();
          }
-         case DISCONNECT -> this.suit.resolve();
+         case DISCONNECT -> {
+            this.suit.resolve();
+            this.overdraft.cancel();
+         }
          case HERO_CHANGE -> {
             this.suit.clear();
             this.energy.reset();
             this.glide = false;
+            this.overdraft.cancel();
+            this.overheat.resetByDeath();
+            this.suit.setNanoLock(0);
          }
       }
    }
 
-   /** Death: suit off, energy full; cooldowns carry over (later stages). */
+   /**
+    * Every combat channel off at once, without shots (cleanup, suit lost).
+    * The overdraft is not touched: it ends only by explosion, death or hero change.
+    */
+   public void stopCombat() {
+      this.repulsor.cancel();
+      this.heldTool = null;
+      this.recoilTicks = 0;
+      if (!this.overdraft.active()) {
+         this.unibeam.clear();
+      }
+
+      this.beamDir = null;
+      this.beamEnd = null;
+      this.missiles.cancel();
+      this.arsenal.clear();
+      this.rightTool = RightTool.REPULSOR;
+      this.strikeTicks = 0;
+      this.hammerCharge = -1;
+      this.dashTicks = 0;
+      this.hammerLaunch.clear();
+      this.shield.lower();
+      this.reflect.clear();
+      this.damagedZones = 0;
+      this.repairTicks = 0;
+   }
+
+   /** Death: suit off, energy full; cooldowns carry over (nano lock), the overheat counter resets. */
    public static IronManState cloneForRespawn(IronManState original) {
-      return new IronManState();
+      IronManState state = new IronManState();
+      state.suit.setNanoLock(original.suit.nanoLockTicks());
+      return state;
    }
 
    public void save(CompoundTag nbt) {
       CompoundTag tag = new CompoundTag();
       this.suit.save(tag);
       this.energy.save(tag);
+      this.overheat.save(tag);
       nbt.put(KEY, tag);
    }
 
@@ -67,6 +150,7 @@ public final class IronManState {
       CompoundTag tag = nbt.getCompound(KEY);
       this.suit.load(tag);
       this.energy.load(tag);
+      this.overheat.load(tag);
       this.glide = false;
    }
 

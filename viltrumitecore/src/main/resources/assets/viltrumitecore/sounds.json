@@ -175,5 +175,159 @@
     "sounds": [
       "viltrumitecore:ironman/flyby_hit"
     ]
+  },
+  "ironman_repulsor_shot": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_repulsor_shot",
+    "sounds": [
+      "viltrumitecore:ironman/repulsor_shot"
+    ]
+  },
+  "ironman_repulsor_charge": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_repulsor_charge",
+    "sounds": [
+      "viltrumitecore:ironman/repulsor_charge"
+    ]
+  },
+  "ironman_repulsor_volley": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_repulsor_volley",
+    "sounds": [
+      "viltrumitecore:ironman/repulsor_volley"
+    ]
+  },
+  "ironman_repulsor_fizzle": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_repulsor_fizzle",
+    "sounds": [
+      "viltrumitecore:ironman/repulsor_fizzle"
+    ]
+  },
+  "ironman_unibeam_charge": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_unibeam_charge",
+    "sounds": [
+      "viltrumitecore:ironman/unibeam_charge"
+    ]
+  },
+  "ironman_unibeam_loop": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_unibeam_loop",
+    "sounds": [
+      "viltrumitecore:ironman/unibeam_loop"
+    ]
+  },
+  "ironman_unibeam_overheat": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_unibeam_overheat",
+    "sounds": [
+      "viltrumitecore:ironman/unibeam_overheat"
+    ]
+  },
+  "ironman_overdraft_sputter": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_overdraft_sputter",
+    "sounds": [
+      "viltrumitecore:ironman/overdraft_sputter"
+    ]
+  },
+  "ironman_core_explosion": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_core_explosion",
+    "sounds": [
+      "viltrumitecore:ironman/core_explosion"
+    ]
+  },
+  "ironman_nanite_form": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_nanite_form",
+    "sounds": [
+      "viltrumitecore:ironman/nanite_form"
+    ]
+  },
+  "ironman_nanite_dissolve": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_nanite_dissolve",
+    "sounds": [
+      "viltrumitecore:ironman/nanite_dissolve"
+    ]
+  },
+  "ironman_nanite_repair": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_nanite_repair",
+    "sounds": [
+      "viltrumitecore:ironman/nanite_repair"
+    ]
+  },
+  "ironman_blade_slash": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_blade_slash",
+    "sounds": [
+      "viltrumitecore:ironman/blade_slash"
+    ]
+  },
+  "ironman_hammer_hit": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_hammer_hit",
+    "sounds": [
+      "viltrumitecore:ironman/hammer_hit"
+    ]
+  },
+  "ironman_hammer_slam": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_hammer_slam",
+    "sounds": [
+      "viltrumitecore:ironman/hammer_slam"
+    ]
+  },
+  "ironman_shield_open": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_shield_open",
+    "sounds": [
+      "viltrumitecore:ironman/shield_open"
+    ]
+  },
+  "ironman_shield_hit": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_shield_hit",
+    "sounds": [
+      "viltrumitecore:ironman/shield_hit"
+    ]
+  },
+  "ironman_shield_perfect": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_shield_perfect",
+    "sounds": [
+      "viltrumitecore:ironman/shield_perfect"
+    ]
+  },
+  "ironman_missile_flaps": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_missile_flaps",
+    "sounds": [
+      "viltrumitecore:ironman/missile_flaps"
+    ]
+  },
+  "ironman_missile_launch": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_missile_launch",
+    "sounds": [
+      "viltrumitecore:ironman/missile_launch"
+    ]
+  },
+  "ironman_missile_explode": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_missile_explode",
+    "sounds": [
+      "viltrumitecore:ironman/missile_explode"
+    ]
+  },
+  "ironman_jarvis_warning": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_jarvis_warning",
+    "sounds": [
+      "viltrumitecore:ironman/jarvis_warning"
+    ]
   }
 }

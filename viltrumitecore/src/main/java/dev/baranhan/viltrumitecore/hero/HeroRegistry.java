@@ -147,12 +147,19 @@ public final class HeroRegistry {
       heroPlayer.viltrumitecore$setSyncedSnapshot(snapshot);
    }
 
-   /** Owner-private snapshot push; only the owner sees carrier ids etc. */
+   /** Owner-private snapshot push of the CARRIERS section (carrier ids, focus targets). */
    public static void pushOwnerSnapshot(ServerPlayer player, HeroOwnerSnapshot snapshot) {
-      if (!snapshot.equals(((HeroPlayer)player).viltrumitecore$getOwnerSnapshot())) {
-         ((HeroPlayer)player).viltrumitecore$setOwnerSnapshot(snapshot);
+      pushOwnerSection(player, OwnerSection.CARRIERS, snapshot.section(OwnerSection.CARRIERS));
+   }
+
+   /** Replaces one owner-only section and sends it when it changed; other sections stay. */
+   public static void pushOwnerSection(ServerPlayer player, OwnerSection section, HeroOwnerSnapshot.Section value) {
+      HeroOwnerSnapshot current = ((HeroPlayer)player).viltrumitecore$getOwnerSnapshot();
+      HeroOwnerSnapshot.Section safe = value == null ? HeroOwnerSnapshot.Section.EMPTY : value;
+      if (!current.section(section).equals(safe)) {
+         ((HeroPlayer)player).viltrumitecore$setOwnerSnapshot(current.with(section, safe));
          dev.baranhan.viltrumitecore.network.CoreMessages.sendToPlayer(
-            new dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket(snapshot.carrierEntityIds()), player
+            new dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket(section, safe), player
          );
       }
    }
