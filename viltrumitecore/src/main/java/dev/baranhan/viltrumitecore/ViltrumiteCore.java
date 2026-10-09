@@ -74,6 +74,30 @@ public class ViltrumiteCore {
    public static final RegistryObject<SoundEvent> REGULUS_JUMP_CHARGE = SOUND_EVENTS.register(
       "regulus_jump_charge", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "regulus_jump_charge"))
    );
+   public static final RegistryObject<SoundEvent> IRONMAN_NANO_DEPLOY = SOUND_EVENTS.register(
+      "ironman_nano_deploy", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_nano_deploy"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_NANO_RETRACT = SOUND_EVENTS.register(
+      "ironman_nano_retract", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_nano_retract"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_THRUSTER_LOOP = SOUND_EVENTS.register(
+      "ironman_thruster_loop", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_thruster_loop"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_THRUSTER_SONIC = SOUND_EVENTS.register(
+      "ironman_thruster_sonic", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_thruster_sonic"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_LANDING_SOFT = SOUND_EVENTS.register(
+      "ironman_landing_soft", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_landing_soft"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_LANDING_HEAVY = SOUND_EVENTS.register(
+      "ironman_landing_heavy", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_landing_heavy"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_AIR_STRIKE = SOUND_EVENTS.register(
+      "ironman_air_strike", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_air_strike"))
+   );
+   public static final RegistryObject<SoundEvent> IRONMAN_FLYBY_HIT = SOUND_EVENTS.register(
+      "ironman_flyby_hit", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("viltrumitecore", "ironman_flyby_hit"))
+   );
 
    public ViltrumiteCore() {
       IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();

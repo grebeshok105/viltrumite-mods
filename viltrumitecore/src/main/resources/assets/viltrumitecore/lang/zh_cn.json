@@ -200,5 +200,17 @@
   "gui.viltrumitecore.race_selection.become_ironman": "成为钢铁侠",
   "hero.viltrumitecore.ironman": "钢铁侠",
   "ability.viltrumitecore.ironman_suit.name": "<gold>战衣",
-  "ability.viltrumitecore.ironman_suit.desc": "<grey>类型：<aqua>切换\n\n<grey>无装甲时：Mark 50 纳米战衣\n<grey>从反应堆中流出（约1秒）。\n<grey>穿着纳米战衣时：纳米机器人回到反应堆。\n\n<blue>钢铁侠"
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>类型：<aqua>切换\n\n<grey>无装甲时：Mark 50 纳米战衣\n<grey>从反应堆中流出（约1秒）。\n<grey>穿着纳米战衣时：纳米机器人回到反应堆。\n\n<blue>钢铁侠",
+  "subtitles.viltrumitecore.ironman_nano_deploy": "纳米战衣展开",
+  "subtitles.viltrumitecore.ironman_nano_retract": "纳米战衣收回",
+  "subtitles.viltrumitecore.ironman_thruster_loop": "推进器轰鸣",
+  "subtitles.viltrumitecore.ironman_thruster_sonic": "推进器尖啸",
+  "subtitles.viltrumitecore.ironman_landing_soft": "钢铁侠着陆",
+  "subtitles.viltrumitecore.ironman_landing_heavy": "钢铁侠重落地",
+  "subtitles.viltrumitecore.ironman_air_strike": "空袭命中",
+  "subtitles.viltrumitecore.ironman_flyby_hit": "装甲掠击命中",
+  "hud.viltrumitecore.ironman.energy": "能量",
+  "hud.viltrumitecore.ironman.glide": "滑翔",
+  "hud.viltrumitecore.ironman.speed": "速度 %s 格/秒",
+  "hud.viltrumitecore.ironman.altitude": "高度 %s"
 }

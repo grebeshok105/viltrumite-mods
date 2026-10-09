@@ -41,6 +41,7 @@ public final class SonicRam {
          if (due(state.ramHits, entity.getUUID(), now)
             && entity.hurt(player.damageSources().playerAttack(player), IronManRules.RAM_DAMAGE)) {
             FlyBy.push((LivingEntity)entity, push);
+            IronManSounds.play(player, dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_FLYBY_HIT.get(), 1.4F, 0.7F);
          }
       }
    }

@@ -41,6 +41,7 @@ public final class FlyBy {
       Result result = compute(velocity);
       if (target.hurt(player.damageSources().playerAttack(player), result.damage())) {
          push(target, result.knockback());
+         IronManSounds.play(player, dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_FLYBY_HIT.get(), 1.0F, 0.9F + player.getRandom().nextFloat() * 0.2F);
       }
 
       player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);

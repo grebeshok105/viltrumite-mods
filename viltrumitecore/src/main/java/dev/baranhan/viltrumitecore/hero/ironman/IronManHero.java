@@ -288,7 +288,12 @@ public class IronManHero implements HeroDefinition {
    @Override
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       if (action == HeroAction.SUIT && pressed && this.canAct(player, action)) {
-         IronManState.ensure(player).suit.toggle();
+         Suit suit = IronManState.ensure(player).suit;
+         if (suit.toggle()) {
+            IronManSounds.play(player, suit.state() == SuitState.DEPLOYING
+               ? dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_DEPLOY.get()
+               : dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_RETRACT.get(), 1.0F, 1.0F);
+         }
       } else if (action == HeroAction.PRIMARY_ATTACK && pressed && this.canAct(player, action)) {
          IronManState state = IronManState.ensure(player);
          dev.baranhan.viltrumiteflight.util.FlightState flight = flightState(player);

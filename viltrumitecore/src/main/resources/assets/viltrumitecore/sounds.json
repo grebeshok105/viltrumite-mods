@@ -119,5 +119,61 @@
     "sounds": [
       "viltrumitecore:homelander/roar_deep"
     ]
+  },
+  "ironman_nano_deploy": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_nano_deploy",
+    "sounds": [
+      "viltrumitecore:ironman/nano_deploy"
+    ]
+  },
+  "ironman_nano_retract": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_nano_retract",
+    "sounds": [
+      "viltrumitecore:ironman/nano_retract"
+    ]
+  },
+  "ironman_thruster_loop": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_thruster_loop",
+    "sounds": [
+      "viltrumitecore:ironman/thruster_loop"
+    ]
+  },
+  "ironman_thruster_sonic": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_thruster_sonic",
+    "sounds": [
+      "viltrumitecore:ironman/thruster_sonic"
+    ]
+  },
+  "ironman_landing_soft": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_landing_soft",
+    "sounds": [
+      "viltrumitecore:ironman/landing_soft"
+    ]
+  },
+  "ironman_landing_heavy": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_landing_heavy",
+    "sounds": [
+      "viltrumitecore:ironman/landing_heavy"
+    ]
+  },
+  "ironman_air_strike": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_air_strike",
+    "sounds": [
+      "viltrumitecore:ironman/air_strike"
+    ]
+  },
+  "ironman_flyby_hit": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_flyby_hit",
+    "sounds": [
+      "viltrumitecore:ironman/flyby_hit"
+    ]
   }
 }

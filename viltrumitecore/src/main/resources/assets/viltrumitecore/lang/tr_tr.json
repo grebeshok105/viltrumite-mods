@@ -200,5 +200,17 @@
   "gui.viltrumitecore.race_selection.become_ironman": "Iron Man ol",
   "hero.viltrumitecore.ironman": "Iron Man",
   "ability.viltrumitecore.ironman_suit.name": "<gold>Zırh",
-  "ability.viltrumitecore.ironman_suit.desc": "<grey>Tür: <aqua>Aç/Kapat\n\n<grey>Zırhsızken: Mark 50 nano zırh\n<grey>reaktörden yayılır (~1sn).\n<grey>Nano zırhtayken: nanitler reaktöre döner.\n\n<blue>Iron Man"
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>Tür: <aqua>Aç/Kapat\n\n<grey>Zırhsızken: Mark 50 nano zırh\n<grey>reaktörden yayılır (~1sn).\n<grey>Nano zırhtayken: nanitler reaktöre döner.\n\n<blue>Iron Man",
+  "subtitles.viltrumitecore.ironman_nano_deploy": "Nano zırh açılıyor",
+  "subtitles.viltrumitecore.ironman_nano_retract": "Nano zırh geri çekiliyor",
+  "subtitles.viltrumitecore.ironman_thruster_loop": "İticiler gürlüyor",
+  "subtitles.viltrumitecore.ironman_thruster_sonic": "İticiler çığlık atıyor",
+  "subtitles.viltrumitecore.ironman_landing_soft": "Iron Man iniyor",
+  "subtitles.viltrumitecore.ironman_landing_heavy": "Iron Man yere çakılıyor",
+  "subtitles.viltrumitecore.ironman_air_strike": "Hava saldırısı çarpıyor",
+  "subtitles.viltrumitecore.ironman_flyby_hit": "Zırhlı geçiş darbesi",
+  "hud.viltrumitecore.ironman.energy": "ENERJİ",
+  "hud.viltrumitecore.ironman.glide": "SÜZÜLME",
+  "hud.viltrumitecore.ironman.speed": "HIZ %s b/s",
+  "hud.viltrumitecore.ironman.altitude": "İRT %s"
 }

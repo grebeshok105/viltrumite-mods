@@ -200,5 +200,17 @@
   "gui.viltrumitecore.race_selection.become_ironman": "Iron Man werden",
   "hero.viltrumitecore.ironman": "Iron Man",
   "ability.viltrumitecore.ironman_suit.name": "<gold>Anzug",
-  "ability.viltrumitecore.ironman_suit.desc": "<grey>Typ: <aqua>Umschalten\n\n<grey>Ohne Rüstung: Der Nanoanzug Mark 50\n<grey>fließt aus dem Reaktor (~1s).\n<grey>Im Nanoanzug: Die Naniten kehren in den Reaktor zurück.\n\n<blue>Iron Man"
+  "ability.viltrumitecore.ironman_suit.desc": "<grey>Typ: <aqua>Umschalten\n\n<grey>Ohne Rüstung: Der Nanoanzug Mark 50\n<grey>fließt aus dem Reaktor (~1s).\n<grey>Im Nanoanzug: Die Naniten kehren in den Reaktor zurück.\n\n<blue>Iron Man",
+  "subtitles.viltrumitecore.ironman_nano_deploy": "Nanoanzug entfaltet sich",
+  "subtitles.viltrumitecore.ironman_nano_retract": "Nanoanzug zieht sich zurück",
+  "subtitles.viltrumitecore.ironman_thruster_loop": "Repulsor-Triebwerke dröhnen",
+  "subtitles.viltrumitecore.ironman_thruster_sonic": "Triebwerke kreischen",
+  "subtitles.viltrumitecore.ironman_landing_soft": "Iron Man landet",
+  "subtitles.viltrumitecore.ironman_landing_heavy": "Iron Man schlägt auf",
+  "subtitles.viltrumitecore.ironman_air_strike": "Luftschlag schlägt ein",
+  "subtitles.viltrumitecore.ironman_flyby_hit": "Gepanzerter Vorbeiflug-Treffer",
+  "hud.viltrumitecore.ironman.energy": "ENERGIE",
+  "hud.viltrumitecore.ironman.glide": "GLEITFLUG",
+  "hud.viltrumitecore.ironman.speed": "GESCHW %s B/s",
+  "hud.viltrumitecore.ironman.altitude": "HÖHE %s"
 }
