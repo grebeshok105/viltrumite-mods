@@ -150,6 +150,12 @@ Invariants:
 - Do not keep model or animation references across a resource reload.
 - `AnimRenderer.time` is wall clock × 20. It runs during pause.
 
+### 7.1 Geo parts on the player (approved extension)
+
+- `client/anim/render/PlayerGeoLayer` (registered for both player skins) draws Blockbench geo parts on the vanilla player model. Register a `PlayerGeoLayer.Provider` that returns `Part(model, texture, glow)` per player per frame.
+- Top bones must use player-armor names (`armorHead/Body/RightArm/LeftArm/RightLeg/LeftLeg`, `PlayerBoneMap`); they copy the final `ModelPart` pose (after every `setupAnim` TAIL mixin), children follow. Unknown top bones are hidden with one warning.
+- Base pass `entityCutoutNoCull`, glow pass `RenderType.eyes`. Do not use it for the suit body: the body is a skin (section 8, suit reveal).
+
 Template: `InfinityGunRenderer` (BEWLR). It selects `shoot` / `reload` / `idle` from NBT tick timers and hides the `right_arm` / `left_arm` bones to draw vanilla arms in first person.
 
 ## 8. World VFX

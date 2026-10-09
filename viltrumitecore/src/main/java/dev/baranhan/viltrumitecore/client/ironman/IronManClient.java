@@ -28,7 +28,9 @@ public final class IronManClient {
 
          @Override
          public Optional<ResourceLocation> skinVariant(AbstractClientPlayer player) {
-            return Optional.empty();
+            // Reveal frame of the nano wave (also the first-person hand texture).
+            int frame = IronManSkinView.frame(player, net.minecraft.client.Minecraft.getInstance().getFrameTime());
+            return frame <= 0 ? Optional.empty() : Optional.of(IronManSkinFrames.skin(frame));
          }
 
          @Override
