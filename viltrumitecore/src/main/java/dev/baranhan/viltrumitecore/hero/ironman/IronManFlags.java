@@ -29,8 +29,12 @@ public final class IronManFlags {
       MARK_CAMO(21, 1),
       EQUIP_PHASE(22, 2),
       // Stage 5
-      HULKBUSTER_PHASE(24, 3);
-      // 27-31 reserved.
+      HULKBUSTER_PHASE(24, 3),
+      // Stage 2 (pose sync): repulsor recoil, which palm fired, overdraft charge running.
+      RECOIL(27, 1),
+      SHOT_HAND(28, 1),
+      OVERDRAFT(29, 1);
+      // 30-31 reserved.
 
       private final int shift;
       private final int width;

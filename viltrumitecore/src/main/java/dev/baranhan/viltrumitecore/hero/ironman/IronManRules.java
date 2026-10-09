@@ -121,6 +121,9 @@ public final class IronManRules {
    public static final float UNIBEAM_HIT = 1.5F;
    public static final float UNIBEAM_HIT_FAR = 0.75F;
    public static final double UNIBEAM_NEAR = 8.0;
+   /** Client scorch marks of repulsors / Unibeam (same budget as Homelander's lasers). */
+   public static final int SCORCH_MAX = 256;
+   public static final long SCORCH_LIFETIME = 600L;
    public static final double UNIBEAM_RANGE = 48.0;
    public static final double UNIBEAM_RADIUS = 0.6;
    public static final float UNIBEAM_TURN_DEG = 3.0F;

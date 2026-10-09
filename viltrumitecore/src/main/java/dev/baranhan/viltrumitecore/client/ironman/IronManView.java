@@ -94,4 +94,32 @@ public final class IronManView {
    public static float energy(HeroPublicSnapshot snapshot) {
       return Math.max(0.0F, Math.min(IronManRules.ENERGY_MAX, snapshot.resource() / 10.0F));
    }
+
+   // ---- Stage 2 combat reads ----
+
+   public static int flag(HeroPublicSnapshot snapshot, IronManFlags.Field field) {
+      return IronManFlags.get(snapshot.heroFlags(), field);
+   }
+
+   public static dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool tool(HeroPublicSnapshot snapshot) {
+      return dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.byId(flag(snapshot, IronManFlags.Field.RMB_TOOL));
+   }
+
+   /** Unibeam phase: 0 idle, 1 charge, 2 beam, 3 overheat. */
+   public static int unibeamPhase(HeroPublicSnapshot snapshot) {
+      return flag(snapshot, IronManFlags.Field.UNIBEAM_PHASE);
+   }
+
+   public static boolean channel(HeroPublicSnapshot snapshot, HeroAction action) {
+      return snapshot.actionId() == action.ordinal() && snapshot.actionLength() > 0;
+   }
+
+   /** Channel progress 0..1 of the given action, 0 when another action runs. */
+   public static float progress(HeroPublicSnapshot snapshot, HeroAction action, float partialTick) {
+      if (!channel(snapshot, action)) {
+         return 0.0F;
+      }
+
+      return Math.max(0.0F, Math.min(1.0F, (snapshot.actionElapsed() + partialTick) / snapshot.actionLength()));
+   }
 }
