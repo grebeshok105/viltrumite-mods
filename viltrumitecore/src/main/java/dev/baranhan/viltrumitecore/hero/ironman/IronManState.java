@@ -96,14 +96,20 @@ public final class IronManState {
    @Nullable
    public net.minecraft.world.phys.Vec3 equipSource;
 
+   // ---- Stage 5: Hulkbuster Mark 48 ----
+   /** Persisted (NBT Hulkbuster): phase, durability, cooldown, partial parts. */
+   public final dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer hulkbuster = new dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer();
+   /** Transient kit state (punch cadence, jackhammer, charge, grab, slam, hop). */
+   public final dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterKit hulkKit = new dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterKit();
+
    /** Missile marks need the JARVIS targeting: helmet closed (spec §10). */
    public boolean canMarkTargets() {
       return this.helmet.closed();
    }
 
-   /** Flight grant: only while fully worn. */
+   /** Flight grant: only while fully worn; the Hulkbuster has no real flight (spec §14.3). */
    public boolean wantsFlight() {
-      return this.suit.worn();
+      return this.suit.worn() && !this.hulkbuster.present();
    }
 
    /** Pure part of HeroDefinition.cleanup (spec §16). */
@@ -120,8 +126,10 @@ public final class IronManState {
       this.podId = -1;
       this.emptySuitId = -1;
       this.equipSource = null;
+      this.hulkKit.stopChannels();
       switch (reason) {
          case DEATH -> {
+            this.hulkbuster.breakNow();
             this.suit.clear();
             this.glide = false;
             // Spec §9.1/§16: death cancels a pending core explosion and resets the counter.
@@ -144,6 +152,8 @@ public final class IronManState {
             this.roster.reset();
             this.veronicaCooldown = 0;
             this.signature.cooldown = 0;
+            this.hulkbuster.reset();
+            this.hulkKit.reset();
          }
       }
 
@@ -189,6 +199,7 @@ public final class IronManState {
       state.reconcileMark();
       state.veronicaCooldown = original.veronicaCooldown;
       state.signature.cooldown = original.signature.cooldown;
+      state.hulkbuster.copyCooldownFrom(original.hulkbuster);
       return state;
    }
 
@@ -211,6 +222,7 @@ public final class IronManState {
       this.roster.save(tag);
       tag.putInt(VERONICA_COOLDOWN_KEY, this.veronicaCooldown);
       tag.putInt(SIGNATURE_COOLDOWN_KEY, this.signature.cooldown);
+      this.hulkbuster.save(tag);
       nbt.put(KEY, tag);
    }
 
@@ -226,6 +238,7 @@ public final class IronManState {
       this.signature.clear();
       this.signature.cooldown = Math.max(0, tag.getInt(SIGNATURE_COOLDOWN_KEY));
       this.reconcileMark();
+      this.hulkbuster.load(tag);
       this.glide = false;
    }
 

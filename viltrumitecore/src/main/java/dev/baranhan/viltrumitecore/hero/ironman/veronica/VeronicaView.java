@@ -11,11 +11,13 @@ import net.minecraft.network.FriendlyByteBuf;
  * durability and cooldown, the Hulkbuster card (Stage 5) and the pod's time
  * left. Built on the server; the client never decides availability.
  *
- * @param hulkbuster -1 = not available yet (Stage 4), 0 = ready, &gt;0 = cooldown ticks
+ * @param hulkbuster -1 = not available, {@link #HULKBUSTER_ON} = on Tony, 0 = ready, &gt;0 = cooldown ticks
  */
 public record VeronicaView(int[] location, float[] durability, int[] cooldown, int wornMark, int hulkbuster, int podTicksLeft) {
    /** Choice id of the Hulkbuster card (marks use their ordinal). */
    public static final int HULKBUSTER = 100;
+   /** {@link #hulkbuster()} value while the Hulkbuster is on Tony. */
+   public static final int HULKBUSTER_ON = -2;
 
    public static VeronicaView of(MarkRoster roster, int hulkbuster, int podTicksLeft) {
       int n = MarkId.count();
@@ -67,7 +69,7 @@ public record VeronicaView(int[] location, float[] durability, int[] cooldown, i
       }
 
       buffer.writeVarInt(this.wornMark + 1);
-      buffer.writeVarInt(this.hulkbuster + 1);
+      buffer.writeVarInt(this.hulkbuster + 2);
       buffer.writeVarInt(this.podTicksLeft);
    }
 
@@ -84,7 +86,7 @@ public record VeronicaView(int[] location, float[] durability, int[] cooldown, i
       }
 
       int worn = buffer.readVarInt() - 1;
-      int hulkbuster = buffer.readVarInt() - 1;
+      int hulkbuster = buffer.readVarInt() - 2;
       int pod = buffer.readVarInt();
       return new VeronicaView(location, durability, cooldown, worn, hulkbuster, pod);
    }

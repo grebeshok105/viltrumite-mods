@@ -56,7 +56,7 @@ import net.minecraft.world.phys.Vec3;
  * timelines in {@code combat/} and applies them to the world. Every entry
  * point assumes an Iron Man player; input methods check the suit themselves.
  */
-final class IronManCombat {
+public final class IronManCombat {
    private IronManCombat() {
    }
 
@@ -68,7 +68,7 @@ final class IronManCombat {
    }
 
    /** Palm in front of the shoulder, where the bolt leaves. */
-   static Vec3 hand(ServerPlayer player, boolean rightHand) {
+   public static Vec3 hand(ServerPlayer player, boolean rightHand) {
       Vec3 look = player.getLookAngle();
       Vec3 side = right(look).scale(rightHand ? 0.38 : -0.38);
       return player.getEyePosition().add(0.0, -0.35, 0.0).add(side).add(look.scale(0.7));
@@ -82,7 +82,7 @@ final class IronManCombat {
    }
 
    /** Crosshair point: first block or entity along the look within range. */
-   static Vec3 aimPoint(ServerPlayer player, double range) {
+   public static Vec3 aimPoint(ServerPlayer player, double range) {
       Vec3 eye = player.getEyePosition();
       Vec3 end = eye.add(player.getLookAngle().scale(range));
       BlockHitResult block = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
@@ -93,7 +93,7 @@ final class IronManCombat {
    }
 
    @Nullable
-   static LivingEntity entityInReach(ServerPlayer player, double reach) {
+   public static LivingEntity entityInReach(ServerPlayer player, double reach) {
       Vec3 eye = player.getEyePosition();
       Vec3 end = eye.add(player.getLookAngle().scale(reach));
       BlockHitResult block = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
@@ -103,7 +103,7 @@ final class IronManCombat {
       return hit != null && hit.getEntity() instanceof LivingEntity living ? living : null;
    }
 
-   static void push(Entity target, Vec3 velocity) {
+   public static void push(Entity target, Vec3 velocity) {
       if (target instanceof LivingEntity living && !HeroRegistry.allowsImpulse(living)) {
          return;
       }
@@ -112,7 +112,7 @@ final class IronManCombat {
       target.hurtMarked = true;
    }
 
-   static void sound(ServerPlayer player, SoundEvent sound, float pitch) {
+   public static void sound(ServerPlayer player, SoundEvent sound, float pitch) {
       IronManSounds.play(player, sound, 1.0F, pitch);
    }
 
@@ -757,7 +757,8 @@ final class IronManCombat {
       }
 
       Vec3 toSource = source.getSourcePosition().subtract(self.getEyePosition());
-      Shield.Block block = state.shield.hit(self.level().getGameTime(), self.getLookAngle(), toSource, state.energy, state.spec().shieldMul());
+      float strength = state.hulkbuster.active() ? dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterKit.SHIELD_STRENGTH : state.spec().shieldMul();
+      Shield.Block block = state.shield.hit(self.level().getGameTime(), self.getLookAngle(), toSource, state.energy, strength);
       if (block == Shield.Block.PASS) {
          return DamageAbsorb.PASS;
       }

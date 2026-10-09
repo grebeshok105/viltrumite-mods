@@ -55,6 +55,19 @@ public final class IronManAbilities {
    /** Slot 3 in a mark shows the mark's signature (spec §6.2). */
    @Nullable
    public static ResourceLocation icon(String abilityId, @Nullable dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot) {
+      if (snapshot != null && snapshot.heroId() == dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN && hulkActive(snapshot)) {
+         // Hulkbuster: slots 1–3 are grab, jump slam, hop (spec §14.3).
+         String hulk = switch (abilityId) {
+            case UNIBEAM -> "hulk_grab";
+            case MISSILES -> "hulk_slam";
+            case NANO_ARSENAL -> "hulk_hop";
+            default -> null;
+         };
+         if (hulk != null) {
+            return new ResourceLocation("viltrumitecore", "textures/gui/ability/ironman/" + hulk + ".png");
+         }
+      }
+
       if (NANO_ARSENAL.equals(abilityId) && snapshot != null && snapshot.heroId() == dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN) {
          dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId mark = IronManVariant.mark(snapshot.variant());
          if (mark != null) {
@@ -63,6 +76,10 @@ public final class IronManAbilities {
       }
 
       return icon(abilityId);
+   }
+
+   static boolean hulkActive(dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot) {
+      return IronManFlags.get(snapshot.heroFlags(), IronManFlags.Field.HULKBUSTER_PHASE) == dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer.Phase.ACTIVE.ordinal();
    }
 
    /** Panel art of a mark signature: tools/assets/make_ironman_stage4_assets.py. */
@@ -141,6 +158,16 @@ public final class IronManAbilities {
       int flags = snapshot.heroFlags();
       boolean worn = IronManFlags.is(flags, IronManFlags.Field.SUIT_WORN);
       boolean mark = IronManVariant.mark(snapshot.variant()) != null;
+      if (hulkActive(snapshot)) {
+         return switch (abilityId) {
+            case UNIBEAM -> false;
+            case MISSILES -> snapshot.extraCooldown(5) > 0;
+            case NANO_ARSENAL -> snapshot.extraCooldown(6) > 0 || snapshot.resourceLocked();
+            case HELMET -> true;
+            default -> false;
+         };
+      }
+
       return switch (abilityId) {
          // Nano lost after a core explosion: extra cooldown [0].
          case SUIT -> snapshot.extraCooldown(0) > 0;

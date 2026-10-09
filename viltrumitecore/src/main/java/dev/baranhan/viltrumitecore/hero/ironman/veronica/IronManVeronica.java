@@ -62,7 +62,12 @@ public final class IronManVeronica {
 
    static void openMenu(ServerPlayer player, IronManState state, VeronicaPodEntity pod) {
       int left = Math.max(0, VeronicaPodEntity.LANDED_TICKS - pod.phaseTicks());
-      CoreMessages.sendToPlayer(new VeronicaMenuS2CPacket(VeronicaView.of(state.roster, -1, left)), player);
+      CoreMessages.sendToPlayer(new VeronicaMenuS2CPacket(VeronicaView.of(state.roster, hulkbusterCard(state), left)), player);
+   }
+
+   /** Hulkbuster card: {@link VeronicaView#HULKBUSTER_ON} while any part is on, else its cooldown (0 = ready). */
+   static int hulkbusterCard(IronManState state) {
+      return state.hulkbuster.present() ? VeronicaView.HULKBUSTER_ON : state.hulkbuster.cooldown();
    }
 
    /** The menu choice: every rule is checked here, the client only displays (spec §12.3). */
@@ -72,18 +77,37 @@ public final class IronManVeronica {
          return;
       }
 
-      MarkId id = MarkId.byId(choice);
-      if (id == null) {
-         return;
-      }
-
       VeronicaPodEntity pod = pod(player, state);
       if (pod == null || !pod.landed() || player.distanceToSqr(pod) > VeronicaPodEntity.MENU_RANGE * VeronicaPodEntity.MENU_RANGE) {
          player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_far"), true);
          return;
       }
 
-      switch (IronManMarks.deliver(player, state, id, pod.position().add(0.0, 2.2, 0.0))) {
+      Vec3 podTop = pod.position().add(0.0, 2.2, 0.0);
+      if (choice == VeronicaView.HULKBUSTER) {
+         switch (dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.IronManHulkbuster.deliver(player, state, podTop)) {
+            case BUSY -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_busy"), true);
+            case UNAVAILABLE -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.mark_unavailable"), true);
+            case NO_ROOM -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.hulkbuster_no_room"), true);
+            default -> {
+            }
+         }
+
+         return;
+      }
+
+      MarkId id = MarkId.byId(choice);
+      if (id == null) {
+         return;
+      }
+
+      // Marks cannot be put on under the Hulkbuster (plan stage 5 Global Constraints).
+      if (state.hulkbuster.present()) {
+         player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_busy"), true);
+         return;
+      }
+
+      switch (IronManMarks.deliver(player, state, id, podTop)) {
          case BUSY -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_busy"), true);
          case UNAVAILABLE -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.mark_unavailable"), true);
          default -> {
