@@ -167,34 +167,93 @@ public class IronManHero implements HeroDefinition {
 
       return switch (action) {
          case SUIT -> true;
+         case SECONDARY_USE, TOOL_CYCLE, UNIBEAM, MISSILES, NANO_ARSENAL, GUARD -> {
+            IronManState state = IronManState.of(player);
+            yield state != null && state.suit.worn();
+         }
+         case INTERACT -> true;
          // Same gate as the claim: a forged HeroInputC2SPacket cannot punch on foot.
          case PRIMARY_ATTACK -> {
             IronManState state = IronManState.of(player);
-            yield state != null && claimsPrimary(state.suit.worn(), flightState(player));
+            yield state != null && (claimsPrimary(state.suit.worn(), flightState(player)) || claimsWeapon(state.suit.worn(), state.arsenal.weapon() != null));
          }
          default -> false;
       };
    }
 
    /**
-    * Stage 1a claims only LMB while flying in the suit (spec §6.1); on the
-    * ground LMB stays vanilla (nano punch via meleeDamageFactor).
+    * LMB: in flight (fly-by / air strike, spec §6.1) or with a formed nano
+    * weapon; otherwise vanilla (nano punch via meleeDamageFactor). RMB in the
+    * suit: hero interaction on a HeroInteractable target, else the current
+    * RMB tool; Shift+RMB stays vanilla (blocks, doors). MMB cycles the tool.
     */
    @Override
    public HeroAction mouseAction(dev.baranhan.viltrumitecore.hero.MouseButton button, Player player) {
-      if (button != dev.baranhan.viltrumitecore.hero.MouseButton.PRIMARY || player == null) {
+      if (player == null) {
          return null;
       }
 
       boolean worn;
+      boolean weapon;
       if (player.level().isClientSide()) {
+         HeroPublicSnapshot snapshot = ((dev.baranhan.viltrumitecore.hero.HeroPlayer)player).getHeroSnapshot();
          worn = suitWornFlag(player);
+         weapon = worn && dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.byId(
+            IronManFlags.get(snapshot.heroFlags(), IronManFlags.Field.RMB_TOOL)).nanoWeapon();
       } else {
          IronManState state = IronManState.of(player);
          worn = state != null && state.suit.worn();
+         weapon = worn && state.arsenal.weapon() != null;
       }
 
-      return claimsPrimary(worn, flightState(player)) ? HeroAction.PRIMARY_ATTACK : null;
+      return switch (button) {
+         case PRIMARY -> claimsPrimary(worn, flightState(player)) || claimsWeapon(worn, weapon) ? HeroAction.PRIMARY_ATTACK : null;
+         case SECONDARY -> !worn || player.isShiftKeyDown() ? null : interactTarget(player) != null ? HeroAction.INTERACT : HeroAction.SECONDARY_USE;
+         case MIDDLE -> worn ? HeroAction.TOOL_CYCLE : null;
+         default -> null;
+      };
+   }
+
+   static boolean claimsWeapon(boolean worn, boolean weaponFormed) {
+      return worn && weaponFormed;
+   }
+
+   /** Entity under the crosshair (reach 4) that offers a hero interaction. */
+   @javax.annotation.Nullable
+   static dev.baranhan.viltrumitecore.entity.HeroInteractable interactTarget(Player player) {
+      net.minecraft.world.phys.Vec3 eye = player.getEyePosition();
+      net.minecraft.world.phys.Vec3 end = eye.add(player.getLookAngle().scale(4.0));
+      net.minecraft.world.phys.EntityHitResult hit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(player, eye, end,
+         new net.minecraft.world.phys.AABB(eye, end).inflate(1.0),
+         e -> e instanceof dev.baranhan.viltrumitecore.entity.HeroInteractable interactable && interactable.canHeroInteract(player), 16.0);
+      return hit != null && hit.getEntity() instanceof dev.baranhan.viltrumitecore.entity.HeroInteractable interactable ? interactable : null;
+   }
+
+   /** F (guard key) raises the shield while any suit is on; the vanilla swap is blocked (spec §6.1, §8.5). */
+   @Override
+   public HeroAction guardAction(Player player) {
+      return suitPresent(player) ? HeroAction.GUARD : null;
+   }
+
+   @Override
+   public boolean blocksHandSwap(Player player) {
+      return suitPresent(player);
+   }
+
+   static boolean suitPresent(Player player) {
+      if (player == null) {
+         return false;
+      }
+
+      if (player.level().isClientSide()) {
+         return suitWornFlag(player) || player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
+            && heroPlayer.getHeroSnapshot().heroId() == HeroId.IRON_MAN
+            && (IronManFlags.is(heroPlayer.getHeroSnapshot().heroFlags(), IronManFlags.Field.DEPLOYING)
+               || IronManFlags.is(heroPlayer.getHeroSnapshot().heroFlags(), IronManFlags.Field.RETRACTING));
+      }
+
+      IronManState state = IronManState.of(player);
+      return state != null && state.suit.state() != SuitState.NONE;
    }
 
    static boolean claimsPrimary(boolean worn, @javax.annotation.Nullable dev.baranhan.viltrumiteflight.util.FlightState state) {
@@ -273,9 +332,12 @@ public class IronManHero implements HeroDefinition {
          IronManLandings.land(player, state, kind, state.landing.impactSpeed());
       }
       if (!state.suit.worn()) {
-         // Suit off / wave: every held mouse action ends (spec §16).
+         // Suit off / wave: every held mouse action ends without a shot (spec §16).
          dev.baranhan.viltrumitecore.hero.HeldInputs.releaseAll(player);
+         IronManCombat.suitGone(player, state);
       }
+
+      IronManCombat.tick(player, state, controlled(player));
 
       if (state.flyByCooldown > 0) {
          state.flyByCooldown--;
@@ -288,23 +350,134 @@ public class IronManHero implements HeroDefinition {
 
    @Override
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
-      if (action == HeroAction.SUIT && pressed && this.canAct(player, action)) {
-         Suit suit = IronManState.ensure(player).suit;
-         if (suit.toggle()) {
-            IronManSounds.play(player, suit.state() == SuitState.DEPLOYING
-               ? dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_DEPLOY.get()
-               : dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_RETRACT.get(), 1.0F, 1.0F);
+      IronManState state = IronManState.ensure(player);
+      if (!pressed) {
+         release(player, state, action);
+         return;
+      }
+
+      if (!this.canAct(player, action)) {
+         if (action == HeroAction.SUIT && state.suit.nanoLocked()) {
+            this.onInputRefused(player, action);
          }
-      } else if (action == HeroAction.PRIMARY_ATTACK && pressed && this.canAct(player, action)) {
-         IronManState state = IronManState.ensure(player);
-         dev.baranhan.viltrumiteflight.util.FlightState flight = flightState(player);
-         if (AirStrike.canArm(flight, player.getXRot(), IronManLandings.groundAhead(player))) {
-            // This LMB arms the air strike instead of a fly-by (spec §8.6).
-            state.airStrike.arm();
-         } else if (state.flyByCooldown <= 0) {
-            state.flyByCooldown = IronManRules.FLYBY_COOLDOWN;
-            FlyBy.hit(player);
+         return;
+      }
+
+      switch (action) {
+         case SUIT -> {
+            Suit suit = state.suit;
+            if (suit.state() == SuitState.NONE && suit.nanoLocked()) {
+               this.onInputRefused(player, action);
+            } else if (suit.toggle()) {
+               IronManSounds.play(player, suit.state() == SuitState.DEPLOYING
+                  ? dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_DEPLOY.get()
+                  : dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_RETRACT.get(), 1.0F, 1.0F);
+            }
          }
+         case PRIMARY_ATTACK -> {
+            if (state.arsenal.weapon() != null) {
+               IronManCombat.strike(player, state);
+               return;
+            }
+
+            dev.baranhan.viltrumiteflight.util.FlightState flight = flightState(player);
+            if (AirStrike.canArm(flight, player.getXRot(), IronManLandings.groundAhead(player))) {
+               // This LMB arms the air strike instead of a fly-by (spec §8.6).
+               state.airStrike.arm();
+            } else if (state.flyByCooldown <= 0) {
+               state.flyByCooldown = IronManRules.FLYBY_COOLDOWN;
+               FlyBy.hit(player);
+            }
+         }
+         case SECONDARY_USE -> {
+            state.heldTool = state.rightTool;
+            switch (state.rightTool) {
+               case REPULSOR -> state.repulsor.press();
+               case NANO_BLADE -> IronManCombat.bladeDash(player, state);
+               case NANO_HAMMER -> state.hammerCharge = state.arsenal.forming() ? -1 : 0;
+               default -> {
+               }
+            }
+         }
+         case INTERACT -> {
+            dev.baranhan.viltrumitecore.entity.HeroInteractable target = interactTarget(player);
+            if (target != null) {
+               target.heroInteract(player);
+            }
+         }
+         case TOOL_CYCLE -> IronManCombat.toolCycle(player, state);
+         case UNIBEAM -> IronManCombat.unibeamPress(player, state);
+         case MISSILES -> IronManCombat.missilesPress(player, state);
+         case NANO_ARSENAL -> IronManCombat.arsenalPress(player, state);
+         case GUARD -> IronManCombat.guardPress(player, state);
+         default -> {
+         }
+      }
+   }
+
+   /** Releases always pass (channels must stop); without the suit they cancel without a shot. */
+   private static void release(ServerPlayer player, IronManState state, HeroAction action) {
+      boolean live = state.suit.worn() && !controlled(player);
+      switch (action) {
+         case SECONDARY_USE -> {
+            dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool tool = state.heldTool;
+            state.heldTool = null;
+            if (tool == dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.REPULSOR) {
+               if (live) {
+                  IronManCombat.fire(player, state, state.repulsor.release(state.energy));
+               } else {
+                  state.repulsor.cancel();
+               }
+            } else if (tool == dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.NANO_HAMMER) {
+               if (live) {
+                  IronManCombat.hammerLaunch(player, state);
+               } else {
+                  state.hammerCharge = -1;
+               }
+            }
+         }
+         case UNIBEAM -> IronManCombat.unibeamRelease(player, state);
+         case MISSILES -> {
+            if (live) {
+               IronManCombat.missilesRelease(player, state);
+            } else if (state.missiles.held()) {
+               state.missiles.cancel();
+               IronManCombat.pushMarks(player, java.util.List.of());
+            }
+         }
+         case GUARD -> state.shield.lower();
+         default -> {
+         }
+      }
+   }
+
+   /** Suit key while the nanites are still lost after a core explosion (spec §9.4). */
+   @Override
+   public void onInputRefused(ServerPlayer player, HeroAction action) {
+      IronManState state = IronManState.of(player);
+      if (action == HeroAction.SUIT && state != null && state.suit.nanoLocked()) {
+         int seconds = (state.suit.nanoLockTicks() + 19) / 20;
+         player.displayClientMessage(net.minecraft.network.chat.Component.translatable("hud.viltrumitecore.ironman.nano_lost", seconds), true);
+      }
+   }
+
+   @Override
+   public dev.baranhan.viltrumitecore.hero.DamageAbsorb absorbIncoming(ServerPlayer self, net.minecraft.world.damagesource.DamageSource source, float raw) {
+      IronManState state = IronManState.of(self);
+      return state == null || !state.suit.worn() ? dev.baranhan.viltrumitecore.hero.DamageAbsorb.PASS : IronManCombat.absorb(self, state, source);
+   }
+
+   @Override
+   public float clampFinalDamage(ServerPlayer self, net.minecraft.world.damagesource.DamageSource source, float afterArmor) {
+      IronManState state = IronManState.of(self);
+      return state == null ? afterArmor : IronManCombat.clampCoreExplosion(self, state, source, afterArmor);
+   }
+
+   @Override
+   public void onHurt(ServerPlayer player, net.minecraft.world.damagesource.DamageSource source, float amount) {
+      IronManState state = IronManState.of(player);
+      if (state != null) {
+         IronManCombat.onHurt(player, state, amount);
       }
    }
 
@@ -319,7 +492,12 @@ public class IronManHero implements HeroDefinition {
       return snapshotOf(state == null ? new IronManState() : state);
    }
 
-   /** Pure snapshot: flags, wave timeline, energy x10 and the weapon lock. */
+   /**
+    * Pure snapshot: flags, one channel timeline, energy x10, weapon lock,
+    * the Unibeam end point and extra cooldowns ([0] = nano lock ticks).
+    * Channel priority: suit wave > Unibeam > missiles > RMB hold (repulsor
+    * charge, hammer charge, blade dash) > LMB weapon strike > weapon forming.
+    */
    static HeroPublicSnapshot snapshotOf(IronManState state) {
       Suit suit = state.suit;
       int flags = 0;
@@ -328,10 +506,63 @@ public class IronManHero implements HeroDefinition {
       flags = IronManFlags.set(flags, IronManFlags.Field.RETRACTING, suit.state() == SuitState.RETRACTING);
       flags = IronManFlags.set(flags, IronManFlags.Field.GLIDE, state.glide);
       flags = IronManFlags.set(flags, IronManFlags.Field.HEAVY_LANDING, state.heavyPoseTicks > 0);
-      boolean wave = suit.transitioning();
-      return new HeroPublicSnapshot(HeroId.IRON_MAN, wave ? HeroAction.SUIT.ordinal() : -1, wave ? suit.ticks() : 0, wave ? suit.waveLength() : 0,
+      flags = IronManFlags.set(flags, IronManFlags.Field.OVERHEAT_COUNT, state.overheat.count());
+      flags = IronManFlags.set(flags, IronManFlags.Field.OVERHEAT_LOCK, state.unibeam.overheated());
+      flags = IronManFlags.set(flags, IronManFlags.Field.RMB_TOOL, state.rightTool.ordinal());
+      flags = IronManFlags.set(flags, IronManFlags.Field.SHIELD_UP, state.shield.raised());
+      flags = IronManFlags.set(flags, IronManFlags.Field.DAMAGED_ZONES, state.damagedZones);
+      flags = IronManFlags.set(flags, IronManFlags.Field.UNIBEAM_PHASE, state.unibeam.phase().ordinal());
+      flags = IronManFlags.set(flags, IronManFlags.Field.MISSILE_FLAPS, state.missiles.flapsOpen());
+      flags = IronManFlags.set(flags, IronManFlags.Field.OVERDRAFT_SPUTTER, state.overdraft.sputtering());
+      flags = IronManFlags.set(flags, IronManFlags.Field.RECOIL, state.recoilTicks > 0);
+      flags = IronManFlags.set(flags, IronManFlags.Field.SHOT_HAND, state.recoilRight);
+      flags = IronManFlags.set(flags, IronManFlags.Field.OVERDRAFT, state.overdraft.active());
+      int actionId = -1;
+      int elapsed = 0;
+      int length = 0;
+      if (suit.transitioning()) {
+         actionId = HeroAction.SUIT.ordinal();
+         elapsed = suit.ticks();
+         length = suit.waveLength();
+      } else if (state.unibeam.active() || state.unibeam.overheated()) {
+         actionId = HeroAction.UNIBEAM.ordinal();
+         elapsed = state.unibeam.ticks();
+         length = switch (state.unibeam.phase()) {
+            case CHARGE -> IronManRules.UNIBEAM_CHARGE;
+            case BEAM -> state.unibeam.overdraft() ? dev.baranhan.viltrumitecore.hero.ironman.combat.Overdraft.explodeAt() : IronManRules.UNIBEAM_MAX;
+            default -> IronManRules.UNIBEAM_OVERHEAT_LOCK;
+         };
+      } else if (state.missiles.held()) {
+         actionId = HeroAction.MISSILES.ordinal();
+         elapsed = state.missiles.ticks();
+         length = IronManRules.MISSILE_FLAPS;
+      } else if (state.repulsor.charging()) {
+         actionId = HeroAction.SECONDARY_USE.ordinal();
+         elapsed = state.repulsor.chargeTicks();
+         length = IronManRules.REPULSOR_CHARGE_MAX;
+      } else if (state.hammerCharge >= 0) {
+         actionId = HeroAction.SECONDARY_USE.ordinal();
+         elapsed = state.hammerCharge;
+         length = IronManRules.HAMMER_CHARGE_MAX;
+      } else if (state.dashTicks > 0) {
+         actionId = HeroAction.SECONDARY_USE.ordinal();
+         elapsed = IronManRules.BLADE_DASH_TICKS - state.dashTicks;
+         length = IronManRules.BLADE_DASH_TICKS;
+      } else if (state.strikeTicks > 0 && state.strikeLength > 0) {
+         actionId = HeroAction.PRIMARY_ATTACK.ordinal();
+         elapsed = state.strikeLength - state.strikeTicks;
+         length = state.strikeLength;
+      } else if (state.arsenal.forming() || state.arsenal.dissolveTicks() > 0) {
+         actionId = HeroAction.NANO_ARSENAL.ordinal();
+         elapsed = IronManRules.NANO_FORM_TICKS - Math.max(state.arsenal.formTicks(), state.arsenal.dissolveTicks());
+         length = IronManRules.NANO_FORM_TICKS;
+      }
+
+      int[] extra = suit.nanoLockTicks() > 0 ? new int[]{suit.nanoLockTicks()} : new int[0];
+      return new HeroPublicSnapshot(HeroId.IRON_MAN, actionId, elapsed, length,
          0, false, 0, 0, false, false, 0, 0, -1, new int[HeroPublicSnapshot.COOLDOWN_COUNT], false,
-         -1, null, Math.round(state.energy.value() * 10.0F), state.energy.weaponsLocked(), flags);
+         -1, state.unibeam.phase() == dev.baranhan.viltrumitecore.hero.ironman.combat.UnibeamTimeline.Phase.BEAM ? state.beamEnd : null,
+         Math.round(state.energy.value() * 10.0F), state.energy.weaponsLocked(), flags, extra);
    }
 
    @Override
