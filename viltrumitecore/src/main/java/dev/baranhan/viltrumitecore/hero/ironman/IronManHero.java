@@ -156,7 +156,7 @@ public class IronManHero implements HeroDefinition {
 
    /** Control (spec §16): nothing starts while anchored or dead. */
    static boolean controlled(ServerPlayer player) {
-      return HeroDamage.isAnchored(player) || !player.isAlive();
+      return HeroDamage.isAnchored(player) || !player.isAlive() || player.isSpectator();
    }
 
    @Override
@@ -344,7 +344,7 @@ public class IronManHero implements HeroDefinition {
          state.flyByCooldown--;
       }
 
-      if (state.suit.worn() && flightState(player) == dev.baranhan.viltrumiteflight.util.FlightState.SONIC) {
+      if (state.suit.worn() && !controlled(player) && flightState(player) == dev.baranhan.viltrumiteflight.util.FlightState.SONIC) {
          SonicRam.tick(player, state);
       }
    }
@@ -395,7 +395,7 @@ public class IronManHero implements HeroDefinition {
             switch (state.rightTool) {
                case REPULSOR -> state.repulsor.press();
                case NANO_BLADE -> IronManCombat.bladeDash(player, state);
-               case NANO_HAMMER -> state.hammerCharge = state.arsenal.forming() ? -1 : 0;
+               case NANO_HAMMER -> state.hammerCharge = state.arsenal.forming() || state.energy.weaponsLocked() ? -1 : 0;
                default -> {
                }
             }
@@ -641,7 +641,7 @@ public class IronManHero implements HeroDefinition {
    public void cloneHeroState(Player original, Player clone) {
       IronManState previous = IronManState.of(original);
       if (previous != null && clone instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer) {
-         heroPlayer.viltrumitecore$setHeroState(IronManState.cloneForRespawn(previous));
+         heroPlayer.viltrumitecore$setHeroState(original.isDeadOrDying() ? IronManState.cloneForRespawn(previous) : IronManState.cloneForPortal(previous));
       }
    }
 

@@ -222,7 +222,7 @@ final class IronManCombat {
       switch (event) {
          case CHARGED -> {
             boolean overdraft = state.overheat.nextIsOverdraft();
-            if (overdraft || state.energy.spend(IronManRules.COST_UNIBEAM)) {
+            if (state.energy.spend(IronManRules.COST_UNIBEAM)) {
                state.unibeam.startBeam(overdraft);
                state.beamDir = player.getLookAngle();
                flash(player, overdraft ? 0.35F : 0.18F, IronManRules.FLASH_OWNER_TICKS);
@@ -489,7 +489,7 @@ final class IronManCombat {
    /** LMB with a formed weapon. */
    static void strike(ServerPlayer player, IronManState state) {
       RightTool weapon = state.arsenal.weapon();
-      if (weapon == null || state.arsenal.forming() || state.strikeTicks > 0) {
+      if (weapon == null || state.arsenal.forming() || state.strikeTicks > 0 || state.energy.weaponsLocked()) {
          return;
       }
 
@@ -584,7 +584,7 @@ final class IronManCombat {
 
    /** RMB with the blade: dash to the crosshair target (≤ 8 blocks), stops before walls. */
    static void bladeDash(ServerPlayer player, IronManState state) {
-      if (state.dashTicks > 0 || state.arsenal.forming()) {
+      if (state.dashTicks > 0 || state.arsenal.forming() || state.energy.weaponsLocked()) {
          return;
       }
 

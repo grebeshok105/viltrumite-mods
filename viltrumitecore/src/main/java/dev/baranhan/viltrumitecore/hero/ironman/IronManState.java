@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Player;
 /** Server-side per-player Iron Man state. Suit and energy survive relog (spec §16). */
 public final class IronManState {
    private static final String KEY = "IronMan";
+   private static final String FLARE_COOLDOWN_KEY = "FlareCooldown";
    public final Suit suit = new Suit();
    public final Energy energy = new Energy();
    /** Energy hit 0 in flight: glide profile (Task 9). */
@@ -158,12 +159,22 @@ public final class IronManState {
       return state;
    }
 
+   /** End exit portal (clone without death): the suit stays on (spec §16), only live channels drop. */
+   public static IronManState cloneForPortal(IronManState original) {
+      CompoundTag nbt = new CompoundTag();
+      original.save(nbt);
+      IronManState state = new IronManState();
+      state.load(nbt);
+      return state;
+   }
+
    public void save(CompoundTag nbt) {
       CompoundTag tag = new CompoundTag();
       this.suit.save(tag);
       this.energy.save(tag);
       this.overheat.save(tag);
       this.helmet.save(tag);
+      tag.putInt(FLARE_COOLDOWN_KEY, this.countermeasures.cooldown());
       nbt.put(KEY, tag);
    }
 
@@ -173,6 +184,7 @@ public final class IronManState {
       this.energy.load(tag);
       this.overheat.load(tag);
       this.helmet.load(tag);
+      this.countermeasures.setCooldown(tag.getInt(FLARE_COOLDOWN_KEY));
       this.glide = false;
    }
 

@@ -113,7 +113,7 @@ public class MicroMissileEntity extends Projectile implements Homing {
 
    @Override
    protected boolean canHitEntity(Entity entity) {
-      return super.canHitEntity(entity) && !(entity instanceof MicroMissileEntity) && !(entity instanceof RepulsorBlastEntity);
+      return super.canHitEntity(entity) && entity != this.getOwner() && !(entity instanceof MicroMissileEntity) && !(entity instanceof RepulsorBlastEntity);
    }
 
    @Override

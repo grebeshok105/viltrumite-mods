@@ -108,6 +108,37 @@ class HelmetTest {
    }
 
    @Test
+   void countermeasuresCooldownSurvivesRelog() {
+      IronManState state = new IronManState();
+      state.countermeasures.fire();
+      CompoundTag nbt = new CompoundTag();
+      state.save(nbt);
+      IronManState loaded = new IronManState();
+      loaded.load(nbt);
+      assertEquals(IronManRules.COUNTERMEASURES_COOLDOWN, loaded.countermeasures.cooldown());
+   }
+
+   @Test
+   void endPortalCloneKeepsSuitEnergyAndCounters() {
+      IronManState state = new IronManState();
+      state.suit.toggle();
+      for (int i = 0; i < IronManRules.SUIT_DEPLOY_TICKS; i++) {
+         state.suit.tick();
+      }
+
+      state.energy.drain(40.0F);
+      state.overheat.add();
+      state.helmet.toggle();
+      state.countermeasures.fire();
+      IronManState portal = IronManState.cloneForPortal(state);
+      assertTrue(portal.suit.worn());
+      assertEquals(state.energy.value(), portal.energy.value(), 1.0E-5F);
+      assertEquals(1, portal.overheat.count());
+      assertFalse(portal.helmet.closed());
+      assertEquals(IronManRules.COUNTERMEASURES_COOLDOWN, portal.countermeasures.cooldown());
+   }
+
+   @Test
    void deathKeepsCountermeasuresCooldown() {
       IronManState state = new IronManState();
       state.countermeasures.fire();
