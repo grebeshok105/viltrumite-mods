@@ -37,6 +37,14 @@ public final class AnimRenderer {
       }
    }
 
+   /**
+    * Renders one bone with its children (no hook). Used by {@link PlayerGeoLayer}
+    * to attach top-level bones to player model parts.
+    */
+   public static void renderBone(GeoBone bone, PoseStack poseStack, VertexConsumer buffer, int light, int overlay, float r, float g, float b, float a) {
+      renderBone(bone, poseStack, null, buffer, light, overlay, r, g, b, a, null);
+   }
+
    private static void renderBone(
       GeoBone bone,
       PoseStack poseStack,

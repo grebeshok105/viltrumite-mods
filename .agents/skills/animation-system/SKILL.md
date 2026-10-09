@@ -30,7 +30,9 @@ The mod has several layers. Each layer has one job. Pick the layer by what you a
 | World effects (rings, beams, sparks, blood) | VFX managers on `RenderLevelStageEvent` | `client/render/vfx/*VFXManager`, `MeltedTunnelRenderer` |
 | Screen effects (shake, blur, tint) | Post shader `dash_impact` | `ViltrumiteShaders`, `GameRendererDashMixin`, `shaders/post/dash_impact.json`, `assets/minecraft/shaders/program/dash_impact.*` |
 | Flight screen effects | Post shader `sonic_boom` | flight `GameRendererMixin` |
-| Overlay on the player model | `RenderLayer` | `AtmosphericHeatFeatureRenderer` via `PlayerFeatureRendererMixin` |
+| Overlay on the player model | `RenderLayer` | `AtmosphericHeatFeatureRenderer` via `PlayerFeatureRendererMixin`; hero layers in `ViltrumiteCoreClient.onAddLayers` |
+| 3D parts on player parts (helmet, flames, gadgets) | `PlayerGeoLayer` + provider | `client/anim/render/PlayerGeoLayer`, `PlayerBoneMap` (§7.1) |
+| Suit skin growing over the body | Baked reveal frames | `client/anim/render/RevealMask`, `client/ironman/IronManSuitTextures` (§7.2) |
 | Particles, entity renderers | Forge registration | `ClientModEvents` |
 | Hand position for VFX/grab | Tracker mixins | `HandPositionTrackerMixin`, `ChopHandTrackerMixin` |
 
@@ -49,6 +51,8 @@ Pattern: one mixin per ability on `PlayerModel.setupAnim(LivingEntity;FFFFF)V` a
 | `ChopModelMixin` | 1160 |
 | `ChopModelMixin2`, `ThunderclapModelMixin` | 1170 |
 | `BarrageModelMixin` | 1175 |
+| `HomelanderModelMixin` | 1180 |
+| `IronManModelMixin` (hover, glide, heavy-landing kneel) | 1190 |
 | `GrabModelMixin` | 2000 |
 | `BlockModelMixin` | 3000 |
 
@@ -150,13 +154,49 @@ Invariants:
 - Do not keep model or animation references across a resource reload.
 - `AnimRenderer.time` is wall clock × 20. It runs during pause.
 
-### 7.1 Geo parts on the player (approved extension)
-
-- `client/anim/render/PlayerGeoLayer` (registered for both player skins) draws Blockbench geo parts on the vanilla player model. Register a `PlayerGeoLayer.Provider` that returns `Part(model, texture, glow)` per player per frame.
-- Top bones must use player-armor names (`armorHead/Body/RightArm/LeftArm/RightLeg/LeftLeg`, `PlayerBoneMap`); they copy the final `ModelPart` pose (after every `setupAnim` TAIL mixin), children follow. Unknown top bones are hidden with one warning.
-- Base pass `entityCutoutNoCull`, glow pass `RenderType.eyes`. Do not use it for the suit body: the body is a skin (section 8, suit reveal).
-
 Template: `InfinityGunRenderer` (BEWLR). It selects `shoot` / `reload` / `idle` from NBT tick timers and hides the `right_arm` / `left_arm` bones to draw vanilla arms in first person.
+
+### 7.1 Geo parts on player parts (`PlayerGeoLayer`)
+
+Approved extension (Iron Man stage 1b): Blockbench geo drawn ON the player
+model, following every pose. Use it for armor pieces, flames, gadgets. The
+body itself stays the player model with a skin.
+
+- Register once on the client: `PlayerGeoLayer.register(provider)`. Each
+  frame `Provider.collect(player, pt, firstPerson, out)` adds
+  `Part(geoLocation, passes, pose)`.
+- Top-level bone names map to model parts with `PlayerBoneMap`
+  (`armorHead/Body/RightArm/LeftArm/RightLeg/LeftLeg`, plain names, GeckoLib
+  `armor*Boot` → legs). Children follow. An unknown top bone with cubes is
+  skipped with one warning. Write geo in Bedrock armor coordinates (feet at
+  y 0, vanilla pivots: arms ±5/22, legs ±1.9/12).
+- The layer applies the part's final pose (`translateAndRotate`) after all
+  `setupAnim` TAIL mixins, then the bone's own pivot/rotation/scale.
+- `pose` runs after `resetBones()` on the shared model: set `scaleX/Y/Z`,
+  rotations, `hidden` there (flame length, flicker). Put a child bone pivot at
+  the flame root so `scaleY` changes the length.
+- Passes: `Pass.cutout(tex)` (lit, `entityCutoutNoCull`) and
+  `Pass.glow(tex[, r, g, b])` (`eyes`, full bright, skipped in the shadow
+  pass). Glow textures must be black where nothing glows (premultiply alpha).
+- First person: `PlayerGeoHandMixin` (`renderHand` TAIL) draws the arm bones
+  on the first-person arm (`firstPerson = true` in `collect`).
+- Layer registration: `ViltrumiteCoreClient.onAddLayers` (both skins).
+
+### 7.2 Suit skin reveal (baked frames)
+
+Decision record: `docs/spikes/2026-10-ironman-reveal.md`. No custom shader
+(Oculus safe).
+
+- `RevealMask` gives every skin texel a distance 0..1 from an origin on the
+  body surface; head texels come last. `frame(progress)` → 0..16.
+- A client reload listener bakes 16 `DynamicTexture` frames (skin / cut /
+  glow / rim) from two skins and a glow map; see `IronManSuitTextures`.
+- The `skin` frame is returned by `HeroSkins.Provider.skinVariant`, so the
+  model and the first-person arm use it. Glow and rim are an `eyes` layer
+  on the parent model with head + hat hidden (`IronManSkinLayer`). A helmet
+  is a geo part drawn with the `cut` frame.
+- Progress must come from synced timeline fields (`actionElapsed/Length`),
+  never from a client counter: relog mid-wave stays correct.
 
 ## 8. World VFX
 
@@ -186,11 +226,6 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
 - Server code sends impact FX with `hero/fx/HeroFx` (`shards`, `shockwave`, `slam`, `blade`, `launch`, `flash`). It sends `HeroFxS2CPacket`; `client/render/vfx/HeroImpactFx` draws it for every hero. Do not add a hero-specific packet for these shapes.
 - Camera shake goes through `client/render/vfx/CameraShake` (`addAt` with distance falloff, `add` for local). Do not add a second shake accumulator.
 - Full API list: `.agents/skills/add_hero/references/shared-toolkit.md`.
-
-### Suit reveal (Iron Man, spike `docs/spikes/2026-10-ironman-reveal.md`)
-
-- Pixel reveal = 16 frames composited on the client into `DynamicTexture`s and used as the player's **skin and hand** texture through `HeroSkins` (vanilla render path: shader packs, shadow pass and first person keep working). No custom reveal shader.
-- Glow pixels of the same frame: `RenderType.eyes` layer. Pure reveal math: `client/ironman/RevealMask`.
 
 ## 9. Screen effects
 

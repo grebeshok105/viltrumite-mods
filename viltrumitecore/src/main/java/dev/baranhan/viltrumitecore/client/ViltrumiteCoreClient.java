@@ -63,6 +63,11 @@ public class ViltrumiteCoreClient {
    }
 
    @SubscribeEvent
+   public static void onRegisterReloadListeners(net.minecraftforge.client.event.RegisterClientReloadListenersEvent event) {
+      event.registerReloadListener(dev.baranhan.viltrumitecore.client.ironman.IronManSuitTextures.INSTANCE);
+   }
+
+   @SubscribeEvent
    public static void onClientSetup(FMLClientSetupEvent event) {
       event.enqueueWork(() -> {
          RegulusClient.registerSkins();

@@ -1,6 +1,5 @@
 package dev.baranhan.viltrumitecore.client.anim;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -16,18 +15,19 @@ class PlayerBoneMapTest {
       assertEquals(PlayerBoneMap.Part.LEFT_ARM, PlayerBoneMap.of("armorLeftArm"));
       assertEquals(PlayerBoneMap.Part.RIGHT_LEG, PlayerBoneMap.of("armorRightLeg"));
       assertEquals(PlayerBoneMap.Part.LEFT_LEG, PlayerBoneMap.of("armorLeftLeg"));
-      // Default pose → zero bone offset (geo pivots equal vanilla pivots).
-      assertArrayEquals(new float[]{0, 0, 0}, PlayerBoneMap.position(PlayerBoneMap.Part.RIGHT_ARM, -5.0F, 2.0F, 0.0F), 1.0E-5F);
-      assertArrayEquals(new float[]{0, 0, 0}, PlayerBoneMap.position(PlayerBoneMap.Part.LEFT_LEG, 1.9F, 12.0F, 0.0F), 1.0E-5F);
-      // Sneak lowers the body pivot by 3.2 px → the geo bone moves down.
-      assertArrayEquals(new float[]{0, -3.2F, 0}, PlayerBoneMap.position(PlayerBoneMap.Part.BODY, 0.0F, 3.2F, 0.0F), 1.0E-5F);
-      assertArrayEquals(new float[]{-0.5F, -0.25F, 0.75F}, PlayerBoneMap.rotation(0.5F, 0.25F, 0.75F), 1.0E-6F);
    }
 
    @Test
    void unknownBoneSkipped() {
-      assertNull(PlayerBoneMap.of("shoulder_rockets"));
-      assertNull(PlayerBoneMap.of("head"));
+      assertNull(PlayerBoneMap.of("antenna"));
+      assertNull(PlayerBoneMap.of("bb_main"));
       assertNull(PlayerBoneMap.of(null));
+   }
+
+   @Test
+   void pivotsMatchVanillaPlayerModel() {
+      assertEquals(-5.0F, PlayerBoneMap.Part.RIGHT_ARM.pivotX);
+      assertEquals(2.0F, PlayerBoneMap.Part.LEFT_ARM.pivotY);
+      assertEquals(12.0F, PlayerBoneMap.Part.LEFT_LEG.pivotY);
    }
 }
