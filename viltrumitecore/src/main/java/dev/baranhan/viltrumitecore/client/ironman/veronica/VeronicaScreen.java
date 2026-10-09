@@ -125,9 +125,10 @@ public final class VeronicaScreen extends Screen {
       }
 
       MarkId mark = MARKS[index];
-      drawPreview(graphics, mark, x + CARD_W / 2, y + 40, time * 40.0F + index * 25.0F, ok);
-      graphics.drawCenteredString(this.font, Component.translatable("mark.viltrumitecore." + mark.key() + ".name"), x + CARD_W / 2, y + 54, ok ? ACCENT : DIM);
-      graphics.drawCenteredString(this.font, Component.translatable("mark.viltrumitecore." + mark.key() + ".role"), x + CARD_W / 2, y + 63, DIM);
+      // Model spans -0.5..1.5 units around the origin: feet end just above the name.
+      drawPreview(graphics, mark, x + CARD_W / 2, y + 16, time * 40.0F + index * 25.0F, ok);
+      drawFitted(graphics, Component.translatable("mark.viltrumitecore." + mark.key() + ".name"), x + CARD_W / 2, y + 54, ok ? ACCENT : DIM);
+      drawFitted(graphics, Component.translatable("mark.viltrumitecore." + mark.key() + ".role"), x + CARD_W / 2, y + 63, DIM);
       int bar = Mth.clamp(Math.round((CARD_W - 12) * this.view.durabilityFraction(mark)), 0, CARD_W - 12);
       graphics.fill(x + 6, y + 73, x + CARD_W - 6, y + 76, 0x80103040);
       graphics.fill(x + 6, y + 73, x + 6 + bar, y + 76, this.view.durabilityFraction(mark) < 0.25F ? AMBER : 0xFF50D8FF);
@@ -163,12 +164,30 @@ public final class VeronicaScreen extends Screen {
       return this.view.location(mark) == MarkLocation.WORN ? AMBER : ACCENT;
    }
 
+   /** Centered text shrunk to the card width (long mark names, other languages). */
+   private void drawFitted(GuiGraphics graphics, Component text, int cx, int y, int color) {
+      int width = this.font.width(text);
+      int max = CARD_W - 6;
+      if (width <= max) {
+         graphics.drawCenteredString(this.font, text, cx, y, color);
+         return;
+      }
+
+      float scale = max / (float)width;
+      PoseStack pose = graphics.pose();
+      pose.pushPose();
+      pose.translate(cx, y + 4.0F * (1.0F - scale), 0.0F);
+      pose.scale(scale, scale, 1.0F);
+      graphics.drawCenteredString(this.font, text, 0, 0, color);
+      pose.popPose();
+   }
+
    /** Turning preview of the player model in the mark skin (rest pose, arms slightly out). */
    private void drawPreview(GuiGraphics graphics, MarkId mark, int cx, int cy, float yaw, boolean active) {
       PoseStack pose = graphics.pose();
       pose.pushPose();
       pose.translate(cx, cy, 100.0F);
-      pose.scale(22.0F, 22.0F, 22.0F);
+      pose.scale(21.0F, 21.0F, 21.0F);
       pose.mulPose(Axis.YP.rotationDegrees(yaw));
       this.preview.rightArm.zRot = 0.18F;
       this.preview.leftArm.zRot = -0.18F;

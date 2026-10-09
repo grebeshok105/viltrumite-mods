@@ -174,7 +174,10 @@ public class VeronicaPodEntity extends Entity {
       }
 
       IronManState state = IronManState.of(owner);
-      return state != null && state.podId == this.getId() && owner.distanceToSqr(this) <= LEAVE_RANGE * LEAVE_RANGE;
+      // Horizontal range: the pod starts 120 blocks above the ground.
+      double dx = owner.getX() - this.getX();
+      double dz = owner.getZ() - this.getZ();
+      return state != null && state.podId == this.getId() && dx * dx + dz * dz <= LEAVE_RANGE * LEAVE_RANGE;
    }
 
    /** Fly up and away; the Veronica cooldown starts now (spec §12.2). */
