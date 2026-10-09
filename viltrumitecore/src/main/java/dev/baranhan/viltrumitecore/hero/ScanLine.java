@@ -39,7 +39,7 @@ public record ScanLine(String key, List<String> args) {
 
    public static ScanLine read(FriendlyByteBuf buffer) {
       String key = buffer.readUtf(128);
-      int count = Math.min(MAX_ARGS, buffer.readVarInt());
+      int count = Math.max(0, Math.min(MAX_ARGS, buffer.readVarInt()));
       String[] args = new String[count];
       for (int i = 0; i < count; i++) {
          args[i] = buffer.readUtf(64);

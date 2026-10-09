@@ -220,6 +220,7 @@ public final class HeroEvents {
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeldInputs.releaseAll(player);
+         HeroDamageLayers.forget(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DISCONNECT);
       }
    }
