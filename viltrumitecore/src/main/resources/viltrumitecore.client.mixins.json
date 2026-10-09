@@ -41,6 +41,7 @@
     "OutlineTeamColorMixin",
     "InGameHudMixin",
     "IronManModelMixin",
+    "SignatureModelMixin",
     "ItemInHandRendererMixin",
     "MinecraftClientMixin",
     "MouseMixin",

@@ -1,12 +1,126 @@
 package dev.baranhan.viltrumitecore.hero.ironman.mark.sig;
 
+import dev.baranhan.viltrumitecore.hero.HeroDestruction;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManCombatSounds;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManMarkSounds;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManRules;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManState;
+import dev.baranhan.viltrumitecore.hero.ironman.combat.UnibeamTimeline;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkSignature;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.SignatureState;
+import java.util.HashSet;
+import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
-/** MARK_17: pulse Unibeam: three short strong pulses, no overheat (spec §13). */
+/**
+ * MARK_17: three short strong Unibeam pulses. No overheat and no overdraft count
+ * (spec §13.6). The normal Unibeam of this mark is handled by the Unibeam code.
+ */
 public final class PulseUnibeam implements MarkSignature {
    @Override
    public void press(ServerPlayer player, IronManState state) {
+      if (state.energy.weaponsLocked() || !state.energy.spend(SignatureRules.PULSE_COST)) {
+         SignatureTrace.sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F, 1.0F);
+         return;
+      }
+
+      SignatureState sig = state.signature;
+      sig.cooldown = SignatureRules.PULSE_COOLDOWN;
+      sig.active = true;
+      sig.ticks = 0;
+      sig.length = SignatureRules.pulseTotal();
+      sig.point = SignatureTrace.chest(player).add(player.getLookAngle().scale(IronManRules.UNIBEAM_RANGE));
+      SignatureTrace.sound(player, IronManMarkSounds.PULSE_UNIBEAM.get(), 1.0F, 1.0F);
+   }
+
+   @Override
+   public void tick(ServerPlayer player, IronManState state) {
+      SignatureState sig = state.signature;
+      if (!sig.active) {
+         return;
+      }
+
+      int tick = sig.ticks;
+      if (tick >= SignatureRules.pulseTotal()) {
+         sig.clear();
+         return;
+      }
+
+      sig.ticks = tick + 1;
+      if (SignatureRules.pulseAt(tick) < 0) {
+         return;
+      }
+
+      Vec3 from = SignatureTrace.chest(player);
+      Vec3 dir = player.getLookAngle();
+      Vec3 end = beamEnd(player, from, dir);
+      sig.point = end;
+      if (SignatureRules.pulseHitsTick(tick)) {
+         hitAlong(player, from, end, dir);
+      }
+   }
+
+   /** Glass and leaves give way (as the Unibeam); everything else stops the pulse. */
+   private static Vec3 beamEnd(ServerPlayer player, Vec3 from, Vec3 dir) {
+      ServerLevel level = player.serverLevel();
+      Vec3 end = from.add(dir.scale(IronManRules.UNIBEAM_RANGE));
+      BlockHitResult block = null;
+      for (int i = 0; i < 4; i++) {
+         block = level.clip(new ClipContext(from, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+         if (block.getType() != HitResult.Type.BLOCK || i == 3) {
+            break;
+         }
+
+         BlockPos pos = block.getBlockPos();
+         Set<String> tags = new HashSet<>();
+         level.getBlockState(pos).getTags().forEach(tag -> tags.add(tag.location().toString()));
+         if (!UnibeamTimeline.breaksBlock(tags) || !HeroDestruction.canDestroy(level, pos) || !HeroDestruction.destroyBlock(level, pos)) {
+            break;
+         }
+      }
+
+      return block != null && block.getType() == HitResult.Type.BLOCK ? block.getLocation() : end;
+   }
+
+   private static void hitAlong(ServerPlayer player, Vec3 from, Vec3 to, Vec3 dir) {
+      double radius = IronManRules.UNIBEAM_RADIUS;
+      Vec3 segment = to.subtract(from);
+      double length = segment.length();
+      AABB box = new AABB(from, to).inflate(radius + 1.0);
+      DamageSource source = player.damageSources().playerAttack(player);
+      for (LivingEntity target : player.serverLevel().getEntitiesOfClass(LivingEntity.class, box, e -> e != player && e.isAlive() && !e.isSpectator())) {
+         Vec3 center = target.getBoundingBox().getCenter();
+         double t = length < 1.0E-3 ? 0.0 : Mth.clamp(center.subtract(from).dot(segment) / (length * length), 0.0, 1.0);
+         Vec3 closest = from.add(segment.scale(t));
+         double reach = radius + target.getBbWidth() / 2.0 + target.getBbHeight() / 4.0;
+         if (closest.distanceTo(center) > reach) {
+            continue;
+         }
+
+         if (SignatureTrace.strike(target, source, SignatureRules.PULSE_DAMAGE)) {
+            SignatureTrace.push(target, dir.scale(IronManRules.UNIBEAM_PUSH));
+            if (target instanceof Mob mob) {
+               mob.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, IronManRules.UNIBEAM_MOB_BLIND_TICKS, 0, false, false));
+               mob.setTarget(null);
+            }
+         }
+
+         if (target instanceof ServerPlayer victim) {
+            SignatureTrace.flash(victim, 0.9F, UnibeamTimeline.flashTicks(IronManRules.FLASH_BEAM_TICKS, true));
+         }
+      }
    }
 }

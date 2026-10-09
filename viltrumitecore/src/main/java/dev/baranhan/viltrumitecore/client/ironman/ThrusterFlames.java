@@ -4,9 +4,13 @@ import dev.baranhan.viltrumitecore.client.anim.geo.BakedGeoModel;
 import dev.baranhan.viltrumitecore.client.anim.geo.GeoBone;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkSpec;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
 
@@ -86,8 +90,18 @@ public final class ThrusterFlames {
       return player instanceof ViltrumiteFlightPlayer flyer ? flyer.getLerpedFlightThrottle(partialTick) : 0.0F;
    }
 
+   /** Mark 15 flies silent without flames (MarkSpec.silentFlight). */
+   public static boolean silent(@Nullable HeroPublicSnapshot snapshot) {
+      MarkId mark = snapshot == null ? null : IronManVariant.mark(snapshot.variant());
+      return mark != null && MarkSpec.of(mark).silentFlight();
+   }
+
    /** Adds the flame parts for this frame. First person: palms only. */
    static void collect(AbstractClientPlayer player, HeroPublicSnapshot snapshot, float partialTick, boolean firstPerson, List<PlayerGeoLayer.Part> out) {
+      if (silent(snapshot)) {
+         return;
+      }
+
       Mode mode = mode(player, snapshot);
       Lengths lengths = lengths(mode, throttle(player, partialTick));
       if (!lengths.any()) {

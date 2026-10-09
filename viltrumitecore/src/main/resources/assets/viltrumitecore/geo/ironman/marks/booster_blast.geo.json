@@ -1,0 +1,107 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.ironman_mark_booster_blast",
+        "texture_width": 32,
+        "texture_height": 32
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "boosterBlast",
+          "pivot": [
+            0,
+            9.0,
+            4.0
+          ],
+          "parent": "armorBody",
+          "cubes": [
+            {
+              "origin": [
+                -2.6,
+                1.0,
+                3.4
+              ],
+              "size": [
+                5.2,
+                8.0,
+                1.2
+              ],
+              "uv": {
+                "up": {
+                  "uv": [
+                    1.2,
+                    0
+                  ],
+                  "uv_size": [
+                    5.2,
+                    1.2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    6.4,
+                    0
+                  ],
+                  "uv_size": [
+                    5.2,
+                    1.2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    1.2
+                  ],
+                  "uv_size": [
+                    1.2,
+                    8.0
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    1.2,
+                    1.2
+                  ],
+                  "uv_size": [
+                    5.2,
+                    8.0
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    6.4,
+                    1.2
+                  ],
+                  "uv_size": [
+                    1.2,
+                    8.0
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    7.6,
+                    1.2
+                  ],
+                  "uv_size": [
+                    5.2,
+                    8.0
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
