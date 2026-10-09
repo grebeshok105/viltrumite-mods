@@ -71,6 +71,8 @@ public final class IronManJarvis {
       if (state.scan.active()) {
          state.scan.cancel();
       }
+
+      HeroRegistry.pushOwnerSection(player, OwnerSection.SCAN, HeroOwnerSnapshot.Section.EMPTY);
    }
 
    /** Combat hit closes an open helmet (spec §10): living attacker or projectile only. */
@@ -138,6 +140,8 @@ public final class IronManJarvis {
       ScanProgress.Event event = state.scan.tick(aimedId, alive, distance, los, state.helmet.closed() && state.suit.worn());
       if (event == ScanProgress.Event.DONE && target instanceof LivingEntity living) {
          CoreMessages.sendToPlayer(new ScanCardS2CPacket(ScanAnalyzer.card(living)), player);
+         // Sections are deduplicated by content: a re-scan of the same target must restart the highlight.
+         HeroRegistry.pushOwnerSection(player, OwnerSection.SCAN, HeroOwnerSnapshot.Section.EMPTY);
          HeroRegistry.pushOwnerSection(player, OwnerSection.SCAN,
             new HeroOwnerSnapshot.Section(new int[]{living.getId()}, new int[]{IronManRules.SCAN_HIGHLIGHT_TICKS}));
          notify(player, IronManJarvisSounds.SCAN_COMPLETE.get(), 0.9F, 1.0F);

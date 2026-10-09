@@ -29,7 +29,7 @@ public final class ScreenProjector {
    private ScreenProjector() {
    }
 
-   /** GUI position; behind = the point is behind the camera (x/y mirrored for edge arrows). */
+   /** GUI position; behind = the point is behind the camera (x/y keep its side for edge arrows). */
    public record Point(float x, float y, boolean behind) {
       public boolean onScreen(int width, int height) {
          return !this.behind && this.x >= 0 && this.y >= 0 && this.x <= width && this.y <= height;
@@ -57,13 +57,9 @@ public final class ScreenProjector {
       VIEW_PROJ.transform(v);
       boolean behind = v.w <= 1.0E-3F;
       float w = Math.abs(v.w) < 1.0E-3F ? 1.0E-3F : Math.abs(v.w);
+      // Dividing by |w| keeps the side of a point behind the camera (signed w would mirror it).
       float nx = v.x / w;
       float ny = v.y / w;
-      if (behind) {
-         nx = -nx;
-         ny = -ny;
-      }
-
       return new Point((nx * 0.5F + 0.5F) * guiWidth, (1.0F - (ny * 0.5F + 0.5F)) * guiHeight, behind);
    }
 }

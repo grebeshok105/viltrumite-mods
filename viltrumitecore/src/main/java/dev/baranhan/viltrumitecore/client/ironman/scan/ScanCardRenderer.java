@@ -43,6 +43,10 @@ public final class ScanCardRenderer {
    private ScanCardRenderer() {
    }
 
+   public static void clear() {
+      card = null;
+   }
+
    public static void accept(ScanCard received) {
       Minecraft client = Minecraft.getInstance();
       card = received;
@@ -111,6 +115,7 @@ public final class ScanCardRenderer {
 
       HeroPublicSnapshot snapshot = IronManView.of(player);
       if (!JarvisVoice.online(snapshot)) {
+         card = null;
          return;
       }
 

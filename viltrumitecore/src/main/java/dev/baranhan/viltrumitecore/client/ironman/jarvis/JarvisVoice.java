@@ -3,6 +3,7 @@ package dev.baranhan.viltrumitecore.client.ironman.jarvis;
 import dev.baranhan.viltrumitecore.client.hero.ClientHeroData;
 import dev.baranhan.viltrumitecore.client.ironman.HelmetAnim;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
+import dev.baranhan.viltrumitecore.client.ironman.scan.ScanCardRenderer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.OwnerSection;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManCombatSounds;
@@ -24,6 +25,7 @@ import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -142,6 +144,17 @@ public final class JarvisVoice {
       subtitle = Component.translatable(line.subtitle);
       subtitleStart = now;
       subtitleUntil = now + Math.max(60, line.duration);
+   }
+
+   /** Game time restarts per world: gate, subtitle and card must not carry over to the next one. */
+   @SubscribeEvent
+   public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+      GATE.reset();
+      KNOWN_THREATS.clear();
+      seen = false;
+      subtitle = null;
+      subtitleUntil = 0L;
+      ScanCardRenderer.clear();
    }
 
    @SubscribeEvent
