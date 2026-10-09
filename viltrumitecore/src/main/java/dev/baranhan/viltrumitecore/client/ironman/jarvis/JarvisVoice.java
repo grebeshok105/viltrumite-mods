@@ -66,7 +66,9 @@ public final class JarvisVoice {
       VERONICA_POD(null, "jarvis.viltrumitecore.veronica", 100, 900),
       MARK_READY(null, "jarvis.viltrumitecore.mark_ready", 100, 600),
       MARK_LOW(null, "jarvis.viltrumitecore.mark_low", 100, 1200),
-      MARK_BROKEN(null, "jarvis.viltrumitecore.mark_broken", 120, 600);
+      MARK_BROKEN(null, "jarvis.viltrumitecore.mark_broken", 120, 600),
+      HULKBUSTER(null, "jarvis.viltrumitecore.hulkbuster", 100, 600),
+      HULKBUSTER_BROKEN(null, "jarvis.viltrumitecore.hulkbuster_broken", 100, 600);
 
       @Nullable
       private final Supplier<SoundEvent> sound;
@@ -237,12 +239,33 @@ public final class JarvisVoice {
       }
 
       markLines(snapshot, seen);
+      hulkLines(snapshot, seen);
       seen = true;
       wasReady = ready;
       lastEnergy = energy;
       lastOverheats = overheats;
       lastOverdraft = overdraft;
       lastCounter = counter;
+   }
+
+   private static int lastHulk;
+
+   /** Hulkbuster lines (plan Task 8): online when the layer goes ACTIVE, lost when it breaks (not on a normal exit). */
+   private static void hulkLines(HeroPublicSnapshot snapshot, boolean announce) {
+      int phase = IronManFlags.get(snapshot.heroFlags(), IronManFlags.Field.HULKBUSTER_PHASE);
+      int active = dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer.Phase.ACTIVE.ordinal();
+      int none = dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer.Phase.NONE.ordinal();
+      if (announce) {
+         if (phase == active && lastHulk != active) {
+            sayHelmet(Line.HULKBUSTER);
+         }
+
+         if (lastHulk == active && phase == none) {
+            sayHelmet(Line.HULKBUSTER_BROKEN);
+         }
+      }
+
+      lastHulk = phase;
    }
 
    /** Mark lines (spec §11.1): ready, low durability once per wear, mark broken into the nano. */

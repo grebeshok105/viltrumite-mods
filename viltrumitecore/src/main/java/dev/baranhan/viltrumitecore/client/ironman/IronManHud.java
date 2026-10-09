@@ -4,6 +4,7 @@ import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManRules;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import net.minecraft.client.Minecraft;
@@ -107,6 +108,17 @@ public final class IronManHud {
          graphics.fill(x - 1, durY - 1, x + WIDTH + 1, durY + 3, 0xA0081420);
          graphics.fill(x, durY, x + Math.round(WIDTH * frac), durY + 2, frac < 0.25F ? (blink ? 0xFFFF4030 : 0xFFFFB020) : 0xFF50D8FF);
          graphics.drawString(font, Math.round(frac * 100.0F) + "%", x + WIDTH + 4, durY - 2, 0xFFFFFF, true);
+         below += 16;
+      }
+
+      // Stage 5: Hulkbuster durability (spec §15.2), gold accent of the Mark 48.
+      if (IronManView.flag(snapshot, IronManFlags.Field.HULKBUSTER_PHASE) != 0) {
+         float hulkFrac = IronManVariant.hulkDurability(snapshot.variant());
+         graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.hulkbuster"), x, below, 0xFFE0A0, true);
+         int hulkY = below + 10;
+         graphics.fill(x - 1, hulkY - 1, x + WIDTH + 1, hulkY + 3, 0xA0081420);
+         graphics.fill(x, hulkY, x + Math.round(WIDTH * hulkFrac), hulkY + 2, hulkFrac < 0.25F ? (blink ? 0xFFFF4030 : 0xFFFFB020) : 0xFFE0A030);
+         graphics.drawString(font, Math.round(hulkFrac * 100.0F) + "%", x + WIDTH + 4, hulkY - 2, 0xFFFFFF, true);
          below += 16;
       }
 
