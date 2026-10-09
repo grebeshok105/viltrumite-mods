@@ -37,6 +37,13 @@ Default hooks (override only when needed):
 | `onDimensionChange(ServerPlayer)` | nothing; stop channels |
 | `abilityIcon(String id)` | null; hero-specific icon for any slot (kit slots drawn as this hero), read by panel and HUD via `ViltrumiteAbility.getIcon(player)` |
 | `saveHeroState` / `loadHeroState` / `cloneHeroState` | drop state |
+| `grantsFlightAbility(Player)` | false; vanilla `mayfly` for heroes without the legacy kit (`HeroFlightGrant`, own NBT marker) |
+| `flightProfile(Player)` | null = legacy flight; else `FlightProfile` (speedMul, throttle up/down, lock cap, inertia, turn rate, hover damping, glide); both sides |
+| `absorbIncoming(ServerPlayer, DamageSource, float)` | `DamageAbsorb.PASS`; LivingAttackEvent, before armor (shields, layers) |
+| `clampFinalDamage(ServerPlayer, DamageSource, float)` | unchanged; LivingDamageEvent, after armor (HP floors) |
+| `modifyOutgoingDamage(ServerPlayer, LivingEntity, DamageSource, float)` | unchanged; this hero as attacker |
+| `mouseAction(MouseButton, Player)` | null = vanilla; claimed buttons go through `HeldInputs` (press gated once, release always routed); both sides |
+| `onInputRefused(ServerPlayer, HeroAction)` | nothing; feedback when a claimed press fails `canAct` |
 
 New behaviour that shared code must ask about → add a new default hook here. Do not branch on `HeroId` in shared code.
 
@@ -67,7 +74,6 @@ New behaviour that shared code must ask about → add a new default hook here. D
 These files check `HeroId.REGULUS` directly. When a new hero needs the same behaviour, replace the branch with a `HeroDefinition` hook instead of adding a second branch:
 
 - `ability/ViltrumiteAbilities` — Regulus slot registration and grey-out.
-- `client/AbilityInputManager` — Regulus key routing.
 - `client/ViltrumiteCoreClient` — Regulus punch key block (hero input slots are generic now).
 - `client/gui/RaceSelectionScreen` — hero buttons and head preview.
 - `client/mixin/GameRendererDashMixin`, `RegulusFovMixin`, `RegulusHudMixin`, `SilhouetteRendererMixin`.
