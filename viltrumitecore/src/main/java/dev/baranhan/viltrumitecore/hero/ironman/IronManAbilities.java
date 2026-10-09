@@ -51,7 +51,8 @@ public final class IronManAbilities {
       List<ViltrumiteAbility> list = new ArrayList<>();
       for (String id : OWN) {
          String name = "ironman_" + id.substring(id.indexOf(':') + 1);
-         list.add(new ViltrumiteAbility(id, icon(id), "ability.viltrumitecore." + name + ".name", "ability.viltrumitecore." + name + ".desc", 0));
+         list.add(new ViltrumiteAbility(id, icon(id), "ability.viltrumitecore." + name + ".name", "ability.viltrumitecore." + name + ".desc", 0,
+            player -> grey(id, player)));
       }
 
       return list;
@@ -61,11 +62,49 @@ public final class IronManAbilities {
       String[] loadout = new String[18];
       Arrays.fill(loadout, "");
       loadout[SUIT_SLOT] = SUIT;
+      loadout[UNIBEAM_SLOT] = UNIBEAM;
+      loadout[MISSILES_SLOT] = MISSILES;
+      loadout[NANO_ARSENAL_SLOT] = NANO_ARSENAL;
       return loadout;
    }
 
    @Nullable
    public static HeroAction actionFor(String abilityId) {
-      return SUIT.equals(abilityId) ? HeroAction.SUIT : null;
+      if (abilityId == null) {
+         return null;
+      }
+
+      return switch (abilityId) {
+         case SUIT -> HeroAction.SUIT;
+         case UNIBEAM -> HeroAction.UNIBEAM;
+         case MISSILES -> HeroAction.MISSILES;
+         case NANO_ARSENAL -> HeroAction.NANO_ARSENAL;
+         default -> null;
+      };
+   }
+
+   /** Panel grey state from the synced snapshot (client) — pure on the snapshot. */
+   static boolean grey(String abilityId, net.minecraft.world.entity.player.Player player) {
+      if (!(player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer)) {
+         return false;
+      }
+
+      return greyFor(abilityId, heroPlayer.getHeroSnapshot());
+   }
+
+   public static boolean greyFor(String abilityId, @Nullable dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot) {
+      if (snapshot == null || snapshot.heroId() != dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN) {
+         return false;
+      }
+
+      int flags = snapshot.heroFlags();
+      boolean worn = IronManFlags.is(flags, IronManFlags.Field.SUIT_WORN);
+      return switch (abilityId) {
+         // Nano lost after a core explosion: extra cooldown [0].
+         case SUIT -> snapshot.extraCooldown(0) > 0;
+         case UNIBEAM -> !worn || snapshot.resourceLocked() || IronManFlags.is(flags, IronManFlags.Field.OVERHEAT_LOCK);
+         case MISSILES, NANO_ARSENAL -> !worn || snapshot.resourceLocked();
+         default -> false;
+      };
    }
 }
