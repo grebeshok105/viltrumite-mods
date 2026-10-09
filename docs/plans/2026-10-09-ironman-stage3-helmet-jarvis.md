@@ -4,7 +4,7 @@
 
 **Goal:** The helmet opens/closes with nanites (auto-closes on the first hit in combat) and gates the JARVIS layer: helmet HUD frame, threat frames and projectile arrows, low-energy/overheat warnings with JARVIS voice lines, missile auto-lock; a 1.5 s scan with a target card (HP, armor, effects, resists, stats, weak spot) and 10 s through-wall highlight; countermeasure flares that pull homing projectiles and make mobs lose the player for ~2 s.
 
-**Architecture:** Server owns helmet state, scan progress/result, countermeasure timers and the threat list; the client draws. Helmet = `Helmet` pure class in `IronManState`. Threats and scan targets go to the owner via `HeroRegistry.pushOwnerSnapshot` (owner-only ids) and a new `ScanCardS2CPacket`. The Homelander focus outline is extracted into a shared `client/render/vfx/OutlineTargets` (Homelander behaviour identical) and reused for the scan highlight. Weak spots come from a generic hook `HeroDefinition.scanWeakSpot(Player target)` plus a vanilla rule table. Countermeasures retarget anything implementing `core/entity/Homing` (added in Stage 2).
+**Architecture:** Server owns helmet state, scan progress/result, countermeasure timers and the threat list; the client draws. Helmet = `Helmet` pure class in `IronManState`. Threats and scan targets go to the owner through the Stage 2 typed owner sections (`HeroRegistry.pushOwnerSection` with `THREATS` and `SCAN` — independent from `MARKS`, `SCAN` carries a 200 t expiry) and a new `ScanCardS2CPacket`. The Homelander focus outline is extracted into a shared `client/render/vfx/OutlineTargets` (Homelander behaviour identical) and reused for the scan highlight. Hero protections and weak spots come from a generic descriptive hook `HeroDefinition.scanInfo(Player self)` that mirrors the real damage route; vanilla targets use a rule table of real vanilla damage rules. Analysis never deals damage or changes state. Countermeasures retarget anything implementing `core/entity/Homing` (added in Stage 2).
 
 **Tech Stack:** Forge 47.3.0, Minecraft 1.20.1, Java 17, Mixin 0.8.5, JUnit 5.9.3.
 
@@ -21,6 +21,7 @@ Paths as in Stage 1; `util/` = `core/hero/ironman/util/`.
 - Voice lines: Codex JARVIS recordings `assets/superheroes/sounds/ironman/jarvis_*.ogg` (repo `grebeshok105/Codex-Superheroes`; fetch with sparse checkout of that folder; the local `/data/cs` clone does not contain it). Each line has a per-line cooldown and a global ≥ 4 s gap; never two at once. If the Codex folder has no JARVIS files, voice is replaced by subtitle + UI chime and it is stated in the PR (no synthetic voice).
 - Scan works on any `LivingEntity` including other heroes' players; nothing in the card is computed on the client.
 - Mark 15 (Stage 4) is hidden from scan and focus: reserve the hook now (`HeroDefinition.hiddenFromScan(Player)` default false).
+- Scan shows only what the damage code really does. No invented weak spots; unknown → «не обнаружено». Head-hit bonuses are out of scope (separate design decision).
 
 ## Review Focus
 
@@ -58,7 +59,7 @@ Paths as in Stage 1; `util/` = `core/hero/ironman/util/`.
 ### Task 3: JARVIS hints and voice
 
 **Files:**
-- Create: `core/hero/ironman/jarvis/ThreatScan.java` (server: mobs whose target is the player, skeletons/pillagers drawing at the player, players looking at us with a weapon within 32 blocks; every 5 t → owner snapshot ids), `core/client/ironman/jarvis/JarvisHints.java` (threat brackets at screen edge, projectile arrows for projectiles within 32 blocks whose path passes ≤ 2 blocks from the player, warnings), `core/client/ironman/jarvis/JarvisVoice.java`, `core/client/ironman/jarvis/VoiceGate.java` (pure), `res/sounds/ironman/jarvis_*.ogg` (+ `.b64`)
+- Create: `core/hero/ironman/jarvis/ThreatScan.java` (server: mobs whose target is the player, skeletons/pillagers drawing at the player, players looking at us with a weapon within 32 blocks; every 5 t → `THREATS` owner section), `core/client/ironman/jarvis/JarvisHints.java` (threat brackets at screen edge, projectile arrows for projectiles within 32 blocks whose path passes ≤ 2 blocks from the player, warnings), `core/client/ironman/jarvis/JarvisVoice.java`, `core/client/ironman/jarvis/VoiceGate.java` (pure), `res/sounds/ironman/jarvis_*.ogg` (+ `.b64`)
 - Modify: `IronManHero.java` (missile auto-lock: if no manual marks and helmet closed → nearest threat gets the first mark, missiles only), `res/sounds.json`, lang
 - Test: `test/hero/ironman/ThreatScanTest.java` (pure predicates), `test/client/ironman/VoiceGateTest.java`
 
@@ -73,16 +74,17 @@ Paths as in Stage 1; `util/` = `core/hero/ironman/util/`.
 
 **Files:**
 - Create: `core/hero/ironman/scan/ScanProgress.java` (pure: hold aim 30 t on the same target, reset on target change), `core/hero/ironman/scan/ScanCard.java` (record), `core/hero/ironman/scan/ScanAnalyzer.java`, `core/hero/ironman/scan/WeakSpots.java`, `core/network/packet/ScanCardS2CPacket.java`
-- Modify: `core/hero/HeroDefinition.java` (`default Component scanWeakSpot(Player self) { return null; }`, `default boolean hiddenFromScan(Player self) { return false; }`), `IronManHero.java` (`SCAN` press → start; repeat → cancel), `IronManAbilities` (`ironman:scan` page 2 slot 1)
+- Create: `core/hero/ScanInfo.java` (record: `List<Component> protections`, `List<Component> weakSpots`, `List<Component> conditions`)
+- Modify: `core/hero/HeroDefinition.java` (`default ScanInfo scanInfo(Player self) { return ScanInfo.EMPTY; }`, `default boolean hiddenFromScan(Player self) { return false; }`), `core/hero/regulus/RegulusHero.java` (`scanInfo`: Lion's Heart active → «блокирует весь внешний урон» from the same state `HeroDamage.decide` reads, `HeroDamage.java:78-110`; inactive → nothing), `core/hero/homelander/HomelanderHero.java` (`scanInfo`: legacy damage reduction % and ignore threshold from the same values `PlayerStatsMixin.reduceIncomingDamage/ignoreWeakDamage` use, `PlayerStatsMixin.java:90-125`), `IronManHero.java` (`scanInfo`: nano armor / mark durability / shield), `IronManHero.java` (`SCAN` press → start; repeat → cancel), `IronManAbilities` (`ironman:scan` page 2 slot 1)
 - Test: `test/hero/ironman/ScanTest.java`
 
 **Interfaces:**
 - `ScanCard(int entityId, Component name, float hp, float maxHp, float armor, float toughness, List<EffectLine> effects, List<Component> resists, float attackDamage, float moveSpeed, Component weakSpot)`.
-- Resists: fire immune (`fireImmune()`), explosion/projectile/magic from damage-type tags immunity checks (`isInvulnerableTo` with a probe source per type), knockback resistance attribute, active Resistance effect level, hero hook (players → their `HeroDefinition` immunities exposed via the same probe).
-- Weak spot table (`WeakSpots`, ordered rules, first match wins): undead (`MobType.UNDEAD`) → «Смайт / лечение»; non-fire-immune undead also «огонь»; arthropods → «Бич членистоногих»; water-sensitive (`isSensitiveToWater()`) → «вода»; creeper → «дальний бой»; fire-immune → «холод / ближний бой»; players → `HeroDefinition.scanWeakSpot(target)` or «голова (крит)»; default → «голова (крит)». Rules are a data list keyed by vanilla properties, never hero ids.
-- Done → card S2C to the owner, `ScanHighlight` (owner snapshot ids) 200 t; cancelled on death, range > 48, LOS lost > 10 t, helmet open.
+- Resists (all read-only queries, no test hits): `fireImmune()`, active Resistance effect level (−20 % per level), Fire Resistance effect, armor + toughness attributes, knockback resistance attribute; for vanilla mobs also `isInvulnerableTo(src)` **queries** for explosion/projectile/magic sources built from `damageSources()` (no damage applied). For players the hero part comes only from `HeroRegistry.get(target).scanInfo(target)` — hero protections live in `HeroDamage`/`PlayerStatsMixin`, not in `isInvulnerableTo`.
+- Weak spots (`WeakSpots`, only real vanilla damage rules): `MobType.UNDEAD` → «Небесная кара, зелья исцеления» (Smite bonus, instant health harms undead); `MobType.ARTHROPOD` → «Бич членистоногих»; `isSensitiveToWater()` → «вода»; players → `scanInfo(target).weakSpots()`; nothing matched → «не обнаружено». Rules are a data list keyed by vanilla properties, never hero ids.
+- Done → card S2C to the owner, highlight via the `SCAN` owner section with a 200 t expiry (THREATS/MARKS updates do not touch it); cancelled on death, range > 48, LOS lost > 10 t, helmet open.
 
-- [ ] Step 1: Tests: `needs30TicksOnSameTarget`, `targetChangeResets`, `cancelledWhenHelmetOpens`, `cancelledOnTargetDeath`, `fireImmuneListed`, `undeadWeakSpot`, `hiddenFromScanRefused`, `highlightLasts200`.
+- [ ] Step 1: Tests: `needs30TicksOnSameTarget`, `targetChangeResets`, `cancelledWhenHelmetOpens`, `cancelledOnTargetDeath`, `fireImmuneListed`, `undeadWeakSpot`, `plainMobHasNoInventedWeakSpot` (cow, iron golem → «не обнаружено»), `playerWithoutHeroInfo`, `regulusLionActiveVsInactive`, `homelanderReductionListed`, `resistanceEffectListed`, `analysisDoesNotChangeHpOrState`, `hiddenFromScanRefused`, `highlightLasts200`, `threatUpdateKeepsScanExpiry`.
 - [ ] Step 2: FAIL → implement → PASS. Commit `feat(ironman): scan analysis`.
 
 ### Task 5: Scan (client) and shared outline
@@ -99,7 +101,7 @@ Paths as in Stage 1; `util/` = `core/hero/ironman/util/`.
 
 **Files:**
 - Create: `core/entity/FlareEntity.java` (short-lived, bright pixel flare, gravity, 60 t), `core/hero/ironman/Countermeasures.java` (pure timers + selection), `core/client/ironman/FlareRenderer.java`
-- Modify: `core/entity/MicroMissileEntity.java` (already `Homing`), `IronManHero.java`, `IronManAbilities` (`ironman:countermeasures` page 2 slot 2, cooldown 400 t in snapshot `cooldowns`)
+- Modify: `core/entity/MicroMissileEntity.java` (already `Homing`), `IronManHero.java`, `IronManAbilities` (`ironman:countermeasures` page 2 slot 2, cooldown 400 t in `extraCooldowns[1]`)
 - Test: `test/hero/ironman/CountermeasuresTest.java`
 
 **Interfaces:**
@@ -113,7 +115,7 @@ Paths as in Stage 1; `util/` = `core/hero/ironman/util/`.
 - [ ] Sounds: helmet open/close, scan loop/complete, flares launch/burn (script `tools/sfx/ironman_stage3.sh`), JARVIS lines from Codex.
 - [ ] Icons `scan, countermeasures, helmet` (16×16, panel style). Lang (all locales): scan card labels, weak spot texts, JARVIS subtitle texts, HUD.
 - [ ] `NoHeroBranchTest`, build, checker, `runServer`; in-game list = spec §21 row "Шлем, JARVIS, сканирование…"; Homelander focus regression.
-- [ ] Version bump, memory bank (`OutlineTargets`, `scanWeakSpot`, `hiddenFromScan`), `hero-seam.md`, `SESSION.md`. PR «Железный человек — этап 3: шлем, JARVIS, сканирование, контрмеры», body starts with «Для игрока».
+- [ ] Version bump, memory bank (`OutlineTargets`, `scanInfo`, `hiddenFromScan`), `hero-seam.md`, `SESSION.md`. PR «Железный человек — этап 3: шлем, JARVIS, сканирование, контрмеры», body starts with «Для игрока».
 
 ---
 
@@ -125,3 +127,9 @@ Plan reviewed against spec §10, §11, §15.2, §16 and Stage 1–2 interfaces (
 3. JARVIS voice/hints explicitly gated by the closed helmet (spec §11.1 "работает при закрытом шлеме").
 4. Fallback when the Codex JARVIS files are missing: subtitles + chime, stated in the PR.
 5. Durability on the HUD is a placeholder until Stages 4–5.
+
+Fixed after PR review (2026-10-09):
+6. Fixed after PR review: threats/scan used the single owner `int[]` → Stage 2 typed sections `THREATS` and `SCAN` with expiry; test `threatUpdateKeepsScanExpiry` (Tasks 3–4).
+7. Fixed after PR review: invented weak spots («голова (крит)», «холод / ближний бой», creeper «дальний бой») removed; only real vanilla damage rules, else «не обнаружено» (Task 4).
+8. Fixed after PR review: hero resists cannot come from `isInvulnerableTo` → descriptive `HeroDefinition.scanInfo(Player)` mirroring `HeroDamage`/`PlayerStatsMixin`, Regulus and Homelander implement it; no test hits (Task 4 Files/tests).
+9. Fixed after PR review: countermeasures cooldown goes through `extraCooldowns[1]` (Task 6).
