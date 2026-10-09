@@ -16,6 +16,14 @@ public interface HeroDefinition {
    /** Whether this hero may use mod flight at all. Vanilla creative/spectator flight is unaffected. */
    boolean allowsFlight(Player player);
 
+   /**
+    * Server: does this hero want vanilla {@code mayfly} now (heroes outside the
+    * legacy kit, which grants it itself). Applied by {@link HeroFlightGrant}.
+    */
+   default boolean grantsFlightAbility(Player player) {
+      return false;
+   }
+
    /** Whether this hero may use the legacy viltrumite ability kit and stats. */
    boolean allowsLegacyAbilities(Player player);
 

@@ -56,6 +56,10 @@ public final class HeroEvents {
       HeroRegistry.restoreHero(newPlayer, event.isWasDeath() && session != null ? session.refreshTotem() : session);
       // The hero decides what carries over to the clone (Regulus: cooldowns).
       HeroRegistry.get(newPlayer).cloneHeroState(original, newPlayer);
+      // Keep the flight-grant marker with the mayfly it describes; the next sync settles it.
+      if (newPlayer instanceof HeroPlayer cloneHero) {
+         cloneHero.viltrumitecore$setMayflyGranted(originalHero.viltrumitecore$isMayflyGranted());
+      }
 
       if (newPlayer instanceof ViltrumiteAbilityUser newAbility && original instanceof ViltrumiteAbilityUser oldAbility) {
          for (int slot = 0; slot < 18; slot++) {
@@ -225,6 +229,7 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroFlightGrant.sync(player);
          if (player instanceof HeroPlayer heroPlayer && heroPlayer.viltrumitecore$consumeLegacyLoadout()) {
             HeroRegistry.resetLoadout(player);
          } else {
@@ -246,6 +251,7 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroFlightGrant.sync(player);
          // The bound Evangelium returns on respawn when it is missing (spec 11.2).
          if (player instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.REGULUS) {
             Evangelium.grant(player);

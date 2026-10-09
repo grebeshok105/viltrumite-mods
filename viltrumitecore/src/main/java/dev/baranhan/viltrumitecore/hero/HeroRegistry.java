@@ -102,6 +102,7 @@ public final class HeroRegistry {
 
       FlightPermissions.resetModFlight(player);
       get(id).enter(player);
+      HeroFlightGrant.sync(player);
       syncSnapshot(player);
    }
 
