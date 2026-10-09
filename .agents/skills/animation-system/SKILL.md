@@ -27,6 +27,7 @@ The mod has several layers. Each layer has one job. Pick the layer by what you a
 | First-person arms/hands | `FirstPersonXMixin` + `PoseDataManager.FP` | `client/mixin/FirstPerson*Mixin`, flight `ItemInHandRendererMixin` |
 | Smooth on/off blend of a pose | Weight managers | `client/render/animation/*AnimationManager`, `SilhouetteManager` |
 | Animated items and geo entities | Anim core (Blockbench geo + animation JSON) | `viltrumitecore/client/anim/**`, `InfinityGunRenderer` |
+| Whole-body replacement (Hulkbuster Mark 48) | `RenderPlayerEvent.Pre` cancel + `RenderArmEvent` (§7.4) | `client/ironman/hulkbuster/HulkbusterRenderer` |
 | World effects (rings, beams, sparks, blood) | VFX managers on `RenderLevelStageEvent` | `client/render/vfx/*VFXManager`, `MeltedTunnelRenderer` |
 | Screen effects (shake, blur, tint) | Post shader `dash_impact` | `ViltrumiteShaders`, `GameRendererDashMixin`, `shaders/post/dash_impact.json`, `assets/minecraft/shaders/program/dash_impact.*` |
 | Flight screen effects | Post shader `sonic_boom` | flight `GameRendererMixin` |
@@ -140,6 +141,7 @@ API:
 - `new AnimationController("main").transitionLength(ticks).onEvent(e -> ...)`.
 - `play(anim)` does not restart the same name. `restart(anim)` always restarts.
 - Per frame, in this order: `controller.play(anim)` → `controller.apply(model, AnimRenderer.time(pt))` → `AnimRenderer.render(..., boneHook)`.
+- Stateless timeline form (no start clock, time comes from synced fields): `AnimationController.seek(anim, model, seconds)` resets and poses one clip; `overlay(anim, model, seconds)` poses only the bones the clip animates; `blend(model, a, sa, b, sb, weight)` lerps two clips per bone.
 - `BoneHook` runs for every bone, also for hidden bones. Use it to attach effects or vanilla arms.
 
 JSON support:
@@ -198,6 +200,22 @@ Decision record: `docs/spikes/2026-10-ironman-reveal.md`. No custom shader
   is a geo part drawn with the `cut` frame.
 - Progress must come from synced timeline fields (`actionElapsed/Length`),
   never from a client counter: relog mid-wave stays correct.
+
+### 7.4 Whole-body replacement (Hulkbuster): allowed only through this renderer pattern
+
+Iron Man stage 5 replaces the whole player body with the Mark 48 model. Only this pattern may do that:
+
+1. Use Forge event hooks, not a model mixin. `RenderPlayerEvent.Pre` draws the big body and cancels the vanilla render while ACTIVE. `RenderArmEvent` draws the two big arms and cancels the vanilla arm in first person. Both are in `client/ironman/hulkbuster/HulkbusterRenderer`.
+2. Pose = `AnimationController.blend` (idle or walk, blended by limb swing speed) + `AnimationController.overlay` (one clip for the action). Clip time comes from synced fields (`actionElapsed`, `actionLength`). Loops use wall time. The walk uses walk distance. Never use a client counter for progress.
+3. Geo sits in the armor space of §7.1: feet at y 0, JSON x = vanilla x, pixels. Draw it in the entity frame: `mulPose(YP(180 - bodyYaw))`, then `scale(1.7)`. Do not flip. The entity frame already matches the armor space.
+4. Cancelling the vanilla render also hides its layers, skin and mark plates. EXITING does not cancel. Tony draws at normal size and steps back. The step is a translation applied in the `RenderPlayerEvent.Pre` stack before vanilla rotates it, so it is in the entity frame.
+5. Locked docking parts use the `PlayerGeoLayer.Provider` `HulkbusterDocking` (the armor bones follow every pose). Flying parts draw in the world (`HulkbusterFlight`, `PartFlight`, AFTER_ENTITIES).
+6. Glow is a `RenderType.eyes` pass, skipped in the shadow pass. Thruster flames are glow-only: their cutout texels are clear, and the bone scale is zero at rest.
+7. `GeoBone.resetToDefault` does not reset `hidden`. A pose that hides bones must set `hidden` every frame.
+8. Hitbox and eye height come from the body scale seam (`HeroDefinition.bodyScale`). This renderer does not change them.
+9. No pose mixin was added for the Hulkbuster, so the priority table in §3.1 is unchanged.
+
+Art: `tools/assets/make_hulkbuster.py` writes the geo, animation JSON and the 512 px texture pair. Tests: `HulkbusterAssetsParseTest` (parse, bones, clip lengths), `HulkbusterPosesTest`, `HulkbusterAssemblyTest`.
 
 ## 8. World VFX
 
