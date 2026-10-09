@@ -67,6 +67,13 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Part flight is client-only: server syncs `EQUIP_PHASE`, the SUIT timeline (`EquipTimeline`, 50 t delivery / 20 t enter), `variant` (mark + parts) and the parts source as `actionTarget`.
 - Signatures: `mark/MarkSignature` per mark (`MarkSignatures`), state in `IronManState.signature`; slot 3 in a mark and the RMB `SIGNATURE` tool route to it; cooldown in `extraCooldowns[3]`.
 
+## Iron Man Hulkbuster (Stage 5)
+- `hulkbuster/HulkbusterLayer` is a layer over the suit (NBT `Hulkbuster`): the suit under it is untouched. Saved DROPPING/ASSEMBLING become ACTIVE with `needsFitCheck`; the first server tick checks the room or refuses (no cooldown).
+- Size goes only through `HeroDefinition.bodyScale` (`HeroSizeEvents`, Forge `EntityEvent.Size`). Before growing, `IronManHulkbuster.freeSpot` checks the real final box (standing 0.6×1.8 × 1.7) with `level.noCollision`, searches 2 blocks, else refuses.
+- Damage order: shield → Hulkbuster (whole hit, no spill) → mark → nano armor → Tony. The shield is ×1.5 inside.
+- Grab and throw use `ControlManager` PULL (acquire / release with an effect id); the Viltrumite legacy grab is not reused (decompiled, unverified). Every end of a carry calls `IronManHulkbuster.releaseGrab`.
+- Inside the Hulkbuster, slots 1–3 (UNIBEAM / MISSILES / NANO_ARSENAL actions) are grab / jump slam / hop; RMB tools JACKHAMMER ↔ HULK_REPULSOR; no flight (`wantsFlight` false while any part is on).
+
 ## Rendering gotchas
 - Through-wall entity highlights: use the vanilla glowing path. Per-entity colour, client-only: mixin `Minecraft.shouldEntityAppearGlowing` → true and `Entity.getTeamColor` → colour (guard `level().isClientSide`), see `OutlineGlowMixin` / `OutlineTeamColorMixin`. Sources register in `client/render/vfx/OutlineTargets` (first registered source that returns a colour wins; Homelander focus first, Iron Man scan highlight next). Drawing into `outlineBufferSource()` by hand is unreliable (the outline post pass runs only when some entity glows). `RenderStateShard` constants (`NO_DEPTH_TEST` etc.) are protected and unavailable to mod code.
 - `SilhouetteManager.getState(entity, shouldDraw)` consumes a per-frame delta (max 0.1 s). Call it at most once per entity per frame; a second caller zeros the first caller's alpha lerp.
