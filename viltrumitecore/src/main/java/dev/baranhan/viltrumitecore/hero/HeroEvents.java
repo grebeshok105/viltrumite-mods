@@ -80,6 +80,7 @@ public final class HeroEvents {
 
       if (entity instanceof ServerPlayer player && player instanceof HeroPlayer heroPlayer) {
          // The hero's own cleanup runs before the death completes.
+         HeldInputs.releaseAll(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DEATH);
       }
 
@@ -218,6 +219,7 @@ public final class HeroEvents {
    @SubscribeEvent
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
+         HeldInputs.releaseAll(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DISCONNECT);
       }
    }

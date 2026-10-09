@@ -17,7 +17,9 @@ public enum HeroAction {
    FOCUS,
    ROAR,
    /** Iron Man "Костюм" key: put on / take off the suit. */
-   SUIT;
+   SUIT,
+   /** Claimed LMB (Iron Man in flight: fly-by punch; air strike in Task 9). */
+   PRIMARY_ATTACK;
 
    public static HeroAction byId(int ordinal) {
       HeroAction[] values = values();

@@ -190,6 +190,19 @@ public class RegulusHero implements HeroDefinition {
       RegulusMovement.onSuperJump(player);
    }
 
+   /** Heart key (MIDDLE = the heart key mapping, default MMB) beats vanilla pick-block. */
+   @Override
+   public HeroAction mouseAction(dev.baranhan.viltrumitecore.hero.MouseButton button, Player player) {
+      return button == dev.baranhan.viltrumitecore.hero.MouseButton.MIDDLE ? HeroAction.ASSIGN_HEART : null;
+   }
+
+   @Override
+   public void onInputRefused(ServerPlayer player, HeroAction action) {
+      if (action == HeroAction.ASSIGN_HEART) {
+         player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.viltrumitecore.hearts.locked"), true);
+      }
+   }
+
    @Override
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       RegulusState state = ensureState(player);

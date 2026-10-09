@@ -40,6 +40,23 @@ public final class IronManRules {
    /** Nano punch on the ground (vanilla LMB damage factor). */
    public static final float NANO_MELEE_FACTOR = 1.5F;
 
+   // Fly-by punch (spec §7.4): LMB in flight, player velocity untouched.
+   public static final float FLYBY_BASE = 4.0F;
+   /** Extra damage per block/tick of flight speed. */
+   public static final float FLYBY_PER_SPEED = 1.5F;
+   public static final float FLYBY_MAX = 12.0F;
+   public static final double FLYBY_RANGE = 3.5;
+   /** Target boxes are inflated by this for the ray (a cone-like reach). */
+   public static final double FLYBY_RADIUS = 1.0;
+   public static final double FLYBY_KNOCKBACK = 1.2;
+   /** Minimum ticks between punches (packet spam guard, ~2 punches/s). */
+   public static final int FLYBY_COOLDOWN = 10;
+
+   // Sonic ram (spec §7.4): bodies in the swept box while SONIC.
+   public static final float RAM_DAMAGE = 6.0F;
+   public static final double RAM_KNOCKBACK = 1.5;
+   public static final int RAM_REHIT_TICKS = 10;
+
    // Flight profile (spec §7.2, §18). speedMul scales the player's synced max
    // flight speed (server config, default 9.0 → ~6 b/t): below Homelander on purpose.
    public static final float FLIGHT_SPEED_MUL = 0.67F;

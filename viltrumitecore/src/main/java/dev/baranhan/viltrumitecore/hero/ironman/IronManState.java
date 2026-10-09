@@ -14,6 +14,10 @@ public final class IronManState {
    public final Energy energy = new Energy();
    /** Energy hit 0 in flight: glide profile (Task 9). */
    public boolean glide;
+   /** Transient: sonic-ram rehit timestamps per target (bounded). */
+   public final java.util.Map<java.util.UUID, Long> ramHits = new dev.baranhan.viltrumitecore.hero.control.BoundedMap<>(64);
+   /** Transient: ticks until the next fly-by punch may land. */
+   public int flyByCooldown;
 
    /** Flight grant: only while fully worn. */
    public boolean wantsFlight() {

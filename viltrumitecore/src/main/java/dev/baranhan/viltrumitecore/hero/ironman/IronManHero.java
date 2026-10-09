@@ -164,7 +164,52 @@ public class IronManHero implements HeroDefinition {
          return false;
       }
 
-      return action == HeroAction.SUIT;
+      return switch (action) {
+         case SUIT -> true;
+         // Same gate as the claim: a forged HeroInputC2SPacket cannot punch on foot.
+         case PRIMARY_ATTACK -> {
+            IronManState state = IronManState.of(player);
+            yield state != null && claimsPrimary(state.suit.worn(), flightState(player));
+         }
+         default -> false;
+      };
+   }
+
+   /**
+    * Stage 1a claims only LMB while flying in the suit (spec §6.1); on the
+    * ground LMB stays vanilla (nano punch via meleeDamageFactor).
+    */
+   @Override
+   public HeroAction mouseAction(dev.baranhan.viltrumitecore.hero.MouseButton button, Player player) {
+      if (button != dev.baranhan.viltrumitecore.hero.MouseButton.PRIMARY || player == null) {
+         return null;
+      }
+
+      boolean worn;
+      if (player.level().isClientSide()) {
+         worn = suitWornFlag(player);
+      } else {
+         IronManState state = IronManState.of(player);
+         worn = state != null && state.suit.worn();
+      }
+
+      return claimsPrimary(worn, flightState(player)) ? HeroAction.PRIMARY_ATTACK : null;
+   }
+
+   static boolean claimsPrimary(boolean worn, @javax.annotation.Nullable dev.baranhan.viltrumiteflight.util.FlightState state) {
+      return worn && state != null && state != dev.baranhan.viltrumiteflight.util.FlightState.NONE;
+   }
+
+   @javax.annotation.Nullable
+   static dev.baranhan.viltrumiteflight.util.FlightState flightState(Player player) {
+      return player instanceof dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer flightPlayer ? flightPlayer.getFlightState() : null;
+   }
+
+   /** Nano punch on the ground (server-side melee). */
+   @Override
+   public float meleeDamageFactor(Player player) {
+      IronManState state = IronManState.of(player);
+      return state != null && state.suit.worn() ? IronManRules.NANO_MELEE_FACTOR : 1.0F;
    }
 
    @Override
@@ -177,12 +222,30 @@ public class IronManHero implements HeroDefinition {
       state.suit.tick();
       state.energy.tick();
       syncArmor(player, state.suit.armored());
+      if (!state.suit.worn()) {
+         // Suit off / wave: every held mouse action ends (spec §16).
+         dev.baranhan.viltrumitecore.hero.HeldInputs.releaseAll(player);
+      }
+
+      if (state.flyByCooldown > 0) {
+         state.flyByCooldown--;
+      }
+
+      if (state.suit.worn() && flightState(player) == dev.baranhan.viltrumiteflight.util.FlightState.SONIC) {
+         SonicRam.tick(player, state);
+      }
    }
 
    @Override
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       if (action == HeroAction.SUIT && pressed && this.canAct(player, action)) {
          IronManState.ensure(player).suit.toggle();
+      } else if (action == HeroAction.PRIMARY_ATTACK && pressed && this.canAct(player, action)) {
+         IronManState state = IronManState.ensure(player);
+         if (state.flyByCooldown <= 0) {
+            state.flyByCooldown = IronManRules.FLYBY_COOLDOWN;
+            FlyBy.hit(player);
+         }
       }
    }
 

@@ -84,6 +84,7 @@ public final class HeroRegistry {
          return;
       }
 
+      HeldInputs.releaseAll(player);
       get(current).cleanup(player, CleanupReason.HERO_CHANGE);
       heroPlayer.viltrumitecore$setHeroState(null);
 

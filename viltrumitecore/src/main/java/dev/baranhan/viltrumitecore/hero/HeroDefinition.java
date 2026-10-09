@@ -95,6 +95,19 @@ public interface HeroDefinition {
    /** May this target be placed under the given control kind right now. */
    boolean allowsExternalControl(LivingEntity target, ControlKind kind);
 
+   /**
+    * Action this hero claims for a mouse button right now, or null for vanilla.
+    * Called on BOTH sides (client cancels vanilla, server gates the press in
+    * {@link HeldInputs}); must only read synced data on the client.
+    */
+   default HeroAction mouseAction(MouseButton button, Player player) {
+      return null;
+   }
+
+   /** A claimed press was refused by canAct (feedback only, e.g. a locked message). */
+   default void onInputRefused(ServerPlayer player, HeroAction action) {
+   }
+
    /** Multiplier on this hero's ordinary melee attack damage (heart bonus). */
    default float meleeDamageFactor(Player player) {
       return 1.0F;

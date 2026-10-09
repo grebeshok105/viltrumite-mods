@@ -193,6 +193,12 @@ public class CoreMessages {
          .encoder(dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket::encode)
          .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.HeroFxS2CPacket::handle)
          .add();
+
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.HeroMouseC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.HeroMouseC2SPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.HeroMouseC2SPacket::toBytes)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.HeroMouseC2SPacket::handle)
+         .add();
    }
 
    public static <MSG> void sendToServer(MSG message) {

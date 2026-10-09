@@ -25,7 +25,6 @@ class NoHeroBranchTest {
    );
    private static final Set<String> LEGACY = Set.of(
       "ability/ViltrumiteAbilities.java",
-      "client/AbilityInputManager.java",
       "client/ViltrumiteCoreClient.java",
       "client/gui/RaceSelectionScreen.java",
       "client/mixin/GameRendererDashMixin.java",

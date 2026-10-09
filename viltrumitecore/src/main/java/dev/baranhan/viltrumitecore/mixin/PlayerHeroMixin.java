@@ -143,6 +143,7 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
          this.heroSessionId = UUID.randomUUID();
       }
 
+      dev.baranhan.viltrumitecore.hero.HeldInputs.tick(serverPlayer);
       HeroRegistry.get(serverPlayer).tick(serverPlayer);
       dev.baranhan.viltrumitecore.hero.HeroFlightGrant.sync(serverPlayer);
       HeroRegistry.syncSnapshot(serverPlayer);

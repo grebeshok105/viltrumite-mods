@@ -54,33 +54,23 @@ public class AbilityInputManager {
       event.register(superJumpKey);
    }
 
-   /** True while a Regulus is playing and the heart key shares the given key with another mapping. */
-   public static boolean heartKeyOwns(Minecraft client, KeyMapping other) {
+   /**
+    * True while the local hero claims the heart key (MIDDLE) and it shares the
+    * given mapping's key — the hero action then beats that vanilla mapping.
+    */
+   public static boolean heroKeyOwns(Minecraft client, KeyMapping other) {
       return assignHeartKey != null
-         && client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
-         && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS
+         && client.player != null
          && !assignHeartKey.isUnbound()
-         && assignHeartKey.getKey().equals(other.getKey());
+         && assignHeartKey.getKey().equals(other.getKey())
+         && dev.baranhan.viltrumitecore.hero.HeroRegistry.get(client.player)
+            .mouseAction(dev.baranhan.viltrumitecore.hero.MouseButton.MIDDLE, client.player) != null;
    }
 
    public static void tick(Minecraft client) {
-      // Regulus assigns hearts on the dedicated heart key (default MMB). The
-      // vanilla pick-block sharing that button is cancelled in
-      // RegulusInputPriority, so the heart key always wins for Regulus.
-      if (client.player instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer heroPlayer
-         && heroPlayer.getHeroId() == dev.baranhan.viltrumitecore.hero.HeroId.REGULUS) {
-         if (heartKeyOwns(client, client.options.keyPickItem)) {
-            // Drain stray pick-item clicks so a later tick never replays them.
-            while (client.options.keyPickItem.consumeClick()) {
-            }
-         }
-         while (assignHeartKey.consumeClick()) {
-            if (client.screen == null) {
-               CoreMessages.sendToServer(new dev.baranhan.viltrumitecore.network.packet.HeroInputC2SPacket(
-                  dev.baranhan.viltrumitecore.hero.HeroAction.ASSIGN_HEART, true));
-            }
-         }
-      }
+      // Claimed mouse buttons (Regulus heart key, Iron Man LMB in flight) are
+      // edge-tracked in HeroMouseInput, which also cancels the vanilla mapping.
+      dev.baranhan.viltrumitecore.client.hero.HeroMouseInput.tick(client);
       while (abilitySwapKey.consumeClick()) {
          Player player = client.player;
          if (player == null || !dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).allowsAbilityPages(player)) {
