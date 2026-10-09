@@ -53,8 +53,9 @@ public class IronManHero implements HeroDefinition {
    }
 
    /**
-    * Iron Man flight profile while the suit is worn; glide at 0 energy.
-    * Both sides: the client reads the synced flags (≤ 1 tick behind).
+    * Normal flight is the original (Homelander) flight: no profile. Only the
+    * 0-energy glide uses a profile. Both sides: the client reads the synced
+    * flags (≤ 1 tick behind).
     */
    @Override
    public dev.baranhan.viltrumiteflight.util.FlightProfile flightProfile(Player player) {
@@ -72,7 +73,7 @@ public class IronManHero implements HeroDefinition {
 
    @javax.annotation.Nullable
    static dev.baranhan.viltrumiteflight.util.FlightProfile profileFor(boolean worn, boolean glide) {
-      return worn ? IronManRules.profile(glide) : null;
+      return worn && glide ? IronManRules.glideProfile() : null;
    }
 
    static boolean glideFlag(Player player) {

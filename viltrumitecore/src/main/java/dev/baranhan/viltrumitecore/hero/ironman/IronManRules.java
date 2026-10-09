@@ -76,29 +76,18 @@ public final class IronManRules {
       new dev.baranhan.viltrumitecore.hero.HeroDebris.Eruption(3.0, 2.0, 0.0, 24, 1.1, 1.0);
    public static final float AIR_STRIKE_DEBRIS_DAMAGE = 4.0F;
 
-   // Flight profile (spec §7.2, §18). speedMul scales the player's synced max
-   // flight speed (server config, default 9.0 → ~6 b/t): below Homelander on purpose.
-   public static final float FLIGHT_SPEED_MUL = 0.67F;
-   /** Ctrl from hover to full throttle in ~1.5 s. */
-   public static final float FLIGHT_THROTTLE_UP = 1.0F / 30.0F;
-   /** Ctrl released: brake to hover in ~1 s. */
-   public static final float FLIGHT_THROTTLE_DOWN = 1.0F / 20.0F;
-   /** Shift speed lock holds at most this (sonic needs 0.8, so only Ctrl reaches it). */
-   public static final float FLIGHT_LOCK_CAP = 0.79F;
-   public static final float FLIGHT_INERTIA = 0.85F;
-   public static final float FLIGHT_TURN_SLOW_DEG = 9.0F;
-   public static final float FLIGHT_TURN_FAST_DEG = 2.5F;
-   public static final float FLIGHT_HOVER_DAMPING = 0.8F;
+   // Flight (spec §7.1–7.2): normal flight is the original flight, same as
+   // Homelander (no profile). Only the 0-energy glide uses a profile; with
+   // glide on the throttle is forced to 0 (no thrust, no sonic), so only the
+   // sink speed matters; the other numbers are unused.
    /** Energy 0: glide down at this speed (blocks per tick). */
    public static final float FLIGHT_GLIDE_SINK = 0.12F;
 
-   private static final dev.baranhan.viltrumiteflight.util.FlightProfile PROFILE = new dev.baranhan.viltrumiteflight.util.FlightProfile(
-      FLIGHT_SPEED_MUL, FLIGHT_THROTTLE_UP, FLIGHT_THROTTLE_DOWN, FLIGHT_LOCK_CAP, FLIGHT_INERTIA,
-      FLIGHT_TURN_SLOW_DEG, FLIGHT_TURN_FAST_DEG, FLIGHT_HOVER_DAMPING, false, FLIGHT_GLIDE_SINK);
-   private static final dev.baranhan.viltrumiteflight.util.FlightProfile GLIDE_PROFILE = PROFILE.withGlide(true);
+   private static final dev.baranhan.viltrumiteflight.util.FlightProfile GLIDE_PROFILE = new dev.baranhan.viltrumiteflight.util.FlightProfile(
+      1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, true, FLIGHT_GLIDE_SINK);
 
-   public static dev.baranhan.viltrumiteflight.util.FlightProfile profile(boolean glide) {
-      return glide ? GLIDE_PROFILE : PROFILE;
+   public static dev.baranhan.viltrumiteflight.util.FlightProfile glideProfile() {
+      return GLIDE_PROFILE;
    }
 
    private IronManRules() {

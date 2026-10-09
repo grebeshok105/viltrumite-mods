@@ -44,7 +44,7 @@ class FlightEnergyTest {
       state.energy.drain(IronManRules.ENERGY_MAX);
       IronManHero.flightEnergyTick(state, FlightState.CRUISE);
       assertTrue(state.glide);
-      assertEquals(IronManRules.profile(true), IronManHero.profileFor(true, state.glide));
+      assertEquals(IronManRules.glideProfile(), IronManHero.profileFor(true, state.glide));
       // landing ends the glide
       IronManHero.flightEnergyTick(state, FlightState.NONE);
       assertFalse(state.glide);
@@ -52,7 +52,7 @@ class FlightEnergyTest {
 
    @Test
    void glideBlocksSonic() {
-      FlightProfile glide = IronManRules.profile(true);
+      FlightProfile glide = IronManRules.glideProfile();
       float throttle = 0.9F;
       for (int i = 0; i < 40; i++) {
          throttle = FlightMotion.throttle(throttle, true, true, glide);
