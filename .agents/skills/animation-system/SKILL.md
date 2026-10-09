@@ -181,6 +181,11 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
 - Camera shake goes through `client/render/vfx/CameraShake` (`addAt` with distance falloff, `add` for local). Do not add a second shake accumulator.
 - Full API list: `.agents/skills/add_hero/references/shared-toolkit.md`.
 
+### Suit reveal (Iron Man, spike `docs/spikes/2026-10-ironman-reveal.md`)
+
+- Pixel reveal = 16 frames composited on the client into `DynamicTexture`s and used as the player's **skin and hand** texture through `HeroSkins` (vanilla render path: shader packs, shadow pass and first person keep working). No custom reveal shader.
+- Glow pixels of the same frame: `RenderType.eyes` layer. Pure reveal math: `client/ironman/RevealMask`.
+
 ## 9. Screen effects
 
 Core shader: `viltrumitecore:shaders/post/dash_impact.json`, set in `GameRendererDashMixin` (`renderLevel` TAIL).
