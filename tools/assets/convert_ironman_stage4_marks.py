@@ -186,7 +186,7 @@ DOORS = {
     "body_door_left": ("armorbody", [4.5, 18, -3.5], 1, -110.0), "body_door_right": ("armorbody", [-4.5, 18, -3.5], 1, 110.0),
     "left_arm_door": ("armorleftarm", [8.5, 18, -2.8], 1, -100.0), "right_arm_door": ("armorrightarm", [-8.5, 18, -2.8], 1, 100.0),
     "left_leg_door": ("armorleftleg", [4.4, 6, -2.5], 1, -95.0), "right_leg_door": ("armorrightleg", [-4.4, 6, -2.5], 1, 95.0),
-    "faceplate": ("armorhead", [0, 32.5, 0], 0, 105.0),
+    "faceplate": ("armorhead", [0, 32.5, 0], 0, -105.0),  # negative X lifts the lower edge forward and up, outside the head
 }
 # Interior atlas regions in 64 px space (the 128 px ironman_interior.png has 2 texels per unit): u, v, w, h.
 LINING = {

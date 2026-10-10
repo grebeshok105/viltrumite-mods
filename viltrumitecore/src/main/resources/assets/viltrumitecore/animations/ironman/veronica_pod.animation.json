@@ -3,7 +3,7 @@
   "animations": {
     "open": {
       "loop": "hold_on_last_frame",
-      "animation_length": 0.8,
+      "animation_length": 0.9,
       "bones": {
         "door_left": {
           "rotation": {
@@ -15,10 +15,10 @@
               ],
               "easing": "easeInOutCubic"
             },
-            "0.8": {
+            "0.9": {
               "vector": [
                 0,
-                -55.0,
+                -40.0,
                 0
               ],
               "easing": "easeInOutCubic"
@@ -35,10 +35,10 @@
               ],
               "easing": "easeInOutCubic"
             },
-            "0.8": {
+            "0.9": {
               "vector": [
                 0,
-                55.0,
+                40.0,
                 0
               ],
               "easing": "easeInOutCubic"
@@ -56,7 +56,7 @@
             "0.0": {
               "vector": [
                 0,
-                -55.0,
+                -40.0,
                 0
               ],
               "easing": "easeInOutCubic"
@@ -76,7 +76,7 @@
             "0.0": {
               "vector": [
                 0,
-                55.0,
+                40.0,
                 0
               ],
               "easing": "easeInOutCubic"

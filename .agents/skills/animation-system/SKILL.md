@@ -294,11 +294,13 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
 - `SuitDebrisRenderer`: one suit piece, tumbling, fades and shrinks in the last 20 ticks.
 - Forearm micro-missile pods (`geo/ironman/missiles/forearm_launchers.geo.json` + `forearm_rockets`, own work, `tools/assets/make_ironman_forearm_launchers.py`): grayscale textures tinted with `SuitPalette` via `PlayerGeoLayer.Pass.cutout(tex, r, g, b)`; pods slide out of the forearm, petals open. Launch point `IronManCombat.forearm(player, right)`.
 - War Machine rounds: `client/ironman/mark/sig/GunRounds` (travelling streaks, muzzle flash, whiz for bystanders, block/body impacts), drawn from `SignatureVfx`.
+- Helmet open (iteration 3): only the iron faceplate opens, the rest of the helmet stays. Nano: `IronManSuitTextures` `cutOpen/glowOpen` (frames without the head front and hat front) plus `face(kind, step)` dissolve steps (8; nanites recede from the middle of the face to the edges, cyan rim). Marks: `MarkSkins` opens only the face region and `MarkFaceplate` (`geo/ironman/marks/faceplate.geo.json`) slides the plate up into the crown with a small outward tilt. `HelmetAnim.gesture` is the hand-to-helmet clock (22 t, smooth, only when the suit stays on — none on exit or retract).
 - `MarkVfx`: pixel motes (fire trail, engine flames, sparks, dust ring) and a
   heat aura (`PixelVfx.bodyShell`). Motes age by client ticks and clear on logout.
 - Animation sign convention: JSON X and Y are negated like `buildBone`, Z is not.
   Parsed-frame checks: door `rotY` -75 turns the +x door edge toward +z.
   Arm `rotZ` +40 on the +x arm is outward. Head `rotX` +35 tilts the top toward +z. Verify in game.
+  For a geo hinge rotated about X (front = -z): a positive bone `rotX` (clip X negative) swings the lower edge forward and up. The empty-suit faceplate (hinge at the top centre) opens with clip X = -105; +105 swung it back through the helmet (fixed in PR #19 iteration 3).
 
 ## 9. Screen effects
 

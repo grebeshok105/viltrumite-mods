@@ -113,12 +113,12 @@ public final class IronManFirstPerson {
 
       IronManAnimation.State s = IronManAnimation.of(player);
       if (s == null || !s.worn()) {
-         return HelmetAnim.toggleProgress(player) >= 0.0F;
+         return HelmetAnim.gesturing(player);
       }
 
       Signature sig = s.signature();
       return s.stance(false) || s.missiles() || s.unibeamPhase() == 1 || s.unibeamPhase() == 2 || s.windup() || s.striking()
-         || sig == Signature.GUN || sig == Signature.SLAM_JUMP || sig == Signature.SLAM_DIVE || HelmetAnim.toggleProgress(player) >= 0.0F;
+         || sig == Signature.GUN || sig == Signature.SLAM_JUMP || sig == Signature.SLAM_DIVE || HelmetAnim.gesturing(player);
    }
 
    /** Combat poses on one first-person arm; applied after the arm's pushPose (view space). */
@@ -198,9 +198,8 @@ public final class IronManFirstPerson {
       }
 
       if (!right) {
-         float toggle = HelmetAnim.toggleProgress(player);
-         float gesture = s.weight(view, Layer.GESTURE, toggle >= 0.0F && toggle < 0.85F);
-         limb.blend(FACE, gesture);
+         // Smooth envelope of its own (rise, hold, lower); none when the suit comes off.
+         limb.blend(FACE, HelmetAnim.gesture(player, partialTick));
       }
 
       limb.apply(poseStack, side);

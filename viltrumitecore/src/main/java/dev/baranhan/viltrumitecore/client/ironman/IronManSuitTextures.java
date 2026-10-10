@@ -33,11 +33,18 @@ public final class IronManSuitTextures implements ResourceManagerReloadListener 
    public static final ResourceLocation SUIT = new ResourceLocation("viltrumitecore", "textures/entity/hero/ironman_mark_50.png");
    public static final ResourceLocation SUIT_GLOW = new ResourceLocation("viltrumitecore", "textures/entity/hero/ironman_mark_50_glow.png");
    private static final Logger LOGGER = LoggerFactory.getLogger("viltrumitecore/ironman");
-   private static final String[] KINDS = {"skin", "cut", "glow", "rim"};
+   private static final String[] KINDS = {"skin", "cut", "glow", "rim", "cut_open", "glow_open"};
    private static final int SKIN = 0;
    private static final int CUT = 1;
    private static final int GLOW = 2;
    private static final int RIM = 3;
+   /** Helmet open: the cut / glow frames without the faceplate (head front + hat front). */
+   private static final int CUT_OPEN = 4;
+   private static final int GLOW_OPEN = 5;
+   /** Faceplate dissolve steps (nanites recede from the middle of the face to its edges). */
+   public static final int FACE_FRAMES = 8;
+   private static final String[] FACE_KINDS = {"face", "face_glow", "face_rim"};
+   private final ResourceLocation[][] faces = new ResourceLocation[FACE_KINDS.length][FACE_FRAMES + 1];
    /** Declared after the constants above: the constructor reads KINDS. */
    public static final IronManSuitTextures INSTANCE = new IronManSuitTextures();
    private final ResourceLocation[][] frames = new ResourceLocation[KINDS.length][RevealMask.FRAMES + 1];
@@ -67,6 +74,42 @@ public final class IronManSuitTextures implements ResourceManagerReloadListener 
    @Nullable
    public ResourceLocation glow(int frame) {
       return this.get(GLOW, frame, null);
+   }
+
+   /** Cut frame without the faceplate (helmet open or opening). */
+   @Nullable
+   public ResourceLocation cutOpen(int frame) {
+      return this.get(CUT_OPEN, frame, null);
+   }
+
+   @Nullable
+   public ResourceLocation glowOpen(int frame) {
+      return this.get(GLOW_OPEN, frame, null);
+   }
+
+   /** Faceplate only, {@code step} of FACE_FRAMES formed (1 = a few edge pixels, FACE_FRAMES = whole plate); kind 0 cutout, 1 glow, 2 rim. */
+   @Nullable
+   public ResourceLocation face(int kind, int step) {
+      if (step <= 0 || !this.ensure()) {
+         return null;
+      }
+
+      return this.faces[kind][Math.min(FACE_FRAMES, step)];
+   }
+
+   /** Head front (8..15, 8..15) and hat front (40..47, 8..15): the iron faceplate. */
+   public static boolean facePixel(int x, int y) {
+      return y >= 8 && y < 16 && (x >= 8 && x < 16 || x >= 40 && x < 48);
+   }
+
+   /** Dissolve threshold of a face pixel: high in the middle (goes first), low at the edges, a little noise. */
+   static float faceThreshold(int x, int y) {
+      float u = (x & 7) - 3.5F;
+      float v = (y & 7) - 3.5F;
+      float d = (float)Math.sqrt(u * u + v * v) / 4.95F;
+      int h = x * 73856093 ^ y * 19349663;
+      float noise = ((h >>> 8) & 0xFF) / 255.0F;
+      return Math.max(0.02F, Math.min(0.98F, 1.0F - 0.82F * d - 0.12F * noise + 0.04F));
    }
 
    @Nullable
@@ -129,6 +172,9 @@ public final class IronManSuitTextures implements ResourceManagerReloadListener 
                out[GLOW].setPixelRGBA(x, y, shown ? additive(pixel(glow, x, y)) : 0);
                boolean rim = RevealMask.rim(distance, progress) && alpha(suitPixel) > 0;
                out[RIM].setPixelRGBA(x, y, rim ? rimColor(x, y, (progress - distance) / RevealMask.RIM_BAND) : 0);
+               boolean face = facePixel(x, y);
+               out[CUT_OPEN].setPixelRGBA(x, y, face ? 0 : out[CUT].getPixelRGBA(x, y));
+               out[GLOW_OPEN].setPixelRGBA(x, y, face ? 0 : out[GLOW].getPixelRGBA(x, y));
             }
          }
 
@@ -137,6 +183,42 @@ public final class IronManSuitTextures implements ResourceManagerReloadListener 
             textures.release(location);
             textures.register(location, new DynamicTexture(out[kind]));
             this.frames[kind][frame] = location;
+         }
+      }
+
+      for (int step = 1; step <= FACE_FRAMES; step++) {
+         float closed = step / (float)FACE_FRAMES;
+         NativeImage[] out = new NativeImage[FACE_KINDS.length];
+         for (int kind = 0; kind < FACE_KINDS.length; kind++) {
+            out[kind] = new NativeImage(size, size, true);
+         }
+
+         for (int y = 8; y < 16; y++) {
+            for (int x = 0; x < size; x++) {
+               if (!facePixel(x, y)) {
+                  continue;
+               }
+
+               float threshold = faceThreshold(x, y);
+               int suitPixel = pixel(suit, x, y);
+               if (closed < threshold || alpha(suitPixel) == 0) {
+                  continue;
+               }
+
+               out[0].setPixelRGBA(x, y, suitPixel);
+               out[1].setPixelRGBA(x, y, additive(pixel(glow, x, y)));
+               float edge = closed - threshold;
+               if (step < FACE_FRAMES && edge < 0.2F) {
+                  out[2].setPixelRGBA(x, y, rimColor(x, y, edge / 0.2F));
+               }
+            }
+         }
+
+         for (int kind = 0; kind < FACE_KINDS.length; kind++) {
+            ResourceLocation location = new ResourceLocation("viltrumitecore", "dynamic/ironman/" + FACE_KINDS[kind] + "_" + step);
+            textures.release(location);
+            textures.register(location, new DynamicTexture(out[kind]));
+            this.faces[kind][step] = location;
          }
       }
    }
