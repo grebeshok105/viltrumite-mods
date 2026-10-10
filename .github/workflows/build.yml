@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,3 +32,35 @@ jobs:
           path: |
             viltrumiteflight/build/libs/*.jar
             viltrumitecore/build/libs/*.jar
+
+      - name: Publish v1.24.1-ironman
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release-v1.24.1]')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          Iron Man — релиз после мержа PR #23 (и всех PR #10–#20 по Железному человеку).
+
+          Что вошло:
+          - Железный человек: нано-костюм, марки (Mark 7/42/15/39/17, War Machine, Iron Heart), Вероника, пустой костюм, Hulkbuster (черновик), JARVIS, скан, Unibeam, ракеты, арсенал, контрмеры;
+          - ПКМ с предметом в руке снова ванильный (еда, блоки), у нано-клинка нет рывка;
+          - страницы способностей: 1 — бой, 2 — скан, Вероника, шлем, костюм;
+          - новые иконки способностей;
+          - скан цели одним нажатием R;
+          - костюм ×2 по HP/броне/прочности (урон не менялся);
+          - поправлена маска марок и мигание скина при входе в пустой костюм;
+          - JAR теперь называются reforgedcodex-core / reforgedcodex-flight.
+
+          Установка: положить оба JAR в `mods/` вместе (старые viltrumitecore/viltrumiteflight удалить). Forge 1.20.1.
+
+          Сборка соответствует merged PR #23: fd38eddad7aaa109e1c5be922b2f471cae79a158.
+          EOF
+
+          gh release create v1.24.1-ironman \
+            viltrumitecore/build/libs/reforgedcodex-core-1.24.1.jar \
+            viltrumiteflight/build/libs/reforgedcodex-flight-1.10.0.jar \
+            --repo "$GITHUB_REPOSITORY" \
+            --target fd38eddad7aaa109e1c5be922b2f471cae79a158 \
+            --title "Iron Man — reforgedcodex-core 1.24.1 + reforgedcodex-flight 1.10.0" \
+            --latest \
+            --notes-file release-notes.md
