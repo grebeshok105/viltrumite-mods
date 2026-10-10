@@ -52,7 +52,7 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Sounds: `tools/sfx/ironman_stage2.sh`; icons/crosshairs: `tools/assets/make_ironman_stage2_icons.py`.
 
 ## Iron Man helmet and JARVIS (Stage 3)
-- Helmet: `hero/ironman/Helmet` (toggle 12 t, auto-close on a combat hit), saved in NBT (`HelmetOpen`); flag `HELMET_CLOSED` only with the suit on. Client `HelmetAnim` (fold via `RevealMask` head frames, hand-to-face pose), `HelmetHud` frame. Helmet open = HUD shows only energy, vanilla crosshair, no JARVIS, no scan.
+- Helmet: `hero/ironman/Helmet` (toggle 12 t, auto-close on a combat hit), saved in NBT (`HelmetOpen`); flag `HELMET_CLOSED` only with the suit on. Client `HelmetAnim` (helmet open = only the faceplate: nano dissolve steps / mark `MarkFaceplate` slide; hand-to-helmet gesture only with the suit staying on), `HelmetHud` frame. Helmet open = HUD shows only energy, vanilla crosshair, no JARVIS, no scan.
 - Server driver `hero/ironman/IronManJarvis` (helmet, scan, countermeasures); pure rules `jarvis/ThreatScan`, `scan/*` (`ScanProgress`, `ScanTraits`, `ScanAnalyzer`, `WeakSpots`, `ScanCard`), `Countermeasures`. Threat ids go in owner section `THREATS`, scan highlights in `SCAN`; scan card = `ScanCardS2CPacket`.
 - Scan seam: `HeroDefinition.scanInfo(Player)` (extra `ScanLine`s) and `hiddenFromScan(Player)`. Regulus/Homelander/Iron Man add lines via static `scanInfoFor(...)`.
 - Scan progress on the client: snapshot `controlTargetId` + lowest-priority channel `SCAN`.
@@ -65,6 +65,7 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - `Suit` holds the mark states (`MARK`, `EQUIPPING`, `EXITING`, `MARK_PARTIAL`, appended to `SuitState`); `Suit.tick()` returns `Event.MARK_ON/EXITED`, `interrupt()` keeps locked parts as `MARK_PARTIAL`. Saved EQUIPPING/EXITING become NONE.
 - Every system reads `IronManState.spec()` (`SuitSpec`: nano defaults or `MarkSpec` + Mark 42 lost parts), never nano constants for armor, missiles, Unibeam charge, shield cost, recoil, drain, weapon and flight speed.
 - Damage order: shield (`IronManCombat.absorb`) → mark durability (`IronManMarks.absorb`, whole hit, no spill) → nano armor → Tony. A worn mark breaks on the next tick: debris + `Suit.autoNano()` (nano on at once, wave is visual only).
+- Veronica settles: in LANDED it drops into the crater of its landing blast (or any hole dug under it) instead of hanging in the air. Model: one joined module, glossy bright red (`make_ironman_stage4_visuals.py`, 256 px).
 - Veronica pod is permanent (user decision 2026-10-10): saved with the chunk (owner UUID, phase), linked by UUID (`IronManState.podUuid`, NBT `VeronicaPod`). It leaves only when the online owner is not Iron Man or called a newer pod (`IronManVeronica.retired`). A new call is allowed when the pod is beyond the menu range; the cooldown starts at the call.
 - The empty suit (`EmptySuitEntity`) is not saved and leaves when the owner is offline, dead, in another level, far (> 96) or `emptySuitId` no longer names it. It is placed exactly where Tony stood, on his body yaw, and never moves (gravity only).
 - Entering (PR #19 iteration 2): only from the front (`EmptySuitEntity.inFront`: ≤ 3 blocks, cos > 0.34, else actionbar `enter_front`); no teleport and no flying parts. `IronManState.enteringSuitId` roots Tony (`canAct` false); the client `SuitEntryDriver` walks him up, turns him round and steps him back (0–32 t), the server snaps him onto the suit at 32 and calls `IronManMarks.finishEntering` at 46 (`Suit.equipNow`, roster IN_DELIVERY → WORN). Control, death or a lost owner abort (`abortEntering`: the suit stays EMPTY where it stood).
@@ -77,6 +78,8 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - `each_part` has no back piece: the chest is split into its front faces (`chest`) and rear faces (`back`). 7-part arms = arm + shoulder.
 - Sind Mark 42 pieces are full limb shells with partial textures in a 160 px atlas; the Sind generic `lights` skin texture is not in the archive, so the Mark 42 glow is baked from the pieces' `mark42_lights`.
 - Box UV vs per-face UV in `BakedGeoModel`: dict `east` = Bedrock +x side, the box's second strip; scale a cube only after making its UV explicit (`explicit_uv` in `convert_ironman_sind.py`).
+
+- Countermeasures forget a player only through `Brain.hasMemoryValue` first: goal-based mobs have no ATTACK_TARGET memory (crash 1.22.0).
 
 ## Iron Man Hulkbuster (Stage 5)
 - `hulkbuster/HulkbusterLayer` is a layer over the suit (NBT `Hulkbuster`): the suit under it is untouched. Saved DROPPING/ASSEMBLING become ACTIVE with `needsFitCheck`; the first server tick checks the room or refuses (no cooldown).
