@@ -13,6 +13,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 /**
  * Shared pose rig for hero model / first-person layers (first used by
@@ -48,6 +49,9 @@ public final class PoseRig {
    private static final Set<PlayerModel<?>> DIRTY = Collections.newSetFromMap(new WeakHashMap<>());
    private static final PoseRig RIG = new PoseRig();
    private static final float[] BASE = new float[6];
+   private static final Quaternionf QA = new Quaternionf();
+   private static final Quaternionf QB = new Quaternionf();
+   private static final Vector3f EULER = new Vector3f();
 
    public PlayerModel<?> model;
    public float m;
@@ -63,6 +67,7 @@ public final class PoseRig {
    @Nullable
    private ModelPart cloak;
    private float vanillaPitch;
+   private boolean slerp;
 
    private PoseRig() {
    }
@@ -94,12 +99,17 @@ public final class PoseRig {
 
    /** Rig mirrored by the entity's main arm. */
    public static PoseRig begin(PlayerModel<?> model, LivingEntity entity, @Nullable ModelPart cloak) {
-      return RIG.start(model, entity, entity.getMainArm() == HumanoidArm.LEFT ? -1.0F : 1.0F, cloak);
+      return RIG.start(model, entity.isCrouching(), entity.getMainArm() == HumanoidArm.LEFT ? -1.0F : 1.0F, cloak);
    }
 
    /** Rig mirrored by an explicit side (+1 right, -1 left), e.g. the book hand. */
    public static PoseRig begin(PlayerModel<?> model, LivingEntity entity, float side, @Nullable ModelPart cloak) {
-      return RIG.start(model, entity, side, cloak);
+      return RIG.start(model, entity.isCrouching(), side, cloak);
+   }
+
+   /** Rig with an explicit crouch flag: pose tables that do not read the entity (and their tests). */
+   public static PoseRig begin(PlayerModel<?> model, boolean crouch, float side, @Nullable ModelPart cloak) {
+      return RIG.start(model, crouch, side, cloak);
    }
 
    /** +1 for a right-side hand, -1 for left. */
@@ -129,10 +139,11 @@ public final class PoseRig {
       poseStack.mulPose(new Quaternionf().rotateZ((float)Math.toRadians(roll)));
    }
 
-   private PoseRig start(PlayerModel<?> model, LivingEntity entity, float side, @Nullable ModelPart cloak) {
+   private PoseRig start(PlayerModel<?> model, boolean crouch, float side, @Nullable ModelPart cloak) {
       this.model = model;
       this.m = side;
-      this.crouch = entity.isCrouching();
+      this.crouch = crouch;
+      this.slerp = false;
       boolean right = side > 0.0F;
       this.mainArm = right ? model.rightArm : model.leftArm;
       this.offArm = right ? model.leftArm : model.rightArm;
@@ -145,6 +156,18 @@ public final class PoseRig {
       this.cloak = cloak;
       this.vanillaPitch = this.crouch ? 0.5F : 0.0F;
       this.hipLock(-1.0F);
+      return this;
+   }
+
+   /**
+    * The next pose calls of this rig blend rotations on the shortest arc
+    * (quaternion slerp in the ZYX order of ModelPart) instead of per Euler
+    * channel. Distant poses (a strike from the walk, an aim from the flight
+    * pose) then never twist the limb through a third orientation. Positions
+    * stay linear. Cleared by every begin.
+    */
+   public PoseRig slerp() {
+      this.slerp = true;
       return this;
    }
 
@@ -194,18 +217,49 @@ public final class PoseRig {
       float[] from = keys[i];
       float[] to = i + 1 < keys.length ? keys[i + 1] : from;
       float[] out = new float[6];
-      for (int c = 0; c < 6; c++) {
-         float a = this.endpoint(from, c, pivot, pivotBase, additive);
-         float b = this.endpoint(to, c, pivot, pivotBase, additive);
-         out[c] = Mth.lerp(weight, BASE[c], Mth.lerp(t, a, b));
+      if (this.slerp) {
+         this.slerpPose(part, from, to, t, weight, pivot, pivotBase, additive, out);
+      } else {
+         for (int c = 0; c < 6; c++) {
+            float a = this.endpoint(from, c, pivot, pivotBase, additive);
+            float b = this.endpoint(to, c, pivot, pivotBase, additive);
+            out[c] = Mth.lerp(weight, BASE[c], Mth.lerp(t, a, b));
+         }
+         part.xRot = (float)Math.toRadians(out[0]);
+         part.yRot = (float)Math.toRadians(out[1]);
+         part.zRot = (float)Math.toRadians(out[2]);
       }
-      part.xRot = (float)Math.toRadians(out[0]);
-      part.yRot = (float)Math.toRadians(out[1]);
-      part.zRot = (float)Math.toRadians(out[2]);
       part.x = out[3];
       part.y = out[4];
       part.z = out[5];
       DIRTY.add(this.model);
+   }
+
+   /** Slerp form of {@link #pose}: the rotation is set here, positions go to {@code out[3..5]}. */
+   private void slerpPose(ModelPart part, float[] from, float[] to, float t, float weight, Pivot pivot, float[] pivotBase, boolean additive, float[] out) {
+      for (int c = 3; c < 6; c++) {
+         float a = this.endpoint(from, c, pivot, pivotBase, additive);
+         float b = this.endpoint(to, c, pivot, pivotBase, additive);
+         out[c] = Mth.lerp(weight, BASE[c], Mth.lerp(t, a, b));
+      }
+      rotation(from, pivot, pivotBase, additive, QA);
+      if (t > 0.0F && to != from) {
+         rotation(to, pivot, pivotBase, additive, QB);
+         QA.slerp(QB, t);
+      }
+      QB.rotationZYX(part.zRot, part.yRot, part.xRot);
+      QB.slerp(QA, Math.min(1.0F, weight));
+      QB.getEulerAnglesZYX(EULER);
+      part.xRot = EULER.x;
+      part.yRot = EULER.y;
+      part.zRot = EULER.z;
+   }
+
+   private void rotation(float[] row, Pivot pivot, float[] pivotBase, boolean additive, Quaternionf out) {
+      float x = (float)Math.toRadians(this.endpoint(row, 0, pivot, pivotBase, additive));
+      float y = (float)Math.toRadians(this.endpoint(row, 1, pivot, pivotBase, additive));
+      float z = (float)Math.toRadians(this.endpoint(row, 2, pivot, pivotBase, additive));
+      out.rotationZYX(z, y, x);
    }
 
    private float endpoint(float[] row, int channel, Pivot pivot, float[] pivotBase, boolean additive) {
