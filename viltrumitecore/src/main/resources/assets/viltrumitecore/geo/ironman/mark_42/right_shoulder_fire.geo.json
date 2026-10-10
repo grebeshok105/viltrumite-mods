@@ -1,0 +1,214 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.right_shoulder_fire",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorRightArm",
+          "pivot": [
+            -5.0,
+            22.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42ArmRight",
+          "pivot": [
+            -4.7,
+            22.2,
+            0.0
+          ],
+          "parent": "armorRightArm"
+        },
+        {
+          "name": "rightShoulder",
+          "pivot": [
+            -5.45,
+            31.5,
+            0.0
+          ],
+          "parent": "42ArmRight"
+        },
+        {
+          "name": "rightShoulder1",
+          "pivot": [
+            -5.45,
+            33.5,
+            0.0
+          ],
+          "parent": "rightShoulder"
+        },
+        {
+          "name": "fire",
+          "pivot": [
+            -6.0,
+            23.0,
+            0.0
+          ],
+          "parent": "rightShoulder1",
+          "rotation": [
+            180.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -14.0,
+                15.0,
+                -8.0
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": -7.0
+            }
+          ]
+        },
+        {
+          "name": "fire_1",
+          "pivot": [
+            -6.5,
+            24.0,
+            0.0
+          ],
+          "parent": "rightShoulder1",
+          "rotation": [
+            180.0,
+            0.0,
+            -22.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15.5,
+                17.0,
+                -8.0
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.0
+            }
+          ]
+        },
+        {
+          "name": "fire_2",
+          "pivot": [
+            -6.0,
+            24.0,
+            0.5
+          ],
+          "parent": "rightShoulder1",
+          "rotation": [
+            90.0,
+            67.5,
+            -90.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15.0,
+                17.0,
+                -7.5
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.0
+            }
+          ]
+        },
+        {
+          "name": "fire_3",
+          "pivot": [
+            -5.5,
+            24.0,
+            0.0
+          ],
+          "parent": "rightShoulder1",
+          "rotation": [
+            0.0,
+            0.0,
+            -157.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -14.5,
+                17.0,
+                -8.0
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.0
+            }
+          ]
+        },
+        {
+          "name": "fire_4",
+          "pivot": [
+            -6.0,
+            24.0,
+            -0.5
+          ],
+          "parent": "rightShoulder1",
+          "rotation": [
+            -90.0,
+            -67.5,
+            -90.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15.0,
+                17.0,
+                -8.5
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -10,9 +10,11 @@ import dev.baranhan.viltrumitecore.client.anim.geo.GeoBone;
 import dev.baranhan.viltrumitecore.client.anim.render.AnimRenderer;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
+import dev.baranhan.viltrumitecore.client.ironman.mark.Mark42Parts;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
+import dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool;
 import dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer;
 import dev.baranhan.viltrumiteflight.client.util.ShaderCompat;
 import java.util.List;
@@ -45,7 +47,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
  */
 @EventBusSubscriber(modid = "viltrumitecore", bus = Bus.FORGE, value = {Dist.CLIENT})
 public final class HulkbusterRenderer {
-   private static final float SCALE = HulkbusterLayer.SCALE;
+   private static final float SCALE = HulkbusterLayer.SCALE * HulkbusterAssets.SIND_UNITS;
    /** Tony's step out of the open back, blocks (entity-local, backwards). */
    private static final float STEP_OUT_BLOCKS = 1.1F;
    private static final float STEP_OUT_START = 0.5F;
@@ -81,7 +83,7 @@ public final class HulkbusterRenderer {
       }
 
       PoseStack stack = event.getPoseStack();
-      drawBody(player, pose, stack, event.getMultiBufferSource(), event.getPackedLight(), partialTick);
+      drawBody(player, pose, jackhammer(snapshot), stack, event.getMultiBufferSource(), event.getPackedLight(), partialTick);
       if (phase == HulkbusterLayer.Phase.ACTIVE) {
          event.setCanceled(true);
          return;
@@ -122,7 +124,13 @@ public final class HulkbusterRenderer {
       event.setCanceled(true);
    }
 
-   private static void drawBody(AbstractClientPlayer player, HulkbusterPoses.Pose pose, PoseStack stack, MultiBufferSource buffers, int light, float partialTick) {
+   /** Sind arm switch: the jackhammer arm replaces the left arm unless the slow repulsors are selected. */
+   private static boolean jackhammer(HeroPublicSnapshot snapshot) {
+      return IronManView.tool(snapshot) != RightTool.HULK_REPULSOR;
+   }
+
+   private static void drawBody(AbstractClientPlayer player, HulkbusterPoses.Pose pose, boolean jackhammer, PoseStack stack, MultiBufferSource buffers,
+      int light, float partialTick) {
       BakedGeoModel body = AnimCache.model(HulkbusterAssets.BODY);
       if (body == null) {
          return;
@@ -130,7 +138,11 @@ public final class HulkbusterRenderer {
 
       applyClips(body, pose);
       applyHead(body, player, partialTick);
-      setFlames(body, pose.flames());
+      GeoBone leftArm = body.getBone(HulkbusterAssets.LEFT_ARM_BONE);
+      if (leftArm != null) {
+         leftArm.hidden = jackhammer;
+      }
+
       stack.pushPose();
       stack.mulPose(Axis.YP.rotationDegrees(180.0F - Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot)));
       stack.scale(SCALE, SCALE, SCALE);
@@ -142,7 +154,36 @@ public final class HulkbusterRenderer {
             glow, glow, glow, 1.0F, null);
       }
 
+      BakedGeoModel arm = jackhammer ? AnimCache.model(HulkbusterAssets.JACKHAMMER) : null;
+      if (arm != null) {
+         applyClips(arm, pose);
+         AnimRenderer.render(arm, stack, null, buffers.getBuffer(RenderType.entityCutoutNoCull(HulkbusterAssets.JACKHAMMER_TEXTURE)), light,
+            OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F, null);
+         if (!ShaderCompat.isShadowPass()) {
+            AnimRenderer.render(arm, stack, null, buffers.getBuffer(RenderType.eyes(HulkbusterAssets.JACKHAMMER_GLOW)), LightTexture.FULL_BRIGHT,
+               OverlayTexture.NO_OVERLAY, pose.glow(), pose.glow(), pose.glow(), 1.0F, null);
+         }
+      }
+
+      if (pose.flames() > 0.01F && !ShaderCompat.isShadowPass()) {
+         drawFire(jackhammer ? HulkbusterAssets.JACKHAMMER_FIRE : null, pose, stack, buffers, player.tickCount);
+      }
+
       stack.popPose();
+   }
+
+   /** Sind fire models (feet, hands, shoulders) posed like the body; brightness = thruster strength. */
+   private static void drawFire(@Nullable net.minecraft.resources.ResourceLocation extra, HulkbusterPoses.Pose pose, PoseStack stack, MultiBufferSource buffers,
+      int tick) {
+      float k = pose.flames();
+      for (net.minecraft.resources.ResourceLocation location : new net.minecraft.resources.ResourceLocation[]{HulkbusterAssets.FIRE, extra}) {
+         BakedGeoModel fire = location == null ? null : AnimCache.model(location);
+         if (fire != null) {
+            applyClips(fire, pose);
+            AnimRenderer.render(fire, stack, null, buffers.getBuffer(RenderType.eyes(Mark42Parts.fireTexture(tick / 2))), LightTexture.FULL_BRIGHT,
+               OverlayTexture.NO_OVERLAY, k, k, k, 1.0F, null);
+         }
+      }
    }
 
    /** Idle/walk blend by speed, then the overlay clip on the bones it animates (same for body and first-person arm). */
@@ -164,32 +205,15 @@ public final class HulkbusterRenderer {
 
    /** The head follows the look direction (vanilla yaw relative to the body, pitch); internal turns are negated. */
    private static void applyHead(BakedGeoModel body, AbstractClientPlayer player, float partialTick) {
-      GeoBone head = body.getBone("head");
+      GeoBone head = body.getBone(HulkbusterAssets.HEAD_BONE);
       if (head == null) {
          return;
       }
 
       float yaw = Mth.clamp(Mth.wrapDegrees(player.yHeadRot - Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot)), -HEAD_YAW_LIMIT, HEAD_YAW_LIMIT);
       float pitch = Mth.clamp(Mth.lerp(partialTick, player.xRotO, player.getXRot()), -HEAD_PITCH_LIMIT, HEAD_PITCH_LIMIT);
-      head.rotY = (float)Math.toRadians(-yaw);
-      head.rotX = (float)Math.toRadians(-pitch);
-   }
-
-   /** Thrusters: feet flames grow down, back flames grow backwards (glow only, the cutout texture is clear there). */
-   private static void setFlames(BakedGeoModel body, float strength) {
-      for (String name : new String[]{"flame_feet_left", "flame_feet_right"}) {
-         GeoBone bone = body.getBone(name);
-         if (bone != null) {
-            bone.scaleY = strength;
-         }
-      }
-
-      for (String name : new String[]{"flame_back_left", "flame_back_right"}) {
-         GeoBone bone = body.getBone(name);
-         if (bone != null) {
-            bone.scaleZ = strength;
-         }
-      }
+      head.rotY += (float)Math.toRadians(-yaw);
+      head.rotX += (float)Math.toRadians(-pitch);
    }
 
    @Nullable

@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 """Iron Man Stage 4 art, own work (style of make_ironman_stage2_icons.py).
 
-Mark skins: the Mark 50 skin (ironman_mark_50.png.b64) is recoloured by palette
-mapping, so UV regions and alpha stay exact. Each mark adds its own reactor,
-plate details and a glow map (eyes and lights, black elsewhere). Also the suit
-interior skin, the Veronica pod icon and seven signature icons.
+The opening-shell interior atlas (128 px, with a glow map), the Veronica pod icon and seven signature icons. The mark
+skins come from the archive (tools/bake_suit_skin.py, tools/assets/convert_ironman_sind.py).
 
 Run: python3 tools/assets/make_ironman_stage4_assets.py [OUT_ROOT]
 Default OUT_ROOT writes base64 files under viltrumitecore/src/main/binassets.
 """
-import base64
-import io
 import math
 import os
 import random
@@ -51,274 +47,94 @@ def put(px, x, y, col):
         px[x, y] = tuple(col) if len(col) == 4 else tuple(col) + (255,)
 
 
-def load(rel):
-    with open(os.path.join(TEX, rel + ".b64"), encoding="ascii") as f:
-        return Image.open(io.BytesIO(base64.b64decode(f.read()))).convert("RGBA")
+# Interior atlas of the opening shell (tools/assets/opening_shell.py LINING regions, 64 px UV space at 2 texels
+# per unit): torso lining, limb lining, helmet lining, torso door, limb door, faceplate, side walls, top/bottom.
+LINING_PX = {"torso": (0, 0, 16, 26), "limb": (16, 0, 8, 24), "helmet": (24, 0, 16, 16), "torso_door": (40, 0, 8, 26),
+             "limb_door": (48, 0, 8, 24), "faceplate": (24, 32, 16, 16), "wall": (64, 0, 8, 26), "cap": (72, 0, 16, 12)}
+GRAPHITE = (30, 32, 38)
+PAD_LIGHT = (58, 62, 72)
+PAD_DARK = (18, 19, 23)
+BRASS = (186, 142, 62)
+BRASS_LIGHT = (232, 196, 110)
+STEEL_D = (70, 74, 84)
+CABLE = (112, 30, 34)
+GLOW_CYAN = (110, 225, 255)
 
 
-def family(r, g, b):
-    if r >= 1.6 * g and r >= 1.6 * b:
-        return "R"
-    if max(r, g, b) - min(r, g, b) < 0.22 * max(r, g, b):
-        return "S"
-    return "G"
+def padded(img, box, cell=4):
+    """Quilted padding: diamond cells, lit top-left, shadowed bottom-right."""
+    px = img.load()
+    x0, y0, x1, y1 = box
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            u, v = (x - x0) % cell, (y - y0 + ((x - x0) // cell) % 2 * cell // 2) % cell
+            col = GRAPHITE
+            if u == 0 or v == 0:
+                col = PAD_DARK
+            elif u == 1 and v == 1:
+                col = PAD_LIGHT
+            elif u == cell - 1 or v == cell - 1:
+                col = (24, 25, 30)
+            px[x, y] = col + (255,)
 
 
-def luma(r, g, b):
-    return 0.299 * r + 0.587 * g + 0.114 * b
-
-
-def _ranges(src):
-    lo, hi = {}, {}
-    px = src.load()
-    for y in range(64):
-        for x in range(64):
-            r, g, b, a = px[x, y]
-            if a and (r, g, b) != LIGHT:
-                f, lum = family(r, g, b), luma(r, g, b)
-                lo[f] = min(lo.get(f, 255.0), lum)
-                hi[f] = max(hi.get(f, 0.0), lum)
-    return {f: (lo[f], hi[f]) for f in lo}
-
-
-SRC = load(HERO + "ironman_mark_50.png")
-SRC_GLOW = load(HERO + "ironman_mark_50_glow.png")
-RANGE = _ranges(SRC)
-GLOW_SRC = [(x, y) for y in range(64) for x in range(64) if SRC_GLOW.getpixel((x, y))[3]]
-
-
-def ramp(stops, t):
-    t = min(1.0, max(0.0, t))
-    if t < 0.5:
-        return lerp(stops[0], stops[1], t * 2)
-    return lerp(stops[1], stops[2], (t - 0.5) * 2)
-
-
-def is_limb(x, y):
-    return y >= 16 and (x < 16 or x >= 40 or y >= 48)
-
-
-def recolour(cfg):
-    out = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    src, dst = SRC.load(), out.load()
-    for y in range(64):
-        for x in range(64):
-            r, g, b, a = src[x, y]
-            if not a:
-                continue
-            if (r, g, b) == LIGHT:
-                dst[x, y] = tuple(cfg["light"]) + (255,)
-                continue
-            fam = family(r, g, b)
-            key = "limb" + fam if is_limb(x, y) and ("limb" + fam) in cfg else fam
-            lo, hi = RANGE[fam]
-            dst[x, y] = ramp(cfg[key], (luma(r, g, b) - lo) / (hi - lo)) + (255,)
-    return out
-
-
-def reactor_skin(dst, src, rings):
-    for y in range(20, 28):
-        for x in range(20, 28):
-            if not src[x, y][3]:
-                continue
-            d = math.hypot(x - 23.5, y - 23.5)
-            for radius, col in rings:
-                if d <= radius:
-                    dst[x, y] = tuple(col) + (255,)
-                    break
-
-
-def faceplate(dst, src, cfg):
-    # Slim helmet: dark red edges, red forehead, pink visor stripe on the centre.
-    for base in (8, 40):
-        for x in range(base, base + 8):
-            for y in range(8, 16):
-                if not src[x, y][3]:
-                    continue
-                local = x - base
-                if local in (0, 7):
-                    col = cfg["R"][0]
-                elif y in (8, 9):
-                    col = cfg["R"][1]
-                elif local in (3, 4) and 9 <= y <= 14:
-                    col = cfg["S"][2]
-                else:
-                    continue
-                dst[x, y] = tuple(col) + (255,)
-
-
-def shoulders(dst, src, cfg):
-    # Heavy plates on the upper arms: bright top rows, dark seam below.
-    light, seam = cfg["S"][2], cfg["S"][0]
-    for rows, x0, x1 in (((20, 21, 22), 40, 55), ((52, 53, 54), 32, 47)):
-        for y in rows:
-            for x in range(x0, x1 + 1):
-                if src[x, y][3]:
-                    dst[x, y] = tuple(light) + (255,)
-        for x in range(x0, x1 + 1):
-            y = rows[-1] + 1
-            if src[x, y][3]:
-                dst[x, y] = tuple(seam) + (255,)
-
-
-def seams(dst, src, cfg):
-    # Panel lines on torso and limbs: the 3rd and 7th row of each 12-row face.
-    for y in (23, 27, 39, 43, 55, 59):
-        for x in range(64):
-            if not src[x, y][3] or dst[x, y][:3] == tuple(cfg["light"]):
-                continue
-            r, g, b, _ = dst[x, y]
-            dst[x, y] = (r // 2, g // 2, b // 2, 255)
-
-
-def back_plates(dst, src, cfg):
-    # Starboost pack: two dark plates on the back with blue vents below.
-    plate, edge, vent = cfg["S"][0], cfg["S"][2], BLUE
-    for x0 in (33, 37):
-        for y in range(21, 28):
-            for x in range(x0, x0 + 3):
-                if src[x, y][3]:
-                    dst[x, y] = tuple(plate) + (255,)
-        for x in range(x0, x0 + 3):
-            if src[x, 21][3]:
-                dst[x, 21] = tuple(edge) + (255,)
-        for y in (29, 30):
-            for x in range(x0, x0 + 3):
-                if src[x, y][3]:
-                    dst[x, y] = tuple(vent) + (255,)
-
-
-def build_skin(cfg):
-    out = recolour(cfg)
-    src, dst = SRC.load(), out.load()
-    if "reactor" in cfg:
-        reactor_skin(dst, src, cfg["reactor"])
-    if cfg.get("faceplate"):
-        faceplate(dst, src, cfg)
-    if cfg.get("shoulders"):
-        shoulders(dst, src, cfg)
-    if cfg.get("seams"):
-        seams(dst, src, cfg)
-    if cfg.get("plates"):
-        back_plates(dst, src, cfg)
-    return out
-
-
-def group(x, y):
-    if y == 11 and x in (9, 10, 13, 14):
-        return "eyes"
-    if 20 <= x <= 27 and 20 <= y <= 27:
-        return "reactor"
-    return "limb"
-
-
-def build_glow(cfg):
-    out = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    dst = out.load()
-    glow = cfg["glow"]
-    for x, y in GLOW_SRC:
-        grp = group(x, y)
-        if grp == "reactor" and "disc" in glow:
-            continue
-        if glow.get(grp):
-            dst[x, y] = tuple(glow[grp]) + (255,)
-    if "disc" in glow:
-        radius, col = glow["disc"]
-        for y in range(20, 28):
-            for x in range(20, 28):
-                if math.hypot(x - 23.5, y - 23.5) <= radius:
-                    dst[x, y] = tuple(col) + (255,)
-    for x, y, col in glow.get("extra", []):
-        dst[x, y] = tuple(col) + (255,)
-    return out
-
-
-# Palette ramps run dark to light. R, G, S are the red, gold and steel families
-# of the Mark 50 source; limbR / limbG override them on arms and legs.
-MARKS = {
-    "mark_7": dict(
-        R=((70, 8, 14), (150, 20, 28), (212, 44, 48)),
-        G=((118, 72, 18), (204, 148, 50), (250, 216, 126)),
-        S=((62, 66, 76), (144, 150, 162), (224, 229, 236)),
-        light=LIGHT,
-        reactor=[(1.6, LIGHT), (2.6, (224, 229, 236))],
-        glow=dict(eyes=LIGHT, limb=LIGHT, disc=(1.6, LIGHT)),
-    ),
-    "mark_42": dict(
-        R=((70, 8, 14), (150, 20, 28), (212, 44, 48)),
-        G=((122, 78, 16), (214, 162, 56), (252, 226, 140)),
-        S=((60, 60, 64), (136, 136, 142), (214, 214, 220)),
-        limbR=((122, 78, 16), (214, 162, 56), (252, 226, 140)),
-        light=LIGHT,
-        seams=True,
-        glow=dict(eyes=LIGHT, limb=LIGHT, reactor=LIGHT),
-    ),
-    "mark_15": dict(
-        R=((14, 16, 22), (34, 38, 48), (58, 64, 76)),
-        G=((22, 24, 30), (48, 52, 62), (78, 84, 96)),
-        S=((18, 20, 26), (40, 44, 52), (66, 70, 80)),
-        light=DIM,
-        reactor=[(1.0, DIM), (2.4, (40, 44, 52))],
-        glow=dict(eyes=DIM, disc=(1.0, DIM)),
-    ),
-    "mark_39": dict(
-        R=((128, 136, 150), (206, 212, 222), (246, 249, 252)),
-        G=((96, 12, 18), (176, 28, 34), (222, 56, 58)),
-        S=((70, 76, 88), (140, 148, 160), (206, 212, 220)),
-        limbG=((20, 56, 128), (40, 112, 220), (120, 190, 255)),
-        light=BLUE_LIGHT,
-        reactor=[(1.6, BLUE_LIGHT), (2.6, (206, 212, 220))],
-        plates=True,
-        glow=dict(eyes=BLUE_LIGHT, limb=BLUE, disc=(1.6, BLUE_LIGHT),
-                  extra=[(x, 30, BLUE) for x in (33, 34, 35, 37, 38, 39)]),
-    ),
-    "mark_17": dict(
-        R=((76, 8, 14), (156, 22, 30), (206, 40, 44)),
-        G=((104, 108, 118), (186, 190, 200), (240, 244, 248)),
-        S=((54, 58, 66), (118, 124, 134), (180, 186, 196)),
-        light=LIGHT,
-        reactor=[(2.6, UNI), (3.4, (180, 186, 196)), (4.3, (54, 58, 66))],
-        glow=dict(eyes=LIGHT, limb=LIGHT, disc=(2.6, UNI)),
-    ),
-    "war_machine_mk2": dict(
-        R=((28, 30, 36), (72, 76, 86), (120, 126, 136)),
-        G=((16, 17, 20), (40, 42, 48), (70, 72, 80)),
-        S=((90, 96, 108), (168, 174, 186), (232, 236, 242)),
-        light=WHITE_RGB,
-        shoulders=True,
-        glow=dict(eyes=WHITE_RGB),
-    ),
-    "iron_heart_mk3": dict(
-        R=((90, 10, 20), (168, 26, 40), (206, 46, 56)),
-        G=((130, 84, 22), (214, 160, 60), (252, 224, 134)),
-        S=((74, 28, 86), (150, 64, 156), (232, 128, 206)),
-        light=PINK,
-        reactor=[(1.6, PINK_CORE), (2.6, (232, 128, 206))],
-        faceplate=True,
-        glow=dict(eyes=PINK, limb=PINK, disc=(1.6, PINK_CORE)),
-    ),
-}
+def frame_edge(d, box, colour=BRASS):
+    x0, y0, x1, y1 = box
+    d.rectangle((x0, y0, x1 - 1, y1 - 1), outline=colour)
 
 
 def interior():
-    rng = random.Random(7)
-    img = Image.new("RGBA", (64, 64), (24, 26, 32, 255))
-    px = img.load()
-    for y in range(64):
-        for x in range(64):
-            col = (38, 42, 52) if (x + y) % 8 == 0 or (x - y) % 8 == 0 else (24, 26, 32)
-            if rng.random() < 0.08:
-                col = tuple(v + 4 for v in col)
-            px[x, y] = col + (255,)
-    for k, (c0, amp, per) in enumerate(((14, 4, 18), (44, 5, 22), (30, 3, 14))):
-        for x in range(64):
-            y = int(round(c0 + amp * math.sin(2 * math.pi * x / per + k)))
-            px[x, y] = (10, 11, 15, 255)
-            px[x, y - 1] = (66, 70, 80, 255)
-    for x0, y0, n in ((4, 6, 6), (40, 22, 8), (12, 52, 5), (48, 58, 6), (20, 36, 6)):
-        for i in range(n):
-            px[x0 + i, y0] = (46, 168, 210, 255)
-    return img
+    img = Image.new("RGBA", (128, 128), PAD_DARK + (255,))
+    glow = Image.new("RGBA", (128, 128), (0, 0, 0, 255))
+    d, g = ImageDraw.Draw(img), ImageDraw.Draw(glow)
+    for key in ("torso", "limb", "helmet"):
+        x0, y0, w, h = LINING_PX[key]
+        padded(img, (x0, y0, x0 + w, y0 + h))
+        frame_edge(d, (x0, y0, x0 + w, y0 + h), STEEL_D)
+    # Torso: spine channel with segment plates, two status lights.
+    x0, y0, w, h = LINING_PX["torso"]
+    cx = x0 + w // 2
+    d.rectangle((cx - 2, y0 + 2, cx + 1, y0 + h - 3), fill=(22, 23, 28))
+    for y in range(y0 + 3, y0 + h - 3, 3):
+        d.rectangle((cx - 2, y, cx + 1, y + 1), fill=STEEL_D)
+        d.point((cx - 1, y), fill=BRASS_LIGHT)
+    for lx in (x0 + 3, x0 + w - 4):
+        d.rectangle((lx, y0 + 3, lx, y0 + 5), fill=GLOW_CYAN)
+        g.rectangle((lx, y0 + 3, lx, y0 + 5), fill=GLOW_CYAN)
+    # Limb lining: a cable down the middle.
+    x0, y0, w, h = LINING_PX["limb"]
+    d.line((x0 + w // 2, y0 + 1, x0 + w // 2, y0 + h - 2), fill=CABLE)
+    # Helmet lining: the padded inside with the sensor band.
+    x0, y0, w, h = LINING_PX["helmet"]
+    d.rectangle((x0 + 2, y0 + 6, x0 + w - 3, y0 + 7), fill=STEEL_D)
+    # Door insides: dark plates, brass pistons, a cyan light strip on the free edge.
+    for key in ("torso_door", "limb_door"):
+        x0, y0, w, h = LINING_PX[key]
+        d.rectangle((x0, y0, x0 + w - 1, y0 + h - 1), fill=(36, 38, 45))
+        for y in range(y0 + 4, y0 + h - 1, 5):
+            d.line((x0, y, x0 + w - 1, y), fill=PAD_DARK)
+        d.rectangle((x0 + 2, y0 + 2, x0 + 3, y0 + h - 3), fill=BRASS)
+        d.line((x0 + 2, y0 + 2, x0 + 2, y0 + h - 3), fill=BRASS_LIGHT)
+        for y in (y0 + 2, y0 + h - 3):
+            d.rectangle((x0 + 1, y - 1, x0 + 4, y), fill=STEEL_D)
+        d.line((x0 + w - 2, y0 + 2, x0 + w - 2, y0 + h - 3), fill=GLOW_CYAN)
+        g.line((x0 + w - 2, y0 + 2, x0 + w - 2, y0 + h - 3), fill=GLOW_CYAN)
+        frame_edge(d, (x0, y0, x0 + w, y0 + h), STEEL_D)
+    # Faceplate inside: the HUD eye slits glow from behind.
+    x0, y0, w, h = LINING_PX["faceplate"]
+    d.rectangle((x0, y0, x0 + w - 1, y0 + h - 1), fill=(26, 27, 32))
+    for ex in (x0 + 2, x0 + 9):
+        d.rectangle((ex, y0 + 6, ex + 4, y0 + 7), fill=GLOW_CYAN)
+        g.rectangle((ex, y0 + 6, ex + 4, y0 + 7), fill=GLOW_CYAN)
+    d.rectangle((x0 + 5, y0 + 10, x0 + 10, y0 + 11), fill=STEEL_D)
+    frame_edge(d, (x0, y0, x0 + w, y0 + h), STEEL_D)
+    # Shell thickness: red armour with a brass seam; top / bottom caps.
+    for key in ("wall", "cap"):
+        x0, y0, w, h = LINING_PX[key]
+        d.rectangle((x0, y0, x0 + w - 1, y0 + h - 1), fill=(120, 18, 24))
+        d.line((x0, y0 + 1, x0 + w - 1, y0 + 1), fill=BRASS)
+        d.line((x0 + 1, y0, x0 + 1, y0 + h - 1), fill=BRASS)
+    return img, glow
 
 
 def veronica():
@@ -517,10 +333,9 @@ SIGNATURES = (
 
 
 def main(out_root):
-    for key, cfg in MARKS.items():
-        write(build_skin(cfg), HERO + "ironman_%s.png" % key, out_root)
-        write(build_glow(cfg), HERO + "ironman_%s_glow.png" % key, out_root)
-    write(interior(), HERO + "ironman_interior.png", out_root)
+    inside, inside_glow = interior()
+    write(inside, HERO + "ironman_interior.png", out_root)
+    write(inside_glow, HERO + "ironman_interior_glow.png", out_root)
     write(veronica(), ICON + "veronica.png", out_root)
     for name, fn in SIGNATURES:
         write(fn(), ICON + "sig_%s.png" % name, out_root)

@@ -16,8 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Mark skins with the helmet open: the mark's skin and glow map, with Tony's
- * head (the top 16 rows of the skin layout) copied from his own skin. Baked once
+ * Mark skins with the faceplate open: the mark's skin and glow map, with Tony's
+ * face (head front and hat front of the skin layout) copied from his own skin;
+ * the rest of the helmet stays. The plate itself is drawn by {@link MarkFaceplate}. Baked once
  * per resource reload into DynamicTextures. A mark whose texture is missing
  * keeps the closed skin.
  */
@@ -88,9 +89,12 @@ public final class MarkSkins implements ResourceManagerReloadListener {
 
    private static ResourceLocation bakeHead(ResourceManager resources, TextureManager textures, NativeImage tony, ResourceLocation source, String name) {
       try (NativeImage image = read(resources, source)) {
+         // Only the faceplate opens (head front + hat front): the rest of the helmet stays on.
          for (int y = 0; y < HEAD_ROWS && y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
-               image.setPixelRGBA(x, y, tony == null ? 0 : pixel(tony, x, y));
+               if (dev.baranhan.viltrumitecore.client.ironman.IronManSuitTextures.facePixel(x, y)) {
+                  image.setPixelRGBA(x, y, tony == null ? 0 : pixel(tony, x, y));
+               }
             }
          }
 

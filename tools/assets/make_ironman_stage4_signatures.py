@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 4 mark-signature parts: geo JSON and pixel textures (own art).
+"""Stage 4 Mark 15 camouflage shimmer: shell geo JSON and ripple texture (own art; spec §13.4 effect).
 
 Writes geo into viltrumitecore/src/main/resources/assets/viltrumitecore/geo/ironman/marks/
 and base64 PNGs into viltrumitecore/src/main/binassets/.../textures/entity/ironman/marks/
@@ -59,58 +59,6 @@ def geo(identifier, width, height, bones):
 
 
 GEOS = {
-    # Mark 7: emitters with a lens on each forearm (glow pass uses the lens region).
-    "laser_emitters": geo("geometry.viltrumitecore.ironman_mark_laser", 16, 16, [
-        bone("armorRightArm", [-5, 22, 0]),
-        bone("laserRight", [-5, 22, 0], [
-            cube([-7.6, 13.0, -3.05], [2.6, 2.4, 1.0], (0, 0)),
-            cube([-6.9, 13.9, -3.25], [1.2, 0.8, 0.3], (8, 0)),
-        ], parent="armorRightArm"),
-        bone("armorLeftArm", [5, 22, 0]),
-        bone("laserLeft", [5, 22, 0], [
-            cube([5.0, 13.0, -3.05], [2.6, 2.4, 1.0], (0, 0)),
-            cube([5.7, 13.9, -3.25], [1.2, 0.8, 0.3], (8, 0)),
-        ], parent="armorLeftArm"),
-    ]),
-    # Mark 39: booster pack on the back with two nozzles.
-    "booster": geo("geometry.viltrumitecore.ironman_mark_booster", 32, 32, [
-        bone("armorBody", [0, 24, 0]),
-        bone("boosterPack", [0, 24, 0], [cube([-4.6, 12.0, 2.1], [9.2, 11.0, 2.6], (0, 0))], parent="armorBody"),
-        bone("boosterNozzles", [0, 24, 0], [
-            cube([-3.6, 9.0, 3.0], [2.0, 3.2, 2.0], (0, 13)),
-            cube([1.6, 9.0, 3.0], [2.0, 3.2, 2.0], (0, 13)),
-        ], parent="armorBody"),
-    ]),
-    # Mark 39 blast: a flame cone under the nozzles, grown from the top (pivot) by the pose.
-    "booster_blast": geo("geometry.viltrumitecore.ironman_mark_booster_blast", 32, 32, [
-        bone("armorBody", [0, 24, 0]),
-        bone("boosterBlast", [0, 9.0, 4.0], [cube([-2.6, 1.0, 3.4], [5.2, 8.0, 1.2], (0, 0))], parent="armorBody"),
-    ]),
-    # War Machine: gun turret on the right shoulder; the turret bone turns towards the aim.
-    "turret": geo("geometry.viltrumitecore.ironman_mark_turret", 16, 16, [
-        bone("armorRightArm", [-5, 22, 0]),
-        bone("turretMount", [-5, 22, 0], [cube([-7.8, 24.0, -2.4], [4.6, 1.0, 4.8], (0, 0))], parent="armorRightArm"),
-        bone("turret", [-5.5, 25.0, 0.0], [
-            cube([-7.4, 25.0, -1.6], [3.8, 1.6, 3.2], (0, 4)),
-            cube([-6.4, 25.5, -6.4], [1.8, 1.2, 4.8], (8, 4)),
-        ], parent="armorRightArm"),
-        bone("turretMuzzle", [-5.5, 25.0, 0.0], [cube([-6.2, 25.6, -6.8], [1.4, 1.0, 0.4], (12, 12))], parent="turret"),
-    ]),
-    # Mark 42: right gauntlet over the hand, with a gold cuff.
-    "glove": geo("geometry.viltrumitecore.ironman_mark_glove", 16, 16, [
-        bone("armorRightArm", [-5, 22, 0]),
-        bone("gauntlet", [-5, 22, 0], [
-            cube([-9.0, 11.4, -2.6], [4.6, 5.0, 5.2], (0, 0)),
-            cube([-9.2, 15.6, -2.8], [4.9, 1.0, 5.6], (0, 8)),
-        ], parent="armorRightArm"),
-    ]),
-    # Mark 42 rocket fist in flight (entity model, root at the origin, pixel units).
-    "fist": geo("geometry.viltrumitecore.ironman_mark_fist", 16, 16, [
-        bone("glove", [0, 0, 0], [
-            cube([-2.75, -2.5, -2.75], [5.5, 5.0, 5.5], (0, 0)),
-            cube([-1.2, -2.8, 2.5], [2.4, 2.4, 1.4], (0, 8)),
-        ]),
-    ]),
     # Mark 15: a shell a little bigger than the body, drawn with a shimmer texture.
     "camo_shell": geo("geometry.viltrumitecore.ironman_mark_camo", 16, 16, [
         bone("armorHead", [0, 24, 0], [cube([-4.7, 23.3, -4.7], [9.4, 9.4, 9.4], (0, 0))]),
@@ -145,37 +93,6 @@ def metal(size, base, light, seed):
 
 def textures():
     out = {}
-    laser = metal(16, (58, 63, 72), (120, 128, 138), 1)
-    paint_rect(laser, 0, 0, 5, 3, (150, 40, 44, 255))
-    out["laser"] = laser
-
-    laser_glow = canvas(16)
-    paint_rect(laser_glow, 8, 0, 10, 2, (255, 60, 60, 255))
-    paint_rect(laser_glow, 10, 0, 11, 1, (120, 240, 255, 255))
-    out["laser_glow"] = laser_glow
-
-    booster = metal(32, (52, 56, 66), (150, 118, 52), 2)
-    paint_rect(booster, 0, 22, 32, 24, (201, 161, 59, 255))
-    out["booster"] = booster
-
-    booster_glow = canvas(32)
-    paint_rect(booster_glow, 0, 13, 6, 19, (255, 150, 60, 255))
-    paint_rect(booster_glow, 1, 14, 5, 18, (255, 220, 150, 255))
-    out["booster_glow"] = booster_glow
-
-    turret = metal(16, (70, 74, 82), (140, 146, 156), 3)
-    paint_rect(turret, 0, 4, 16, 6, (184, 50, 44, 255))
-    out["turret"] = turret
-
-    turret_glow = canvas(16)
-    paint_rect(turret_glow, 12, 12, 14, 13, (255, 210, 122, 255))
-    out["turret_glow"] = turret_glow
-
-    glove = canvas(16, (184, 50, 44, 255))
-    paint_rect(glove, 0, 8, 16, 9, (224, 176, 64, 255))
-    paint_rect(glove, 0, 0, 16, 2, (118, 28, 30, 255))
-    out["glove"] = glove
-
     camo = canvas(16)
     rnd = random.Random(15)
     for x in range(16):

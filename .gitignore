@@ -16,3 +16,6 @@ build-tmp/
 .project
 .settings/
 bin/__pycache__/
+
+# Python
+__pycache__/

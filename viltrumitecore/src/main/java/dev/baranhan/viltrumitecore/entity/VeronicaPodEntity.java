@@ -24,18 +24,16 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Veronica capsule (spec §12.1–§12.2): falls like a meteor onto the drop
- * point, explodes ~1 TNT (mobGriefing respected), stands ~60 s for the suit
- * menu, then flies up and away. It leaves at once when its owner is gone, far
- * (> 96 blocks), dead, in another dimension, no longer Iron Man, or called a
- * newer pod. Not saved: it never survives a relog or a restart.
+ * point, explodes ~1 TNT (mobGriefing respected) and then stays for good
+ * (user decision 2026-10-10): saved with the chunk, through owner death,
+ * logout and dimension change. It flies away only when its online owner is
+ * no longer Iron Man or called a newer pod.
  */
 public class VeronicaPodEntity extends Entity {
-   public static final int LANDED_TICKS = 1200;
    public static final int LEAVE_TICKS = 60;
    public static final double FALL_HEIGHT = 120.0;
    public static final double FALL_SPEED = 2.6;
    public static final double MENU_RANGE = 64.0;
-   public static final double LEAVE_RANGE = 96.0;
    public static final float IMPACT_POWER = 4.0F;
    private static final EntityDataAccessor<Optional<UUID>> OWNER = SynchedEntityData.defineId(VeronicaPodEntity.class, EntityDataSerializers.OPTIONAL_UUID);
    private static final EntityDataAccessor<Byte> PHASE = SynchedEntityData.defineId(VeronicaPodEntity.class, EntityDataSerializers.BYTE);
@@ -111,6 +109,9 @@ public class VeronicaPodEntity extends Entity {
       this.phaseTicks = 0;
    }
 
+   /** Fall speed while settling into a crater (server only). */
+   private double settleSpeed;
+
    @Override
    public void tick() {
       super.tick();
@@ -122,19 +123,14 @@ public class VeronicaPodEntity extends Entity {
 
       this.phaseTicks++;
       Phase phase = this.phase();
-      if (phase != Phase.LEAVING && !this.ownerStillHere()) {
+      if (phase != Phase.LEAVING && this.retired()) {
          this.leave();
          phase = Phase.LEAVING;
       }
 
       switch (phase) {
          case FALLING -> this.fall(motion);
-         case LANDED -> {
-            this.setDeltaMovement(Vec3.ZERO);
-            if (this.phaseTicks >= LANDED_TICKS) {
-               this.leave();
-            }
-         }
+         case LANDED -> this.settle();
          case LEAVING -> {
             double up = Math.min(3.0, 0.05 + this.phaseTicks * 0.06);
             this.setDeltaMovement(0.0, up, 0.0);
@@ -167,20 +163,47 @@ public class VeronicaPodEntity extends Entity {
       }
    }
 
-   private boolean ownerStillHere() {
-      ServerPlayer owner = IronManOwned.owner(this, this.ownerId());
-      if (owner == null) {
-         return false;
+   /**
+    * Landed: rests on what is under it. The landing blast digs a crater under
+    * the pod (and players may dig too), so it drops into it instead of hanging
+    * in the air.
+    */
+   private void settle() {
+      this.setDeltaMovement(Vec3.ZERO);
+      Vec3 from = this.position();
+      double step = Math.min(1.2, 0.1 + this.settleSpeed);
+      Vec3 to = from.add(0.0, -step, 0.0);
+      if (to.y <= this.level().getMinBuildHeight()) {
+         return;
       }
 
-      IronManState state = IronManState.of(owner);
-      // Horizontal range: the pod starts 120 blocks above the ground.
-      double dx = owner.getX() - this.getX();
-      double dz = owner.getZ() - this.getZ();
-      return state != null && state.podId == this.getId() && dx * dx + dz * dz <= LEAVE_RANGE * LEAVE_RANGE;
+      BlockHitResult hit = this.level().clip(new ClipContext(from.add(0.0, 0.05, 0.0), to, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, this));
+      if (hit.getType() == HitResult.Type.MISS) {
+         this.setPos(to);
+         this.settleSpeed = Math.min(1.1, this.settleSpeed + 0.08);
+         return;
+      }
+
+      Vec3 at = hit.getLocation();
+      if (from.y - at.y > 1.0E-3) {
+         this.setPos(from.x, at.y, from.z);
+      }
+
+      this.settleSpeed = 0.0;
    }
 
-   /** Fly up and away; the Veronica cooldown starts now (spec §12.2). */
+   /** Only an online owner decides (IronManVeronica.retired); offline owners keep the pod. */
+   private boolean retired() {
+      UUID id = this.ownerId().orElse(null);
+      if (id == null || this.level().getServer() == null) {
+         return id == null;
+      }
+
+      ServerPlayer owner = this.level().getServer().getPlayerList().getPlayer(id);
+      return owner != null && IronManVeronica.retired(owner, this.getUUID());
+   }
+
+   /** Fly up and away (replaced or retired). */
    public void leave() {
       if (this.phase() == Phase.LEAVING) {
          return;
@@ -210,11 +233,26 @@ public class VeronicaPodEntity extends Entity {
 
    @Override
    protected void readAdditionalSaveData(CompoundTag tag) {
-      this.discard();
+      if (tag.hasUUID("Owner")) {
+         this.entityData.set(OWNER, Optional.of(tag.getUUID("Owner")));
+      }
+
+      int phase = tag.getByte("Phase");
+      if (phase == Phase.LEAVING.ordinal() || !tag.hasUUID("Owner")) {
+         this.discard();
+         return;
+      }
+
+      this.entityData.set(PHASE, (byte)(phase == Phase.FALLING.ordinal() ? Phase.FALLING : Phase.LANDED).ordinal());
+      if (this.phase() == Phase.FALLING) {
+         this.setDeltaMovement(0.0, -FALL_SPEED, 0.0);
+      }
    }
 
    @Override
    protected void addAdditionalSaveData(CompoundTag tag) {
+      this.ownerId().ifPresent(id -> tag.putUUID("Owner", id));
+      tag.putByte("Phase", (byte)this.phase().ordinal());
    }
 
    @Override

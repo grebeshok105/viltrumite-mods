@@ -28,7 +28,7 @@ class HulkbusterPosesTest {
 
    @Test
    void jackhammerLoopsOnTheSyncedClockAndChargeClamps() {
-      HulkbusterPoses.Pose hammer = HulkbusterPoses.select(input(ACTIVE, HeroAction.SECONDARY_USE, 5, 60, RightTool.JACKHAMMER, false, -1.0));
+      HulkbusterPoses.Pose hammer = HulkbusterPoses.select(input(ACTIVE, HeroAction.SECONDARY_USE, 6, 60, RightTool.JACKHAMMER, false, -1.0));
       assertEquals(HulkbusterPoses.Clip.JACKHAMMER, hammer.overlay());
       assertEquals(0.05, hammer.overlaySeconds(), 1.0E-9);
 
@@ -80,7 +80,7 @@ class HulkbusterPosesTest {
       HulkbusterPoses.Input running = new HulkbusterPoses.Input(ACTIVE, -1, 0, 0, 0.0F, RightTool.REPULSOR, false, -1.0, 0.8F, 0.0F, 0.0);
       assertEquals(1.0F, HulkbusterPoses.select(running).walk(), 1.0E-6F);
 
-      double cycle = 2.0 * Math.PI / 0.6662;
+      double cycle = 13.0;
       assertEquals(0.0, HulkbusterPoses.walkSeconds((float)cycle), 1.0E-4);
       assertEquals(0.5, HulkbusterPoses.walkSeconds((float)(cycle / 2.0)), 1.0E-4);
    }
