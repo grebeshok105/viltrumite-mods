@@ -395,10 +395,75 @@ def hulkbuster(src, extracted):
     write_b64("textures/entity/ironman/hulkbuster_jackhammer_glow.png", premultiplied(tex(src, "mark44/hulkbuster_arm_lights")))
 
 
+POD_SCALE = 1.8
+ROCKET_SCALE = 1.8
+
+
+def subtree_centre(bones, root):
+    return centre(subtree(bones, root))
+
+
+def missile_parts(src):
+    """Shoulder launchers (Sind cannons + rocket tips), the arm rocket and the missile projectile (spec §8.3).
+
+    The Sind pods are 3 x 2 x 5 px; they are scaled by POD_SCALE about each pod centre so the launchers
+    read clearly. The panel clip is baked from cannons.fsk with the positions scaled the same way.
+    """
+    cannons_model = tbl(src, "cannons")
+    cannons = tabula2geo.convert(cannons_model, attach="armorBody")
+    rockets = tabula2geo.convert(tbl(src, "rockets"), attach="armorBody")
+    pods = {"leftcannon": "bone2", "rightcannon": "bone3"}
+    out_c, out_r = [b for b in cannons if b["name"] in ("armorBody", "suit", "Body2")], [b for b in rockets if b["name"] in ("armorBody", "Body2")]
+    for pod, tips in pods.items():
+        c = subtree_centre(cannons, pod)
+        out_c += scaled(subtree(cannons, pod), c, c, POD_SCALE)
+        out_r += scaled(subtree(rockets, tips), c, c, POD_SCALE)
+    write_geo("geo/ironman/missiles/shoulder_launchers.geo.json", cannons_model, out_c)
+    write_geo("geo/ironman/missiles/shoulder_rockets.geo.json", tbl(src, "rockets"), out_r)
+    write_b64("textures/entity/ironman/missiles/launcher.png", tex(src, "mark7/mark7_cannon"))
+    write_b64("textures/entity/ironman/missiles/rocket_tips.png", Image.open(os.path.join(src, "textures/heroes/rockets.png")).convert("RGBA"))
+
+    rest = {}
+
+    def walk(p):
+        rest[p["name"]] = (p["rotAX"], p["rotAY"], p["rotAZ"])
+        for ch in p.get("children", []):
+            walk(ch)
+
+    for part in cannons_model["parts"]:
+        walk(part)
+    script = open(os.path.join(src, "models/animations/cannons.fsk"), encoding="utf-8").read()
+    bones = fsk2anim.bake(script, fsk2anim.rest_of(rest), lambda t: {"data_0": t / 0.5}, 0.5, bones={b["name"] for b in out_c})
+    for entry in bones.values():
+        for key, frame in entry.get("position", {}).items():
+            entry["position"][key] = [round(v * POD_SCALE, 3) for v in frame]
+    path = os.path.join(RES, "animations/ironman/missiles.animation.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({"format_version": "1.8.0", "animations": {"open": {"loop": "hold_on_last_frame", "animation_length": 0.5, "bones": bones}}}, f, indent=1)
+        f.write("\n")
+
+    # Arm rocket and projectile: the Sind arm-rocket missile (1 x 3 x 1 px with fins).
+    arm_model = tbl(src, "armrocket")
+    arm = tabula2geo.convert(arm_model)
+    rocket = subtree(arm, "rocket")
+    c = centre(rocket)
+    # On the right forearm, sliding out past the fist (pose: posY); the rocket points along the arm.
+    on_arm = scaled(json.loads(json.dumps(rocket)), c, [-6.0, 13.0, -2.6], ROCKET_SCALE)
+    on_arm[0]["parent"] = "armorRightArm"
+    write_geo("geo/ironman/missiles/arm_rocket.geo.json", arm_model, [{"name": "armorRightArm", "pivot": [-5, 22, 0]}] + on_arm)
+    # Projectile: centred on the origin, then turned so the nose (Bedrock -y of the arm rocket) points along -z.
+    flying = scaled(json.loads(json.dumps(rocket)), c, [0.0, 0.0, 0.0], 2.0)
+    flying[0].pop("parent", None)
+    write_geo("geo/ironman/missiles/missile.geo.json", arm_model, [{"name": "missile", "pivot": [0, 0, 0], "rotation": [-90, 0, 0]}]
+              + [dict(b, parent=b.get("parent") or "missile") for b in flying])
+    write_b64("textures/entity/ironman/missiles/rocket.png", tex(src, "mark42/mark42_rocket"))
+
+
 def main(src, extracted):
     mark42(src)
     laser(src)
     hulkbuster(src, extracted)
+    missile_parts(src)
 
 
 if __name__ == "__main__":

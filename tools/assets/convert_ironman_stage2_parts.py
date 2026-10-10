@@ -67,13 +67,6 @@ def main(src):
     ], 64, 64)
     texture(src, "textures/models/shields/nano_shield.png", "nano_shield.png")
 
-    # Missile flaps: shoulder_rockets bone of full_body; drawn with the worn suit skin.
-    rockets = bones_of(src, "geo/armor_models/iron_man/full_body/main.geo.json")["shoulder_rockets"]
-    write_geo("geo/ironman/nano/shoulder_rockets.geo.json", [
-        {"name": "armorBody", "pivot": [0, 24, 0]},
-        {"name": "shoulder_rockets", "parent": "armorBody", "pivot": rockets["pivot"], "cubes": rockets["cubes"]},
-    ], 64, 64)
-
     # Forearm rocket launcher: third-person and first-person geo (the first-person file's bb_main has no player part).
     for name in ("rocket_launcher", "rocket_launcher_first_person"):
         launcher = bones_of(src, NANO + "each_arms/right/" + name + ".geo.json")["rocket_launcher"]

@@ -1,5 +1,8 @@
 package dev.baranhan.viltrumitecore.client.ironman;
 
+import dev.baranhan.viltrumitecore.client.anim.AnimCache;
+import dev.baranhan.viltrumitecore.client.anim.animation.Animation;
+import dev.baranhan.viltrumitecore.client.anim.animation.AnimationController;
 import dev.baranhan.viltrumitecore.client.anim.geo.BakedGeoModel;
 import dev.baranhan.viltrumitecore.client.anim.geo.GeoBone;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
@@ -8,9 +11,7 @@ import dev.baranhan.viltrumitecore.client.ironman.mark.MarkTextures;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
-import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool;
-import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import java.util.List;
 import java.util.WeakHashMap;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -21,8 +22,9 @@ import net.minecraft.util.Mth;
  * Stage 2 geo parts on the player (animation-system §7.1), converted from the
  * Satsu addon by tools/assets/convert_ironman_stage2_parts.py: the nano blade
  * (katar) or hammer (mallet) on the right fist, the shield plate on the left
- * forearm (nano texture, or the hex force field in a mark), the shoulder rockets and the nano forearm
- * rocket launcher while missiles are held, and the repulsor palm glow while
+ * forearm (nano texture, or the hex force field in a mark), the Sind shoulder
+ * launchers (every suit) and the nano forearm launcher with its rocket while
+ * missiles are held, and the repulsor palm glow while
  * charging. Forming and dissolving grow / shrink the weapon from the wrist
  * (nanite wave, spec §4.2, §8.4) from the synced NANO_ARSENAL timeline. Arm
  * parts are also drawn on the first-person arm.
@@ -31,7 +33,10 @@ public final class IronManCombatParts {
    public static final ResourceLocation BLADE = geo("nano_blade");
    public static final ResourceLocation HAMMER = geo("nano_hammer");
    public static final ResourceLocation SHIELD = geo("nano_shield");
-   public static final ResourceLocation ROCKETS = geo("shoulder_rockets");
+   public static final ResourceLocation LAUNCHERS = new ResourceLocation("viltrumitecore", "geo/ironman/missiles/shoulder_launchers.geo.json");
+   public static final ResourceLocation LAUNCHER_ROCKETS = new ResourceLocation("viltrumitecore", "geo/ironman/missiles/shoulder_rockets.geo.json");
+   public static final ResourceLocation ARM_ROCKET = new ResourceLocation("viltrumitecore", "geo/ironman/missiles/arm_rocket.geo.json");
+   public static final ResourceLocation MISSILE_CLIPS = new ResourceLocation("viltrumitecore", "animations/ironman/missiles.animation.json");
    public static final ResourceLocation LAUNCHER = geo("rocket_launcher");
    public static final ResourceLocation LAUNCHER_FIRST_PERSON = geo("rocket_launcher_first_person");
    private static final List<PlayerGeoLayer.Pass> BLADE_PASSES = List.of(PlayerGeoLayer.Pass.cutout(texture("nano_blade")), PlayerGeoLayer.Pass.glow(texture("nano_blade_glow")));
@@ -39,10 +44,20 @@ public final class IronManCombatParts {
    private static final List<PlayerGeoLayer.Pass> SHIELD_PASSES = List.of(PlayerGeoLayer.Pass.cutout(texture("nano_shield")));
    private static final List<PlayerGeoLayer.Pass> LAUNCHER_PASSES = List.of(PlayerGeoLayer.Pass.cutout(texture("rocket_launcher")));
    private static final List<PlayerGeoLayer.Pass> FIELD_PASSES = List.of(PlayerGeoLayer.Pass.glow(MarkTextures.ENERGY_SHIELD));
-   private static final List<PlayerGeoLayer.Pass> NANO_SKIN_PASSES = List.of(PlayerGeoLayer.Pass.cutout(IronManSuitTextures.SUIT), PlayerGeoLayer.Pass.glow(IronManSuitTextures.SUIT_GLOW));
+   private static final List<PlayerGeoLayer.Pass> LAUNCHER_POD_PASSES = List.of(PlayerGeoLayer.Pass.cutout(missileTexture("launcher")));
+   private static final List<PlayerGeoLayer.Pass> ROCKET_TIP_PASSES = List.of(PlayerGeoLayer.Pass.cutout(missileTexture("rocket_tips")));
+   private static final List<PlayerGeoLayer.Pass> ARM_ROCKET_PASSES = List.of(PlayerGeoLayer.Pass.cutout(missileTexture("rocket")));
+   /** Shoulder pods rise this far (px) out of the shoulders while open. */
+   private static final float POD_RISE = 2.5F;
+   /** The arm rocket slides this far (px) towards the fist. */
+   private static final float ARM_ROCKET_SLIDE = 3.0F;
+   /** Ticks the launchers stay open, empty, after the volley. */
+   private static final float FIRED_HOLD_TICKS = 12.0F;
+   /** Open / close speed of the launchers (1/s). */
+   private static final float LAUNCHER_RATE = 14.0F;
    /** Last formed weapon per player: the dissolve wave still knows what to shrink. */
    private static final WeakHashMap<AbstractClientPlayer, RightTool> LAST_WEAPON = new WeakHashMap<>();
-   /** Missile flap opening 0..1 and the frame time it was last stepped, per player (render thread). */
+   /** Per player: launcher opening 0..1, last step (s), last tick the missiles were held, loaded flag (render thread). */
    private static final WeakHashMap<AbstractClientPlayer, float[]> FLAPS = new WeakHashMap<>();
 
    private IronManCombatParts() {
@@ -105,41 +120,46 @@ public final class IronManCombatParts {
          return;
       }
 
+      boolean loaded = launchersLoaded(player);
       if (!mark) {
          out.add(new PlayerGeoLayer.Part(firstPerson ? LAUNCHER_FIRST_PERSON : LAUNCHER, LAUNCHER_PASSES, geo -> grow(geo, "rocket_launcher", k)));
+         out.add(new PlayerGeoLayer.Part(ARM_ROCKET, ARM_ROCKET_PASSES, geo -> armRocket(geo, k, loaded)));
       }
 
-      MarkId worn = IronManVariant.mark(snapshot.variant());
-      if (!firstPerson && ownShoulderRockets(worn)) {
-         List<PlayerGeoLayer.Pass> skin = worn == null || !mark ? NANO_SKIN_PASSES
-            : List.of(PlayerGeoLayer.Pass.cutout(MarkTextures.skin(worn)), PlayerGeoLayer.Pass.glow(MarkTextures.glow(worn)));
-         out.add(new PlayerGeoLayer.Part(ROCKETS, skin, geo -> rockets(geo, k)));
+      if (!firstPerson) {
+         out.add(new PlayerGeoLayer.Part(LAUNCHERS, LAUNCHER_POD_PASSES, geo -> pods(geo, k)));
+         out.add(new PlayerGeoLayer.Part(LAUNCHER_ROCKETS, ROCKET_TIP_PASSES, geo -> rocketTips(geo, k, loaded)));
       }
    }
 
    /**
-    * Smoothed missile flap opening 0..1 (held missiles or the synced flap flag).
-    * Stepped once per frame, so both views and the mark flap parts share it.
+    * Launcher opening 0..1: open while the missiles are held (or the synced flap
+    * flag), held open and empty for a moment after the volley, then closed.
+    * Eased by real time, so it runs the same at any frame rate.
     */
    public static float flapOpen(AbstractClientPlayer player, HeroPublicSnapshot snapshot, float partialTick) {
-      float[] flap = FLAPS.computeIfAbsent(player, p -> new float[]{0.0F, -1.0F});
+      float[] st = FLAPS.computeIfAbsent(player, p -> new float[]{0.0F, Float.NaN, -1000.0F, 0.0F});
       float now = player.tickCount + partialTick;
-      if (now != flap[1]) {
-         boolean open = IronManFlags.is(snapshot.heroFlags(), IronManFlags.Field.MISSILE_FLAPS) || IronManView.channel(snapshot, HeroAction.MISSILES);
-         flap[0] = Mth.lerp(0.25F, flap[0], open ? 1.0F : 0.0F);
-         flap[1] = now;
+      boolean held = IronManFlags.is(snapshot.heroFlags(), IronManFlags.Field.MISSILE_FLAPS) || IronManView.channel(snapshot, HeroAction.MISSILES);
+      if (held) {
+         st[2] = now;
+         st[3] = 1.0F;
+      } else if (now - st[2] > FIRED_HOLD_TICKS || now < st[2]) {
+         st[3] = 0.0F;
       }
 
-      return flap[0];
+      boolean open = held || now - st[2] <= FIRED_HOLD_TICKS && now >= st[2];
+      float seconds = System.nanoTime() / 1.0E9F;
+      float dt = Float.isNaN(st[1]) ? 0.0F : Math.min(0.1F, seconds - st[1]);
+      st[1] = seconds;
+      st[0] = Mth.lerp(1.0F - (float)Math.exp(-LAUNCHER_RATE * dt), st[0], open ? 1.0F : 0.0F);
+      return st[0];
    }
 
-   /**
-    * The full_body shoulder rockets of the nano and most marks. Mark 7 and War
-    * Machine open their own Satsu flaps / shoulder modules (spec §3.1), and the
-    * Sind Mark 42 has no full_body geometry.
-    */
-   private static boolean ownShoulderRockets(MarkId worn) {
-      return worn != MarkId.MARK_7 && worn != MarkId.WAR_MACHINE_MK2 && worn != MarkId.MARK_42;
+   /** Rockets sit in the tubes while the missiles are held; empty after the volley. */
+   private static boolean launchersLoaded(AbstractClientPlayer player) {
+      float[] st = FLAPS.get(player);
+      return st != null && st[3] > 0.5F && st[2] >= player.tickCount - 1;
    }
 
    private static void grow(BakedGeoModel geo, String bone, float scale) {
@@ -166,18 +186,53 @@ public final class IronManCombatParts {
       }
    }
 
-   /** Satsu shoulder_rockets clip: the rockets slide up and forward out of the shoulders (offset -1, 1, -2 px). */
-   private static void rockets(BakedGeoModel geo, float open) {
-      GeoBone rockets = geo.getBone("shoulder_rockets");
-      if (rockets != null) {
-         rockets.posX = -open;
-         rockets.posY = open;
-         rockets.posZ = -2.0F * open;
+   /** Sind shoulder pods: rise out of the shoulders, side panels open (cannons.fsk, baked). */
+   private static void pods(BakedGeoModel geo, float open) {
+      Animation clip = AnimCache.animation(MISSILE_CLIPS, "open");
+      if (clip != null) {
+         AnimationController.seek(clip, geo, open * clip.lengthSeconds());
+      }
+
+      for (String pod : new String[]{"leftcannon", "rightcannon"}) {
+         GeoBone bone = geo.getBone(pod);
+         if (bone != null) {
+            bone.posY = POD_RISE * open;
+         }
+      }
+   }
+
+   /** Rocket tips rise with the pods; the rows are empty after the volley (hidden is not reset, set every frame). */
+   private static void rocketTips(BakedGeoModel geo, float open, boolean loaded) {
+      for (String side : new String[]{"bone2", "bone3"}) {
+         GeoBone bone = geo.getBone(side);
+         if (bone != null) {
+            bone.posY = POD_RISE * open;
+         }
+      }
+
+      for (String row : new String[]{"leftrockets1", "leftrockets2", "leftrockets3", "rightrockets1", "rightrockets2", "rightrockets3"}) {
+         GeoBone bone = geo.getBone(row);
+         if (bone != null) {
+            bone.hidden = !loaded;
+         }
+      }
+   }
+
+   /** The arm rocket slides out past the fist while loaded. */
+   private static void armRocket(BakedGeoModel geo, float open, boolean loaded) {
+      GeoBone rocket = geo.getBone("rocket");
+      if (rocket != null) {
+         rocket.posY = -ARM_ROCKET_SLIDE * open;
+         rocket.hidden = !loaded || open < 0.05F;
       }
    }
 
    private static ResourceLocation geo(String name) {
       return new ResourceLocation("viltrumitecore", "geo/ironman/nano/" + name + ".geo.json");
+   }
+
+   private static ResourceLocation missileTexture(String name) {
+      return new ResourceLocation("viltrumitecore", "textures/entity/ironman/missiles/" + name + ".png");
    }
 
    private static ResourceLocation texture(String name) {

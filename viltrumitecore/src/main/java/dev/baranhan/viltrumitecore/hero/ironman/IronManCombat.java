@@ -465,7 +465,8 @@ public final class IronManCombat {
          Entity target = targets.isEmpty() ? null : level.getEntity(targets.get(i % targets.size()));
          float offset = MissileLock.fanOffset(i, count);
          Vec3 dir = look.yRot((float)Math.toRadians(-offset)).add(0.0, 0.12, 0.0).normalize();
-         Vec3 from = player.getEyePosition().add(0.0, -0.25, 0.0).add(right.scale(i % 2 == 0 ? 0.35 : -0.35)).add(look.scale(0.2));
+         // From the shoulder launchers, alternating sides.
+         Vec3 from = player.position().add(0.0, player.getBbHeight() * 0.78, 0.0).add(right.scale(i % 2 == 0 ? 0.3 : -0.3)).add(look.scale(0.15));
          MicroMissileEntity.launch(player, from, dir, target, damageMul);
       }
 
