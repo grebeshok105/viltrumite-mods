@@ -3,9 +3,9 @@
   "minecraft:geometry": [
     {
       "description": {
-        "identifier": "geometry.viltrumitecore.ironman_mark_booster_blast",
-        "texture_width": 32,
-        "texture_height": 32
+        "identifier": "geometry.viltrumitecore.booster_blast",
+        "texture_width": 4,
+        "texture_height": 4
       },
       "bones": [
         {
@@ -18,83 +18,137 @@
         },
         {
           "name": "boosterBlast",
-          "pivot": [
-            0,
-            9.0,
-            4.0
-          ],
           "parent": "armorBody",
+          "pivot": [
+            0.0,
+            16.96716,
+            5.6644
+          ],
           "cubes": [
             {
               "origin": [
-                -2.6,
-                1.0,
-                3.4
+                3.55479,
+                13.96716,
+                4.81443
               ],
               "size": [
-                5.2,
-                8.0,
-                1.2
+                1.2,
+                3,
+                1.7
+              ],
+              "pivot": [
+                4.25479,
+                14.96716,
+                4.76443
+              ],
+              "rotation": [
+                7.5,
+                4.95,
+                -0.65
               ],
               "uv": {
-                "up": {
+                "north": {
                   "uv": [
-                    1.2,
+                    3,
                     0
                   ],
                   "uv_size": [
-                    5.2,
-                    1.2
+                    -3,
+                    3
                   ]
                 },
-                "down": {
+                "east": {
                   "uv": [
-                    6.4,
+                    3,
                     0
                   ],
                   "uv_size": [
-                    5.2,
-                    1.2
+                    -3,
+                    3
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -4.75479,
+                13.96716,
+                4.81443
+              ],
+              "size": [
+                1.2,
+                3,
+                1.7
+              ],
+              "pivot": [
+                -4.25479,
+                14.96716,
+                4.76443
+              ],
+              "rotation": [
+                7.5,
+                -4.95,
+                0.65
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
                   ]
                 },
                 "east": {
                   "uv": [
                     0,
-                    1.2
+                    0
                   ],
                   "uv_size": [
-                    1.2,
-                    8.0
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    1.2,
-                    1.2
-                  ],
-                  "uv_size": [
-                    5.2,
-                    8.0
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    6.4,
-                    1.2
-                  ],
-                  "uv_size": [
-                    1.2,
-                    8.0
+                    3,
+                    3
                   ]
                 },
                 "south": {
                   "uv": [
-                    7.6,
-                    1.2
+                    0,
+                    0
                   ],
                   "uv_size": [
-                    5.2,
-                    8.0
+                    3,
+                    3
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
                   ]
                 }
               }

@@ -1,18 +1,19 @@
 package dev.baranhan.viltrumitecore.client.ironman.veronica;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.baranhan.viltrumitecore.client.anim.AnimCache;
 import dev.baranhan.viltrumitecore.client.anim.geo.BakedGeoModel;
-import dev.baranhan.viltrumitecore.client.anim.render.AnimRenderer;
+import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
+import dev.baranhan.viltrumitecore.client.ironman.ThrusterFlames;
 import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
-import dev.baranhan.viltrumitecore.client.ironman.mark.MarkTextures;
-import dev.baranhan.viltrumitecore.client.ironman.mark.PlateParts;
+import dev.baranhan.viltrumitecore.client.ironman.mark.Mark42Parts;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkParts;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManMarkSounds;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.EquipTimeline;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.SuitPart;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -20,9 +21,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -49,6 +49,9 @@ import org.joml.Vector3f;
 public final class PartFlightVisuals {
    /** Player render scale: the geo body frame is drawn at this size. */
    public static final float BODY_SCALE = 0.9375F;
+   /** Sind Mark 42 piece thrusters while flying in (additive, thruster flame texture). */
+   private static final List<PlayerGeoLayer.Pass> FIRE_PASSES = List.of(PlayerGeoLayer.Pass.glow(ThrusterFlames.texture(3), 0.45F, 0.8F, 1.0F),
+      PlayerGeoLayer.Pass.glow(ThrusterFlames.texture(3), 0.8F, 0.9F, 1.0F));
    private static int lastElapsed = -1;
 
    private PartFlightVisuals() {
@@ -79,12 +82,12 @@ public final class PartFlightVisuals {
          return null;
       }
 
-      BakedGeoModel geo = AnimCache.model(PlateParts.geo(parts.get(index)));
+      BakedGeoModel geo = AnimCache.model(MarkParts.geo(state.mark(), parts.get(index)));
       if (geo == null) {
          return null;
       }
 
-      Vec3 target = anchor(player, PlateParts.centre(geo), partialTick);
+      Vec3 target = anchor(player, MarkParts.centre(geo), partialTick);
       return PartFlight.position(state.launch(), target, EquipTimeline.phaseProgress(index, count, true, elapsed));
    }
 
@@ -126,14 +129,14 @@ public final class PartFlightVisuals {
                continue;
             }
 
-            BakedGeoModel geo = AnimCache.model(PlateParts.geo(parts.get(i)));
+            BakedGeoModel geo = AnimCache.model(MarkParts.geo(state.mark(), parts.get(i)));
             if (geo == null) {
                continue;
             }
 
             float progress = EquipTimeline.phaseProgress(i, parts.size(), true, state.elapsed() + partialTick);
             float tumble = PartFlight.tumble(progress);
-            Vec3 centre = PlateParts.centre(geo);
+            Vec3 centre = MarkParts.centre(geo);
             stack.pushPose();
             stack.translate(at.x - camera.x, at.y - camera.y, at.z - camera.z);
             stack.mulPose(Axis.YP.rotationDegrees(180.0F - bodyYaw(player, partialTick)));
@@ -142,10 +145,13 @@ public final class PartFlightVisuals {
             stack.scale(BODY_SCALE, BODY_SCALE, BODY_SCALE);
             stack.translate(-centre.x, -centre.y, -centre.z);
             geo.resetBones();
-            VertexConsumer skin = buffers.getBuffer(RenderType.entityCutoutNoCull(MarkTextures.skin(state.mark())));
-            AnimRenderer.render(geo, stack, null, skin, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F, null);
-            VertexConsumer glow = buffers.getBuffer(RenderType.eyes(MarkTextures.glow(state.mark())));
-            AnimRenderer.render(geo, stack, null, glow, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F, null);
+            MarkParts.draw(geo, stack, buffers, MarkParts.passes(state.mark(), parts.get(i)), LightTexture.FULL_BRIGHT, 1.0F);
+            ResourceLocation fire = state.mark() == MarkId.MARK_42 ? Mark42Parts.fire(parts.get(i)) : null;
+            BakedGeoModel flame = fire == null ? null : AnimCache.model(fire);
+            if (flame != null) {
+               flame.resetBones();
+               MarkParts.draw(flame, stack, buffers, FIRE_PASSES, LightTexture.FULL_BRIGHT, 1.0F);
+            }
             stack.popPose();
          }
       }

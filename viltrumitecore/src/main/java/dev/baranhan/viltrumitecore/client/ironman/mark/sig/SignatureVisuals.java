@@ -1,9 +1,13 @@
 package dev.baranhan.viltrumitecore.client.ironman.mark.sig;
 
+import dev.baranhan.viltrumitecore.client.anim.AnimCache;
+import dev.baranhan.viltrumitecore.client.anim.animation.Animation;
+import dev.baranhan.viltrumitecore.client.anim.animation.AnimationController;
 import dev.baranhan.viltrumitecore.client.anim.geo.GeoBone;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
 import dev.baranhan.viltrumitecore.client.ironman.ThrusterFlames;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkExtras;
 import dev.baranhan.viltrumitecore.entity.ViltrumiteEntities;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
@@ -11,6 +15,7 @@ import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import java.util.List;
+import java.util.WeakHashMap;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -35,8 +40,14 @@ public final class SignatureVisuals {
 
    private static final List<PlayerGeoLayer.Pass> LASER_IDLE = List.of(cutout("laser"), glow("laser_glow", 0.55F));
    private static final List<PlayerGeoLayer.Pass> LASER_LIVE = List.of(cutout("laser"), glow("laser_glow", 1.0F));
-   private static final List<PlayerGeoLayer.Pass> BOOSTER_PASSES = List.of(cutout("booster"), glow("booster_glow", 1.0F));
-   private static final List<PlayerGeoLayer.Pass> TURRET_PASSES = List.of(cutout("turret"), glow("turret_glow", 1.0F));
+   /** Satsu Mark 39 jetpack and War Machine turret: drawn with the raw Satsu suit textures. */
+   private static final List<PlayerGeoLayer.Pass> BOOSTER_PASSES = MarkExtras.passes(MarkId.MARK_39);
+   private static final List<PlayerGeoLayer.Pass> TURRET_PASSES = MarkExtras.passes(MarkId.WAR_MACHINE_MK2);
+   private static final ResourceLocation TURRET_CLIPS = new ResourceLocation("viltrumitecore", "animations/ironman/marks/war_machine_turret.animation.json");
+   /** Satsu start_on clip: the gun swings over the shoulder by 0.83 s. */
+   private static final double TURRET_UNFOLD_SECONDS = 0.8333;
+   /** Turret unfold 0..1 and the frame time it was last stepped, per player (render thread). */
+   private static final WeakHashMap<AbstractClientPlayer, float[]> TURRET_OPEN = new WeakHashMap<>();
    private static final List<PlayerGeoLayer.Pass> GLOVE_PASSES = List.of(cutout("glove"));
 
    private SignatureVisuals() {
@@ -85,8 +96,14 @@ public final class SignatureVisuals {
             }
          }
          case WAR_MACHINE_MK2 -> {
-            float yaw = turretYaw(player, snapshot, partialTick);
+            float open = turretOpen(player, active, partialTick);
+            float yaw = turretYaw(player, snapshot, partialTick) * open;
             out.add(new PlayerGeoLayer.Part(TURRET, TURRET_PASSES, geo -> {
+               Animation unfold = AnimCache.animation(TURRET_CLIPS, "start_on");
+               if (unfold != null && open > 0.0F) {
+                  AnimationController.seek(unfold, geo, open * TURRET_UNFOLD_SECONDS);
+               }
+
                GeoBone turret = geo.getBone("turret");
                if (turret != null) {
                   turret.rotY = yaw;
@@ -120,6 +137,18 @@ public final class SignatureVisuals {
       float speed = (float)Mth.clamp(player.getDeltaMovement().horizontalDistance() * 4.0, 0.0, 1.0);
       float alpha = 0.12F + 0.5F * speed + (player.swinging ? 0.3F : 0.0F);
       return new PlayerGeoLayer.Pass(texture("camo_ripple"), PlayerGeoLayer.Pass.Kind.GLOW, 0.75F, 0.92F, 1.0F, alpha);
+   }
+
+   /** Smoothed turret unfold: the folded gun on the back swings out while the signature fires. */
+   private static float turretOpen(AbstractClientPlayer player, boolean active, float partialTick) {
+      float[] open = TURRET_OPEN.computeIfAbsent(player, p -> new float[]{0.0F, -1.0F});
+      float now = player.tickCount + partialTick;
+      if (now != open[1]) {
+         open[0] = Mth.lerp(0.2F, open[0], active ? 1.0F : 0.0F);
+         open[1] = now;
+      }
+
+      return open[0];
    }
 
    /** Turret yaw (radians) that turns the barrel towards the synced aim point, relative to the body. */

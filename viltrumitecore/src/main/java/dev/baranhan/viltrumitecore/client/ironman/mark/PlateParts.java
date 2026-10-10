@@ -26,33 +26,7 @@ public final class PlateParts {
       return new ResourceLocation("viltrumitecore", "geo/ironman/marks/plates/" + key(part) + ".geo.json");
    }
 
-   /** Rest geometry centre in block units, parsed frame (the frame AnimRenderer draws in). */
    public static Vec3 centre(BakedGeoModel geo) {
-      float minX = Float.MAX_VALUE;
-      float minY = Float.MAX_VALUE;
-      float minZ = Float.MAX_VALUE;
-      float maxX = -Float.MAX_VALUE;
-      float maxY = -Float.MAX_VALUE;
-      float maxZ = -Float.MAX_VALUE;
-      for (GeoBone bone : geo.allBones()) {
-         for (GeoBone.Cube cube : bone.cubes) {
-            for (GeoBone.Quad quad : cube.quads()) {
-               for (GeoBone.Vertex v : quad.vertices()) {
-                  minX = Math.min(minX, v.x());
-                  minY = Math.min(minY, v.y());
-                  minZ = Math.min(minZ, v.z());
-                  maxX = Math.max(maxX, v.x());
-                  maxY = Math.max(maxY, v.y());
-                  maxZ = Math.max(maxZ, v.z());
-               }
-            }
-         }
-      }
-
-      if (minX > maxX) {
-         return Vec3.ZERO;
-      }
-
-      return new Vec3((minX + maxX) / 2.0, (minY + maxY) / 2.0, (minZ + maxZ) / 2.0);
+      return MarkParts.centre(geo);
    }
 }
