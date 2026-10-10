@@ -119,3 +119,10 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 
 ## Topic files
 - `decompile.md`: decompile artifacts and their fixes.
+## Iron Man polish (core 1.24.0)
+- RMB: any item in either hand keeps vanilla use (`IronManHero.handsBusy`); NANO_BLADE has no RMB (dash removed from input).
+- Pages: 0-3 combat (Unibeam, missiles, arsenal, countermeasures), 6-9 scan, Veronica, helmet, suit. `HeroDefinition.previousDefaultLoadouts` + `HeroRegistry.isPreviousDefault`: an untouched old default is reset to the new one on login.
+- Icons: `tools/assets/make_ironman_icons_v3.py` (supersedes make_ironman_icons/stage2/4/5 icon art), renderer `tools/assets/icon_figure.py`.
+- Scan locks once (`ScanProgress` lock + `IronManJarvis.lockCandidate`, cone `SCAN_LOCK_CONE_DEG`), no aim needed after.
+- Suit stats: `SUIT_HEALTH_BONUS` max-health modifier while armored; nano/mark armor and toughness doubled (armor capped 30), Hulkbuster 800/30.
+- Mark faceplate: rigid 90° turn about head centre (geo pivot 0,28,0); glow layer uses `HelmetAnim.progress` like the skin; `HelmetAnim` snaps (no close replay / gesture) for `SETTLE_TICKS` after a mark is fully on.

@@ -41,7 +41,9 @@ public class IronManSkinLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
       if (mark.markOn()) {
          if (mark.full()) {
             PlayerModel<AbstractClientPlayer> body = this.getParentModel();
-            ResourceLocation markGlow = MarkSkins.INSTANCE.glow(mark.mark(), !mark.helmetClosed());
+            // Same switch as the skin (MarkVisuals.skin): the open glow until the plate is fully down,
+            // otherwise the closed glow's eyes flash over Tony's face the moment the helmet starts closing.
+            ResourceLocation markGlow = MarkSkins.INSTANCE.glow(mark.mark(), HelmetAnim.progress(player, snapshot, partialTick) < 0.999F);
             float pulse = 0.85F + 0.15F * (float)Math.sin(ageInTicks * 0.12F);
             body.renderToBuffer(poseStack, buffers.getBuffer(RenderType.eyes(markGlow)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, pulse, pulse, pulse, 1.0F);
          }

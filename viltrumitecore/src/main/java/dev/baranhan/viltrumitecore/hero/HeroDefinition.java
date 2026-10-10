@@ -119,6 +119,14 @@ public interface HeroDefinition {
    /** Default slot contents applied on hero enter. Length 18, "" for empty. */
    String[] defaultLoadout();
 
+   /**
+    * Former default layouts of this hero. A save that still holds one of them
+    * exactly (the player never rearranged it) is moved to {@link #defaultLoadout()}.
+    */
+   default String[][] previousDefaultLoadouts() {
+      return new String[0][];
+   }
+
    /** May this target be placed under the given control kind right now. */
    boolean allowsExternalControl(LivingEntity target, ControlKind kind);
 

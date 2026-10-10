@@ -43,15 +43,23 @@ class ScanTest {
    }
 
    @Test
-   void targetChangeResets() {
+   void lockedTargetKeepsScanningWithoutAim() {
       ScanProgress scan = started();
+      assertTrue(scan.seeking());
       for (int i = 0; i < 20; i++) {
          scan.tick(7, true, 10, true, true);
       }
 
+      // Another entity offered (crosshair moved): the lock stays, no aim needed.
       scan.tick(8, true, 10, true, true);
-      assertEquals(8, scan.targetId());
-      assertEquals(1, scan.ticks());
+      assertEquals(7, scan.targetId());
+      assertEquals(21, scan.ticks());
+      assertEquals(7, scan.resolve(8));
+      for (int i = 0; i < 8; i++) {
+         scan.tick(-1, true, 10, true, true);
+      }
+
+      assertSame(ScanProgress.Event.DONE, scan.tick(-1, true, 10, true, true));
    }
 
    @Test

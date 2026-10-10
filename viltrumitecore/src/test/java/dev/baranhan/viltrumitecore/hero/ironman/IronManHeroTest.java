@@ -40,18 +40,20 @@ class IronManHeroTest {
       String[] loadout = this.hero.defaultLoadout();
       assertEquals(18, loadout.length);
       // Page 2 starts at slot 6; the fifth key (B) is index 4 of the page.
-      assertEquals(IronManAbilities.SUIT, loadout[6 + 4]);
+      assertEquals(IronManAbilities.SUIT, loadout[IronManAbilities.SUIT_SLOT]);
       // Page 1 (spec §6.2): Unibeam, missiles, nano arsenal.
       assertEquals(IronManAbilities.UNIBEAM, loadout[0]);
       assertEquals(IronManAbilities.MISSILES, loadout[1]);
       assertEquals(IronManAbilities.NANO_ARSENAL, loadout[2]);
       // Page 2 (spec §6.2): scan, countermeasures, Veronica, helmet, suit, (Legion reserved).
+      // Page 1 also has the countermeasures; page 2: scan, Veronica, helmet, suit.
+      assertEquals(IronManAbilities.COUNTERMEASURES, loadout[3]);
       assertEquals(IronManAbilities.SCAN, loadout[6]);
-      assertEquals(IronManAbilities.COUNTERMEASURES, loadout[7]);
-      assertEquals(IronManAbilities.VERONICA, loadout[8]);
-      assertEquals(IronManAbilities.HELMET, loadout[9]);
-      for (int i = 3; i < 18; i++) {
-         if (i < 6 || i > 10) {
+      assertEquals(IronManAbilities.VERONICA, loadout[7]);
+      assertEquals(IronManAbilities.HELMET, loadout[8]);
+      assertEquals(IronManAbilities.SUIT, loadout[9]);
+      for (int i = 4; i < 18; i++) {
+         if (i < 6 || i > 9) {
             assertEquals("", loadout[i], "slot " + i);
          }
       }
