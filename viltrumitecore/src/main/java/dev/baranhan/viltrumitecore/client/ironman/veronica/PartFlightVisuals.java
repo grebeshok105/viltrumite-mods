@@ -6,7 +6,6 @@ import dev.baranhan.viltrumitecore.client.anim.AnimCache;
 import dev.baranhan.viltrumitecore.client.anim.geo.BakedGeoModel;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
-import dev.baranhan.viltrumitecore.client.ironman.ThrusterFlames;
 import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
 import dev.baranhan.viltrumitecore.client.ironman.mark.Mark42Parts;
 import dev.baranhan.viltrumitecore.client.ironman.mark.MarkParts;
@@ -49,9 +48,6 @@ import org.joml.Vector3f;
 public final class PartFlightVisuals {
    /** Player render scale: the geo body frame is drawn at this size. */
    public static final float BODY_SCALE = 0.9375F;
-   /** Sind Mark 42 piece thrusters while flying in (additive, thruster flame texture). */
-   private static final List<PlayerGeoLayer.Pass> FIRE_PASSES = List.of(PlayerGeoLayer.Pass.glow(ThrusterFlames.texture(3), 0.45F, 0.8F, 1.0F),
-      PlayerGeoLayer.Pass.glow(ThrusterFlames.texture(3), 0.8F, 0.9F, 1.0F));
    private static int lastElapsed = -1;
 
    private PartFlightVisuals() {
@@ -150,7 +146,9 @@ public final class PartFlightVisuals {
             BakedGeoModel flame = fire == null ? null : AnimCache.model(fire);
             if (flame != null) {
                flame.resetBones();
-               MarkParts.draw(flame, stack, buffers, FIRE_PASSES, LightTexture.FULL_BRIGHT, 1.0F);
+               // Sind repulsor_layer: an animated additive flame texture.
+               List<PlayerGeoLayer.Pass> fireTex = List.of(PlayerGeoLayer.Pass.glow(Mark42Parts.fireTexture(player.tickCount / 4)));
+               MarkParts.draw(flame, stack, buffers, fireTex, LightTexture.FULL_BRIGHT, 1.0F);
             }
             stack.popPose();
          }

@@ -3,10 +3,12 @@ package dev.baranhan.viltrumitecore.client.ironman.mark.sig;
 import dev.baranhan.viltrumitecore.client.anim.AnimCache;
 import dev.baranhan.viltrumitecore.client.anim.animation.Animation;
 import dev.baranhan.viltrumitecore.client.anim.animation.AnimationController;
+import dev.baranhan.viltrumitecore.client.anim.geo.BakedGeoModel;
 import dev.baranhan.viltrumitecore.client.anim.geo.GeoBone;
 import dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer;
 import dev.baranhan.viltrumitecore.client.ironman.IronManView;
 import dev.baranhan.viltrumitecore.client.ironman.ThrusterFlames;
+import dev.baranhan.viltrumitecore.client.ironman.mark.Mark42Parts;
 import dev.baranhan.viltrumitecore.client.ironman.mark.MarkExtras;
 import dev.baranhan.viltrumitecore.entity.ViltrumiteEntities;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
@@ -14,6 +16,7 @@ import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.SuitPart;
 import java.util.List;
 import java.util.WeakHashMap;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -35,11 +38,12 @@ public final class SignatureVisuals {
    static final ResourceLocation BOOSTER = geo("booster");
    static final ResourceLocation BLAST = geo("booster_blast");
    static final ResourceLocation TURRET = geo("turret");
-   static final ResourceLocation GLOVE = geo("glove");
+   /** Mark 42 right gauntlet piece (Sind): stays on the hand until the rocket fist launches. */
+   static final ResourceLocation GLOVE = Mark42Parts.geo(SuitPart.FOURTEEN.get(5));
    static final ResourceLocation CAMO = geo("camo_shell");
 
-   private static final List<PlayerGeoLayer.Pass> LASER_IDLE = List.of(cutout("laser"), glow("laser_glow", 0.55F));
-   private static final List<PlayerGeoLayer.Pass> LASER_LIVE = List.of(cutout("laser"), glow("laser_glow", 1.0F));
+   /** Sind mk6 laser on the right forearm; the pack gives it no lights texture. */
+   private static final List<PlayerGeoLayer.Pass> LASER_PASSES = List.of(cutout("laser"));
    /** Satsu Mark 39 jetpack and War Machine turret: drawn with the raw Satsu suit textures. */
    private static final List<PlayerGeoLayer.Pass> BOOSTER_PASSES = MarkExtras.passes(MarkId.MARK_39);
    private static final List<PlayerGeoLayer.Pass> TURRET_PASSES = MarkExtras.passes(MarkId.WAR_MACHINE_MK2);
@@ -48,7 +52,7 @@ public final class SignatureVisuals {
    private static final double TURRET_UNFOLD_SECONDS = 0.8333;
    /** Turret unfold 0..1 and the frame time it was last stepped, per player (render thread). */
    private static final WeakHashMap<AbstractClientPlayer, float[]> TURRET_OPEN = new WeakHashMap<>();
-   private static final List<PlayerGeoLayer.Pass> GLOVE_PASSES = List.of(cutout("glove"));
+   private static final List<PlayerGeoLayer.Pass> GLOVE_PASSES = Mark42Parts.passes(SuitPart.FOURTEEN.get(5));
 
    private SignatureVisuals() {
    }
@@ -76,7 +80,7 @@ public final class SignatureVisuals {
       int flags = snapshot.heroFlags();
       boolean active = IronManFlags.is(flags, IronManFlags.Field.SIGNATURE_ACTIVE);
       switch (mark) {
-         case MARK_7 -> out.add(new PlayerGeoLayer.Part(LASER, active ? LASER_LIVE : LASER_IDLE));
+         case MARK_7 -> out.add(new PlayerGeoLayer.Part(LASER, LASER_PASSES, active ? SignatureVisuals::laserOut : null));
          case MARK_42 -> {
             if (!active) {
                out.add(new PlayerGeoLayer.Part(GLOVE, GLOVE_PASSES));
@@ -137,6 +141,25 @@ public final class SignatureVisuals {
       float speed = (float)Mth.clamp(player.getDeltaMovement().horizontalDistance() * 4.0, 0.0, 1.0);
       float alpha = 0.12F + 0.5F * speed + (player.swinging ? 0.3F : 0.0F);
       return new PlayerGeoLayer.Pass(texture("camo_ripple"), PlayerGeoLayer.Pass.Kind.GLOW, 0.75F, 0.92F, 1.0F, alpha);
+   }
+
+   /** Sind mk6laser clip at full charge: the emitter rises out of the cover (Java pixels: y down, here y up). */
+   private static void laserOut(BakedGeoModel geo) {
+      GeoBone laser = geo.getBone("laser");
+      GeoBone emitter = geo.getBone("emitter");
+      GeoBone cover = geo.getBone("coverLayer");
+      if (laser != null) {
+         laser.rotZ = laser.initRotZ + (float)Math.toRadians(10.0);
+         laser.posX = -0.75F;
+      }
+
+      if (emitter != null) {
+         emitter.posY = 1.0F;
+      }
+
+      if (cover != null) {
+         cover.posX = 0.45F;
+      }
    }
 
    /** Smoothed turret unfold: the folded gun on the back swings out while the signature fires. */

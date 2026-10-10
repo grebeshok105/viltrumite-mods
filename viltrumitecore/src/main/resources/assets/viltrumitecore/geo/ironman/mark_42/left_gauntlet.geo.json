@@ -3,50 +3,59 @@
   "minecraft:geometry": [
     {
       "description": {
-        "identifier": "geometry.viltrumitecore.fist",
+        "identifier": "geometry.viltrumitecore.left_gauntlet",
         "texture_width": 160,
         "texture_height": 160
       },
       "bones": [
         {
-          "name": "glove",
+          "name": "armorLeftArm",
           "pivot": [
-            0.0,
-            0.0,
+            6.0,
+            18.0,
             0.0
           ]
         },
         {
-          "name": "42ArmRight",
+          "name": "42ArmLeft",
           "pivot": [
-            1.2999999999999998,
-            4.199999999999999,
+            4.7,
+            22.2,
             0.0
           ],
-          "parent": "glove"
+          "parent": "armorLeftArm"
         },
         {
-          "name": "rightGauntlet",
+          "name": "leftGauntlet",
           "pivot": [
-            0.5499999999999998,
-            5.5,
+            5.725,
+            23.5,
             0.0
           ],
-          "parent": "42ArmRight"
+          "parent": "42ArmLeft"
         },
         {
-          "name": "rightGauntlet1",
+          "name": "leftGauntlet1",
           "pivot": [
-            0.5499999999999998,
-            4.5,
+            5.725,
+            22.5,
             0.0
           ],
-          "parent": "rightGauntlet",
+          "parent": "leftGauntlet"
+        },
+        {
+          "name": "Left_Arm",
+          "pivot": [
+            10.725,
+            0.5,
+            0.0
+          ],
+          "parent": "leftGauntlet1",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                4.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -58,24 +67,32 @@
                 32,
                 112
               ],
-              "inflate": 0.025,
-              "mirror": true
+              "inflate": 0.025
             }
           ]
         },
         {
-          "name": "rightGauntlet2",
+          "name": "leftGauntlet2",
           "pivot": [
-            0.5499999999999998,
-            5.5,
+            5.725,
+            23.5,
             0.0
           ],
-          "parent": "rightGauntlet",
+          "parent": "leftGauntlet"
+        },
+        {
+          "name": "Left_Arm_1",
+          "pivot": [
+            10.725,
+            1.5,
+            0.0
+          ],
+          "parent": "leftGauntlet2",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                4.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -87,24 +104,32 @@
                 80,
                 112
               ],
-              "inflate": 0.025,
-              "mirror": true
+              "inflate": 0.025
             }
           ]
         },
         {
-          "name": "rightGauntlet3",
+          "name": "leftGauntlet3",
           "pivot": [
-            0.5499999999999998,
-            6.5,
+            5.725,
+            24.5,
             0.0
           ],
-          "parent": "rightGauntlet",
+          "parent": "leftGauntlet"
+        },
+        {
+          "name": "Left_Arm_2",
+          "pivot": [
+            10.725,
+            2.5,
+            0.0
+          ],
+          "parent": "leftGauntlet3",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                4.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -116,24 +141,32 @@
                 128,
                 96
               ],
-              "inflate": 0.025,
-              "mirror": true
+              "inflate": 0.025
             }
           ]
         },
         {
-          "name": "rightGauntletLayer",
+          "name": "leftGauntletLayer",
           "pivot": [
-            0.5499999999999998,
-            6.5,
+            5.725,
+            24.5,
             0.0
           ],
-          "parent": "rightGauntlet",
+          "parent": "leftGauntlet"
+        },
+        {
+          "name": "Left_Arm_3",
+          "pivot": [
+            10.725,
+            0.5,
+            0.0
+          ],
+          "parent": "leftGauntletLayer",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                4.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -145,24 +178,32 @@
                 128,
                 112
               ],
-              "inflate": 0.525,
-              "mirror": true
+              "inflate": 0.525
             }
           ]
         },
         {
-          "name": "rightGauntletElbow",
+          "name": "leftGauntletElbow",
           "pivot": [
-            0.5499999999999998,
-            4.5,
+            5.725,
+            22.5,
             0.0
           ],
-          "parent": "rightGauntlet",
+          "parent": "leftGauntlet"
+        },
+        {
+          "name": "Left_Arm_4",
+          "pivot": [
+            10.725,
+            3.5,
+            0.0
+          ],
+          "parent": "leftGauntletElbow",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                4.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -174,8 +215,7 @@
                 112,
                 128
               ],
-              "inflate": 0.025,
-              "mirror": true
+              "inflate": 0.025
             }
           ]
         }

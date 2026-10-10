@@ -3,33 +3,33 @@
   "minecraft:geometry": [
     {
       "description": {
-        "identifier": "geometry.viltrumitecore.fist",
+        "identifier": "geometry.viltrumitecore.right_gauntlet",
         "texture_width": 160,
         "texture_height": 160
       },
       "bones": [
         {
-          "name": "glove",
+          "name": "armorRightArm",
           "pivot": [
-            0.0,
-            0.0,
+            -6.0,
+            18.0,
             0.0
           ]
         },
         {
           "name": "42ArmRight",
           "pivot": [
-            1.2999999999999998,
-            4.199999999999999,
+            -4.7,
+            22.2,
             0.0
           ],
-          "parent": "glove"
+          "parent": "armorRightArm"
         },
         {
           "name": "rightGauntlet",
           "pivot": [
-            0.5499999999999998,
-            5.5,
+            -5.45,
+            23.5,
             0.0
           ],
           "parent": "42ArmRight"
@@ -37,16 +37,16 @@
         {
           "name": "rightGauntlet1",
           "pivot": [
-            0.5499999999999998,
-            4.5,
+            -5.45,
+            22.5,
             0.0
           ],
           "parent": "rightGauntlet",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                -8.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -66,16 +66,16 @@
         {
           "name": "rightGauntlet2",
           "pivot": [
-            0.5499999999999998,
-            5.5,
+            -5.45,
+            23.5,
             0.0
           ],
           "parent": "rightGauntlet",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                -8.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -95,16 +95,16 @@
         {
           "name": "rightGauntlet3",
           "pivot": [
-            0.5499999999999998,
-            6.5,
+            -5.45,
+            24.5,
             0.0
           ],
           "parent": "rightGauntlet",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                -8.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -124,16 +124,16 @@
         {
           "name": "rightGauntletLayer",
           "pivot": [
-            0.5499999999999998,
-            6.5,
+            -5.45,
+            24.5,
             0.0
           ],
           "parent": "rightGauntlet",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                -8.0,
+                12.0,
                 -2.0
               ],
               "size": [
@@ -153,16 +153,16 @@
         {
           "name": "rightGauntletElbow",
           "pivot": [
-            0.5499999999999998,
-            4.5,
+            -5.45,
+            22.5,
             0.0
           ],
           "parent": "rightGauntlet",
           "cubes": [
             {
               "origin": [
-                -2.0,
-                -6.0,
+                -8.0,
+                12.0,
                 -2.0
               ],
               "size": [

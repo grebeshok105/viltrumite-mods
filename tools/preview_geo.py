@@ -74,7 +74,9 @@ def face_uvs(cube):
                 u, v = f["uv"]
                 su, sv = f.get("uv_size", [0, 0])
                 out[face] = (u, v, u + su, v + sv)
-        return out
+        # BakedGeoModel: Bedrock "east" is +x, the side the box UV gives its second strip.
+        out["east"], out["west"] = out.get("west"), out.get("east")
+        return {k: r for k, r in out.items() if r is not None}
     u, v = uv if isinstance(uv, list) else (0, 0)
     sx, sy, sz = size
     out = {

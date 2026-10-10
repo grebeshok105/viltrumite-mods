@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """Iron Man Stage 4 client art (own work, generated, committed):
 
-- geo/ironman/marks/plates/<key>.geo.json: one plate per SuitPart slice (mark skin
-  drawn over Tony's body on the parts that are on, see MarkVisuals);
-- geo/ironman/marks/empty_suit.geo.json (+ _interior): the empty suit shell and its inside;
+- geo/ironman/marks/empty_suit_interior.geo.json: the inside of the empty suit (the
+  shell is Satsu full_body, tools/assets/convert_ironman_stage4_marks.py);
 - geo/ironman/veronica/veronica_pod.geo.json + animations/ironman/*.animation.json;
 - textures/entity/ironman/veronica_pod.png (binassets, base64).
 
 Geometry convention (client/anim/geo/BakedGeoModel): JSON x = vanilla player model x,
 JSON y = 24 - vanilla model y (feet at 0), pixels. Box UV = vanilla texOffs layout.
-The SuitPart sets mirror hero/ironman/mark/SuitPart.java; PlateKeysTest checks the output.
 
 Run: python3 tools/assets/make_ironman_stage4_visuals.py
 """
@@ -34,38 +32,8 @@ BOXES = {
     'right_leg': ((-3.9, 12, -2), (4, 12, 4), (0, 16), 'armorrightleg', (-1.9, 12, 0)),
     'left_leg': ((-0.1, 12, -2), (4, 12, 4), (16, 48), 'armorleftleg', (1.9, 12, 0)),
 }
-BONE_KEY = {'HEAD': 'head', 'BODY': 'body', 'RIGHT_ARM': 'right_arm', 'LEFT_ARM': 'left_arm', 'RIGHT_LEG': 'right_leg', 'LEFT_LEG': 'left_leg'}
-
-# (name, bone, from, to, side) — same order as SuitPart.SEVEN / NINE / FOURTEEN.
-SETS = [
-    [('left_leg', 'LEFT_LEG', 0.0, 1.0, 'ALL'), ('right_leg', 'RIGHT_LEG', 0.0, 1.0, 'ALL'), ('left_arm', 'LEFT_ARM', 0.0, 1.0, 'ALL'),
-     ('right_arm', 'RIGHT_ARM', 0.0, 1.0, 'ALL'), ('chest', 'BODY', 0.0, 1.0, 'FRONT'), ('back', 'BODY', 0.0, 1.0, 'BACK'),
-     ('helmet', 'HEAD', 0.0, 1.0, 'ALL')],
-    [('left_leg', 'LEFT_LEG', 0.0, 1.0, 'ALL'), ('right_leg', 'RIGHT_LEG', 0.0, 1.0, 'ALL'), ('left_arm', 'LEFT_ARM', 0.25, 1.0, 'ALL'),
-     ('right_arm', 'RIGHT_ARM', 0.25, 1.0, 'ALL'), ('chest', 'BODY', 0.0, 1.0, 'FRONT'), ('left_shoulder', 'LEFT_ARM', 0.0, 0.25, 'ALL'),
-     ('right_shoulder', 'RIGHT_ARM', 0.0, 0.25, 'ALL'), ('back', 'BODY', 0.0, 1.0, 'BACK'), ('helmet', 'HEAD', 0.0, 1.0, 'ALL')],
-    [('left_boot', 'LEFT_LEG', 0.5, 1.0, 'ALL'), ('right_boot', 'RIGHT_LEG', 0.5, 1.0, 'ALL'), ('left_thigh', 'LEFT_LEG', 0.0, 0.5, 'ALL'),
-     ('right_thigh', 'RIGHT_LEG', 0.0, 0.5, 'ALL'), ('left_gauntlet', 'LEFT_ARM', 0.5, 1.0, 'ALL'), ('right_gauntlet', 'RIGHT_ARM', 0.5, 1.0, 'ALL'),
-     ('left_upper_arm', 'LEFT_ARM', 0.25, 0.5, 'ALL'), ('right_upper_arm', 'RIGHT_ARM', 0.25, 0.5, 'ALL'), ('left_shoulder', 'LEFT_ARM', 0.0, 0.25, 'ALL'),
-     ('right_shoulder', 'RIGHT_ARM', 0.0, 0.25, 'ALL'), ('abdomen', 'BODY', 0.55, 1.0, 'FRONT'), ('chest', 'BODY', 0.0, 0.55, 'FRONT'),
-     ('back', 'BODY', 0.0, 1.0, 'BACK'), ('helmet', 'HEAD', 0.0, 1.0, 'ALL')],
-]
-
-PLATE_INFLATE = 0.35
 INTERIOR_INFLATE = -0.3
 SCALE_PX = 16
-
-
-def plate_key(bone, f0, f1, side):
-    return f'{bone.lower()}_{round(f0 * 100)}_{round(f1 * 100)}_{side.lower()}'
-
-
-def slice_box(key, f0, f1):
-    (mx, my, mz), (sx, sy, sz), (u, v), _, _ = BOXES[key]
-    r0 = round(f0 * sy)
-    r1 = round(f1 * sy)
-    # Box UV: the side strips run top to bottom, so a vertical slice shifts the UV origin by its top row.
-    return (mx, my + r0, mz), (sx, r1 - r0, sz), (u, v + r0)
 
 
 def cube(mn, size, uv, inflate):
@@ -95,30 +63,13 @@ def write_json(path, data):
         f.write('\n')
 
 
-def plate_files():
-    seen = {}
-    for part_set in SETS:
-        for name, bone, f0, f1, side in part_set:
-            seen[plate_key(bone, f0, f1, side)] = (BONE_KEY[bone], f0, f1)
-    for key, (box_key, f0, f1) in sorted(seen.items()):
-        mn, size, uv = slice_box(box_key, f0, f1)
-        bone_name = BOXES[box_key][3]
-        pivot = centroid(mn, size)
-        bones = [{'name': bone_name, 'pivot': pivot, 'cubes': [cube(mn, size, uv, PLATE_INFLATE)]}]
-        write_json(os.path.join(RES, 'geo', 'ironman', 'marks', 'plates', key + '.geo.json'),
-                   geometry('geometry.viltrumitecore.plate_' + key, bones))
-    return len(seen)
-
-
 def empty_suit_files():
-    shell, inner = [], []
+    inner = []
     for key in ['body', 'head', 'right_arm', 'left_arm', 'right_leg', 'left_leg']:
         mn, size, uv, bone_name, pivot = BOXES[key]
         centre = centroid(mn, size)
         joint = list(pivot) if key != 'body' else [0, centre[1], 0]
-        shell.append({'name': bone_name, 'pivot': joint, 'cubes': [cube(mn, size, uv, PLATE_INFLATE)]})
         inner.append({'name': bone_name, 'pivot': joint, 'cubes': [cube(mn, size, uv, INTERIOR_INFLATE)]})
-    write_json(os.path.join(RES, 'geo', 'ironman', 'marks', 'empty_suit.geo.json'), geometry('geometry.viltrumitecore.empty_suit', shell))
     write_json(os.path.join(RES, 'geo', 'ironman', 'marks', 'empty_suit_interior.geo.json'),
                geometry('geometry.viltrumitecore.empty_suit_interior', inner))
 
@@ -240,13 +191,11 @@ def pod_texture():
 
 
 def main():
-    count = plate_files()
     empty_suit_files()
     pod_geo()
     pod_animation()
     empty_suit_animation()
     pod_texture()
-    print('plates', count)
 
 
 if __name__ == '__main__':
