@@ -42,6 +42,10 @@ public final class HeroFlightGrant {
          }
          case KEEP_CLEAR_MARKER -> heroPlayer.viltrumitecore$setMayflyGranted(false);
          case KEEP -> {
+            // Self-heal a client that lost the flag (packet order, other mods): resend our grant now and then.
+            if (wants && ours && player.tickCount % 40 == 0) {
+               player.onUpdateAbilities();
+            }
          }
       }
    }

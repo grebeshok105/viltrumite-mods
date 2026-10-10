@@ -68,7 +68,7 @@ public final class ThrusterSound extends AbstractTickableSoundInstance {
    public void tick() {
       HeroPublicSnapshot snapshot = IronManView.of(this.player);
       ThrusterFlames.Mode mode = snapshot == null ? ThrusterFlames.Mode.NONE : ThrusterFlames.mode(this.player, snapshot);
-      if (this.player.isRemoved() || !this.player.isAlive() || mode == ThrusterFlames.Mode.NONE) {
+      if (this.player.isRemoved() || !this.player.isAlive() || mode == ThrusterFlames.Mode.NONE || ThrusterFlames.silent(snapshot)) {
          this.stop();
          return;
       }
@@ -108,7 +108,7 @@ public final class ThrusterSound extends AbstractTickableSoundInstance {
          }
 
          HeroPublicSnapshot snapshot = IronManView.of(player);
-         if (snapshot != null && ThrusterFlames.mode(clientPlayer, snapshot) != ThrusterFlames.Mode.NONE) {
+         if (snapshot != null && !ThrusterFlames.silent(snapshot) && ThrusterFlames.mode(clientPlayer, snapshot) != ThrusterFlames.Mode.NONE) {
             ThrusterSound loop = new ThrusterSound(clientPlayer, ViltrumiteCore.IRONMAN_THRUSTER_LOOP.get(), false);
             ThrusterSound sonic = new ThrusterSound(clientPlayer, ViltrumiteCore.IRONMAN_THRUSTER_SONIC.get(), true);
             client.getSoundManager().play(loop);

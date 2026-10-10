@@ -17,6 +17,7 @@ public final class IronManAbilities {
    public static final String SCAN = "ironman:scan";
    public static final String COUNTERMEASURES = "ironman:countermeasures";
    public static final String HELMET = "ironman:helmet";
+   public static final String VERONICA = "ironman:veronica";
    /** Page 1 (slots 0-5): Unibeam, missiles, nano arsenal (spec §6.2). */
    public static final int UNIBEAM_SLOT = 0;
    public static final int MISSILES_SLOT = 1;
@@ -24,11 +25,11 @@ public final class IronManAbilities {
    /** Page 2 (slots 6-11), index 4 = fifth key (B): Scan, Countermeasures, Veronica, Helmet, Suit, Legion reserve. */
    public static final int SCAN_SLOT = 6;
    public static final int COUNTERMEASURES_SLOT = 6 + 1;
-   /** 6 + 2 = Veronica (stage 4). */
+   public static final int VERONICA_SLOT = 6 + 2;
    public static final int HELMET_SLOT = 6 + 3;
    public static final int SUIT_SLOT = 6 + 4;
    /** Own slots in panel order. Later stages append. */
-   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, SUIT, SCAN, COUNTERMEASURES, HELMET};
+   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, SUIT, SCAN, COUNTERMEASURES, HELMET, VERONICA};
 
    private IronManAbilities() {
    }
@@ -49,6 +50,41 @@ public final class IronManAbilities {
       }
 
       return false;
+   }
+
+   /** Slot 3 in a mark shows the mark's signature (spec §6.2). */
+   @Nullable
+   public static ResourceLocation icon(String abilityId, @Nullable dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot) {
+      if (snapshot != null && snapshot.heroId() == dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN && hulkActive(snapshot)) {
+         // Hulkbuster: slots 1–3 are grab, jump slam, hop (spec §14.3).
+         String hulk = switch (abilityId) {
+            case UNIBEAM -> "hulk_grab";
+            case MISSILES -> "hulk_slam";
+            case NANO_ARSENAL -> "hulk_hop";
+            default -> null;
+         };
+         if (hulk != null) {
+            return new ResourceLocation("viltrumitecore", "textures/gui/ability/ironman/" + hulk + ".png");
+         }
+      }
+
+      if (NANO_ARSENAL.equals(abilityId) && snapshot != null && snapshot.heroId() == dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN) {
+         dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId mark = IronManVariant.mark(snapshot.variant());
+         if (mark != null) {
+            return signatureIcon(mark);
+         }
+      }
+
+      return icon(abilityId);
+   }
+
+   static boolean hulkActive(dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot snapshot) {
+      return IronManFlags.get(snapshot.heroFlags(), IronManFlags.Field.HULKBUSTER_PHASE) == dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer.Phase.ACTIVE.ordinal();
+   }
+
+   /** Panel art of a mark signature: tools/assets/make_ironman_stage4_assets.py. */
+   public static ResourceLocation signatureIcon(dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId mark) {
+      return new ResourceLocation("viltrumitecore", "textures/gui/ability/ironman/sig_" + mark.signatureKey() + ".png");
    }
 
    @Nullable
@@ -82,6 +118,7 @@ public final class IronManAbilities {
       loadout[SCAN_SLOT] = SCAN;
       loadout[COUNTERMEASURES_SLOT] = COUNTERMEASURES;
       loadout[HELMET_SLOT] = HELMET;
+      loadout[VERONICA_SLOT] = VERONICA;
       return loadout;
    }
 
@@ -99,6 +136,7 @@ public final class IronManAbilities {
          case SCAN -> HeroAction.SCAN;
          case COUNTERMEASURES -> HeroAction.COUNTERMEASURES;
          case HELMET -> HeroAction.HELMET;
+         case VERONICA -> HeroAction.VERONICA;
          default -> null;
       };
    }
@@ -119,11 +157,26 @@ public final class IronManAbilities {
 
       int flags = snapshot.heroFlags();
       boolean worn = IronManFlags.is(flags, IronManFlags.Field.SUIT_WORN);
+      boolean mark = IronManVariant.mark(snapshot.variant()) != null;
+      if (hulkActive(snapshot)) {
+         return switch (abilityId) {
+            case UNIBEAM -> false;
+            case MISSILES -> snapshot.extraCooldown(5) > 0;
+            case NANO_ARSENAL -> snapshot.extraCooldown(6) > 0 || snapshot.resourceLocked();
+            case HELMET -> true;
+            default -> false;
+         };
+      }
+
       return switch (abilityId) {
          // Nano lost after a core explosion: extra cooldown [0].
          case SUIT -> snapshot.extraCooldown(0) > 0;
          case UNIBEAM -> !worn || snapshot.resourceLocked() || IronManFlags.is(flags, IronManFlags.Field.OVERHEAT_LOCK);
-         case MISSILES, NANO_ARSENAL -> !worn || snapshot.resourceLocked();
+         case MISSILES -> !worn || snapshot.resourceLocked();
+         // In a mark slot 3 is the signature (spec §6.2): its cooldown is extra [3].
+         case NANO_ARSENAL -> !worn || snapshot.resourceLocked() || mark && snapshot.extraCooldown(3) > 0;
+         // Veronica: cooldown after the pod left, extra [2]; callable without armor (spec §4.1).
+         case VERONICA -> snapshot.extraCooldown(2) > 0;
          // Scan needs the closed helmet (spec §10); flares: cooldown in extra [1], no energy.
          case SCAN -> !worn || !IronManFlags.is(flags, IronManFlags.Field.HELMET_CLOSED);
          case COUNTERMEASURES -> !worn || snapshot.extraCooldown(1) > 0;

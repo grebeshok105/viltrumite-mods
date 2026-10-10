@@ -39,7 +39,14 @@ public record HeroPublicSnapshot(
     * {@link #EXTRA_COOLDOWN_MAX}. Index meaning is owned by the hero. Encoded
     * only when non-empty: older encodings decode as empty.
     */
-   int[] extraCooldowns
+   int[] extraCooldowns,
+   /**
+    * Generic hero-owned packed value for every client's renderer (Iron Man:
+    * suit variant + body parts present). Older encodings decode as 0.
+    */
+   int variant,
+   /** Second generic resource (Iron Man: worn mark durability x10). Older encodings decode as 0. */
+   int resource2
 ) {
    public static final int COOLDOWN_COUNT = 6;
    public static final int EXTRA_COOLDOWN_MAX = 16;
@@ -71,6 +78,15 @@ public record HeroPublicSnapshot(
       this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
          lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy,
          availableActions, actionTarget, resource, resourceLocked, heroFlags, NO_EXTRA);
+   }
+
+   public HeroPublicSnapshot(HeroId heroId, int actionId, int actionElapsed, int actionLength, int hearts,
+      boolean lionActive, int lionWindowLeft, int lionWindowMax, boolean lionOverheat, boolean madness,
+      int madnessTicksLeft, int ritualTicks, int controlTargetId, int[] cooldowns, boolean actionBusy,
+      int availableActions, @Nullable Vec3 actionTarget, int resource, boolean resourceLocked, int heroFlags, int[] extraCooldowns) {
+      this(heroId, actionId, actionElapsed, actionLength, hearts, lionActive, lionWindowLeft, lionWindowMax,
+         lionOverheat, madness, madnessTicksLeft, ritualTicks, controlTargetId, cooldowns, actionBusy,
+         availableActions, actionTarget, resource, resourceLocked, heroFlags, extraCooldowns, 0, 0);
    }
 
    public HeroPublicSnapshot {
@@ -113,7 +129,8 @@ public record HeroPublicSnapshot(
 
       builder.append(';').append(this.actionBusy ? 1 : 0);
       builder.append(';').append(this.availableActions);
-      boolean hasExtra = this.extraCooldowns.length > 0;
+      boolean hasVariant = this.variant != 0 || this.resource2 != 0;
+      boolean hasExtra = this.extraCooldowns.length > 0 || hasVariant;
       boolean hasResource = this.resource != 0 || this.resourceLocked || this.heroFlags != 0 || hasExtra;
       if (this.actionTarget != null) {
          builder.append(';').append(this.actionTarget.x).append(';').append(this.actionTarget.y).append(';').append(this.actionTarget.z);
@@ -134,6 +151,12 @@ public record HeroPublicSnapshot(
          for (int value : this.extraCooldowns) {
             builder.append(';').append(value);
          }
+      }
+
+      // Variant fields after the extras, only when set: older clients stop reading at the extras.
+      if (hasVariant) {
+         builder.append(';').append(this.variant);
+         builder.append(';').append(this.resource2);
       }
       return builder.toString();
    }
@@ -164,12 +187,20 @@ public record HeroPublicSnapshot(
          }
 
          int[] extra = NO_EXTRA;
+         int variant = 0;
+         int resource2 = 0;
          if (parts.length > 27) {
             int count = Math.max(0, Math.min(EXTRA_COOLDOWN_MAX, Integer.parseInt(parts[27])));
             extra = new int[count];
             for (int i = 0; i < count; i++) {
                int index = 28 + i;
                extra[i] = index < parts.length ? Integer.parseInt(parts[index]) : 0;
+            }
+
+            int after = 28 + count;
+            if (parts.length > after + 1) {
+               variant = Integer.parseInt(parts[after]);
+               resource2 = Integer.parseInt(parts[after + 1]);
             }
          }
          return new HeroPublicSnapshot(
@@ -193,7 +224,9 @@ public record HeroPublicSnapshot(
             parts.length > 24 ? Integer.parseInt(parts[24]) : 0,
             parts.length > 25 && "1".equals(parts[25]),
             parts.length > 26 ? Integer.parseInt(parts[26]) : 0,
-            extra
+            extra,
+            variant,
+            resource2
          );
       } catch (NumberFormatException exception) {
          return EMPTY;
@@ -227,7 +260,9 @@ public record HeroPublicSnapshot(
             && this.resource == snapshot.resource
             && this.resourceLocked == snapshot.resourceLocked
             && this.heroFlags == snapshot.heroFlags
-            && Arrays.equals(this.extraCooldowns, snapshot.extraCooldowns);
+            && Arrays.equals(this.extraCooldowns, snapshot.extraCooldowns)
+            && this.variant == snapshot.variant
+            && this.resource2 == snapshot.resource2;
       }
    }
 
@@ -254,6 +289,8 @@ public record HeroPublicSnapshot(
       result = 31 * result + Boolean.hashCode(this.resourceLocked);
       result = 31 * result + this.heroFlags;
       result = 31 * result + Arrays.hashCode(this.extraCooldowns);
+      result = 31 * result + this.variant;
+      result = 31 * result + this.resource2;
       return result;
    }
 }

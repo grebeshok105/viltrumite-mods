@@ -9,11 +9,11 @@ import net.minecraft.sounds.SoundSource;
  * nearby hears them, the acting player included. Thruster loops are client
  * side (ThrusterSound). All sounds are own synthesis (tools/sfx).
  */
-final class IronManSounds {
+public final class IronManSounds {
    private IronManSounds() {
    }
 
-   static void play(ServerPlayer player, SoundEvent sound, float volume, float pitch) {
+   public static void play(ServerPlayer player, SoundEvent sound, float volume, float pitch) {
       player.level().playSound(null, player.getX(), player.getY() + 1.0, player.getZ(), sound, SoundSource.PLAYERS, volume, pitch);
    }
 }

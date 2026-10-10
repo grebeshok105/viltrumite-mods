@@ -2,6 +2,8 @@ package dev.baranhan.viltrumitecore.client.ironman;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkSkins;
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
 import dev.baranhan.viltrumiteflight.client.util.ShaderCompat;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -31,6 +33,19 @@ public class IronManSkinLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
       float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
       HeroPublicSnapshot snapshot = IronManView.of(player);
       if (snapshot == null || player.isInvisible() || ShaderCompat.isShadowPass()) {
+         return;
+      }
+
+      // Stage 4: a mark replaces the nano passes; its own glow covers the whole suit when fully on.
+      MarkState mark = MarkState.of(snapshot);
+      if (mark.markOn()) {
+         if (mark.full()) {
+            PlayerModel<AbstractClientPlayer> body = this.getParentModel();
+            ResourceLocation markGlow = MarkSkins.INSTANCE.glow(mark.mark(), !mark.helmetClosed());
+            float pulse = 0.85F + 0.15F * (float)Math.sin(ageInTicks * 0.12F);
+            body.renderToBuffer(poseStack, buffers.getBuffer(RenderType.eyes(markGlow)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, pulse, pulse, pulse, 1.0F);
+         }
+
          return;
       }
 

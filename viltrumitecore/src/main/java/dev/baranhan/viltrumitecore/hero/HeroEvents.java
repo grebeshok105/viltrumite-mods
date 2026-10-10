@@ -67,6 +67,7 @@ public final class HeroEvents {
          }
 
          newAbility.setActivePage(oldAbility.getActivePage());
+         newAbility.setOfferedAbilities(oldAbility.getOfferedAbilities());
          HeroRegistry.repairLoadout(newPlayer);
       }
    }

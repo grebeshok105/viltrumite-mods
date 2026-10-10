@@ -2,7 +2,7 @@ package dev.baranhan.viltrumitecore.hero.ironman;
 
 /**
  * The single bit layout of {@code HeroPublicSnapshot.heroFlags} for Iron Man,
- * for all stages. Append new fields into the reserved bits 30-31 (27-29 are Stage 2 pose bits); never move
+ * for all stages. All 32 bits are taken (27-29 Stage 2 pose bits, 30-31 Stage 4 signature); never move
  * an existing field (clients of the same version decode the same layout).
  */
 public final class IronManFlags {
@@ -27,14 +27,17 @@ public final class IronManFlags {
       SCAN_ACTIVE(20, 1),
       // Stage 4
       MARK_CAMO(21, 1),
+      /** 0 none, 1 equipping, 2 exiting, 3 partial ({@link #EQUIP_EQUIPPING} ...). */
       EQUIP_PHASE(22, 2),
       // Stage 5
       HULKBUSTER_PHASE(24, 3),
       // Stage 2 (pose sync): repulsor recoil, which palm fired, overdraft charge running.
       RECOIL(27, 1),
       SHOT_HAND(28, 1),
-      OVERDRAFT(29, 1);
-      // 30-31 reserved.
+      OVERDRAFT(29, 1),
+      // Stage 4: the worn mark's signature (visual bits, meaning per signature).
+      SIGNATURE_ACTIVE(30, 1),
+      SIGNATURE_AUX(31, 1);
 
       private final int shift;
       private final int width;
@@ -56,6 +59,11 @@ public final class IronManFlags {
          return ((1 << this.width) - 1) << this.shift;
       }
    }
+
+   public static final int EQUIP_NONE = 0;
+   public static final int EQUIP_EQUIPPING = 1;
+   public static final int EQUIP_EXITING = 2;
+   public static final int EQUIP_PARTIAL = 3;
 
    private IronManFlags() {
    }

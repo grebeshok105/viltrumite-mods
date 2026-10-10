@@ -1,0 +1,185 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.fist",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "glove",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42ArmRight",
+          "pivot": [
+            1.2999999999999998,
+            4.199999999999999,
+            0.0
+          ],
+          "parent": "glove"
+        },
+        {
+          "name": "rightGauntlet",
+          "pivot": [
+            0.5499999999999998,
+            5.5,
+            0.0
+          ],
+          "parent": "42ArmRight"
+        },
+        {
+          "name": "rightGauntlet1",
+          "pivot": [
+            0.5499999999999998,
+            4.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                32,
+                112
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntlet2",
+          "pivot": [
+            0.5499999999999998,
+            5.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                80,
+                112
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntlet3",
+          "pivot": [
+            0.5499999999999998,
+            6.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                128,
+                96
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntletLayer",
+          "pivot": [
+            0.5499999999999998,
+            6.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                128,
+                112
+              ],
+              "inflate": 0.525,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntletElbow",
+          "pivot": [
+            0.5499999999999998,
+            4.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                128
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

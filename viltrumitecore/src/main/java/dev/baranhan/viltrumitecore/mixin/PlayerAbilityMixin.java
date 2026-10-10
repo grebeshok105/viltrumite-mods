@@ -55,6 +55,10 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
    private static final EntityDataAccessor<String> S_16 = SynchedEntityData.defineId(Player.class, EntityDataSerializers.STRING);
    @Unique
    private static final EntityDataAccessor<String> S_17 = SynchedEntityData.defineId(Player.class, EntityDataSerializers.STRING);
+   @Unique
+   private static final String OFFERED_KEY = "ViltrumiteOfferedAbilities";
+   @Unique
+   private java.util.Set<String> viltrumitecore$offeredAbilities;
 
    @Inject(
       method = {"defineSynchedData"},
@@ -181,6 +185,16 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
       }
    }
 
+   @Override
+   public java.util.Set<String> getOfferedAbilities() {
+      return this.viltrumitecore$offeredAbilities;
+   }
+
+   @Override
+   public void setOfferedAbilities(java.util.Set<String> offered) {
+      this.viltrumitecore$offeredAbilities = offered == null ? null : new java.util.LinkedHashSet<>(offered);
+   }
+
    @Inject(
       method = {"addAdditionalSaveData"},
       at = {@At("TAIL")}
@@ -190,6 +204,15 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
 
       for (int i = 0; i < 18; i++) {
          nbt.putString("ViltrumiteAbilitySlot_" + i, this.getAbilityInSlot(i));
+      }
+
+      if (this.viltrumitecore$offeredAbilities != null) {
+         net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+         for (String id : this.viltrumitecore$offeredAbilities) {
+            list.add(net.minecraft.nbt.StringTag.valueOf(id));
+         }
+
+         nbt.put(OFFERED_KEY, list);
       }
    }
 
@@ -207,6 +230,16 @@ public abstract class PlayerAbilityMixin implements ViltrumiteAbilityUser {
          if (nbt.contains(key)) {
             this.setAbilityInSlot(i, nbt.getString(key));
          }
+      }
+
+      if (nbt.contains(OFFERED_KEY, net.minecraft.nbt.Tag.TAG_LIST)) {
+         java.util.Set<String> offered = new java.util.LinkedHashSet<>();
+         net.minecraft.nbt.ListTag list = nbt.getList(OFFERED_KEY, net.minecraft.nbt.Tag.TAG_STRING);
+         for (int i = 0; i < list.size(); i++) {
+            offered.add(list.getString(i));
+         }
+
+         this.viltrumitecore$offeredAbilities = offered;
       }
    }
 }
