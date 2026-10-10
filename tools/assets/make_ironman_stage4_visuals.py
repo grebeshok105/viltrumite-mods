@@ -5,7 +5,7 @@
   drawn over Tony's body on the parts that are on, see MarkVisuals);
 - geo/ironman/marks/empty_suit.geo.json (+ _interior): the empty suit shell and its inside;
 - geo/ironman/veronica/veronica_pod.geo.json + animations/ironman/*.animation.json;
-- textures/entity/ironman/veronica_pod.png and energy_hex.png (binassets, base64).
+- textures/entity/ironman/veronica_pod.png (binassets, base64).
 
 Geometry convention (client/anim/geo/BakedGeoModel): JSON x = vanilla player model x,
 JSON y = 24 - vanilla model y (feet at 0), pixels. Box UV = vanilla texOffs layout.
@@ -201,14 +201,6 @@ def empty_suit_animation():
     write_json(os.path.join(RES, 'animations', 'ironman', 'empty_suit.animation.json'), doc)
 
 
-def energy_shield_geo():
-    cube_def = {'origin': [1, 8, -7], 'size': [14, 14, 0.6], 'uv': {'north': {'uv': [0, 0], 'uv_size': [32, 32]},
-                                                                      'south': {'uv': [0, 0], 'uv_size': [32, 32]}}}
-    bones = [{'name': 'armorleftarm', 'pivot': [5, 22, 0], 'cubes': [cube_def]}]
-    doc = geometry('geometry.viltrumitecore.energy_shield', bones, tex=32)
-    write_json(os.path.join(RES, 'geo', 'ironman', 'marks', 'energy_shield.geo.json'), doc)
-
-
 def paint_hull(img, uv, size, colour):
     w, h, d = size
     u, v = uv
@@ -247,32 +239,13 @@ def pod_texture():
         f.write(base64.b64encode(buf.getvalue()).decode('ascii'))
 
 
-def energy_hex_texture():
-    img = Image.new('RGBA', (32, 32), (0, 0, 0, 0))
-    for y in range(0, 32, 4):
-        for x in range(0, 32, 4):
-            ox = 2 if (y // 4) % 2 else 0
-            cx, cy = x + ox, y
-            for t in range(4):
-                for px, py in [(cx + t, cy), (cx + 4 - t, cy + 2), (cx + t, cy + 4), (cx + 4, cy + 2)]:
-                    if 0 <= px < 32 and 0 <= py < 32:
-                        img.putpixel((px % 32, py % 32), (80, 216, 255, 255))
-    buf = io.BytesIO()
-    img.save(buf, format='PNG')
-    os.makedirs(os.path.join(BIN, 'textures', 'entity', 'ironman'), exist_ok=True)
-    with open(os.path.join(BIN, 'textures', 'entity', 'ironman', 'energy_hex.png.b64'), 'w', encoding='ascii') as f:
-        f.write(base64.b64encode(buf.getvalue()).decode('ascii'))
-
-
 def main():
     count = plate_files()
     empty_suit_files()
-    energy_shield_geo()
     pod_geo()
     pod_animation()
     empty_suit_animation()
     pod_texture()
-    energy_hex_texture()
     print('plates', count)
 
 
