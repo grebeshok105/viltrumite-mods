@@ -47,6 +47,7 @@ Default hooks (override only when needed):
 | `guardAction(Player)` | null = vanilla swap-hands key (F); non-null: client consumes the key, edges go through `HeldInputs` as `MouseButton.GUARD`; both sides |
 | `blocksHandSwap(Player)` | false; server cancels `LivingSwapItemsEvent.Hands` (also forged packets) |
 | `abilityIcon(String, Player)` | `abilityIcon(String)`; icon of a slot for this player now (Iron Man slot 3 = the worn mark's signature) |
+| `bodyScale(Player)` | 1; hitbox and eye height factor, both sides (`HeroSizeEvents` on Forge `EntityEvent.Size`; call `refreshDimensions()` on change, the client refreshes in `BodyScaleClient`); check room with `BodyScale.findFree` before growing |
 | `flightSpeedScale(Player)` | 1; factor on the legacy (no profile) CRUISE/SONIC speed, both sides (flight `FlightProfiles.setSpeedScaleResolver`) |
 | `hiddenFromFocus(Player)` | false; true = Homelander focus skips this player (Mark 15) |
 | `scanInfo(Player)` | `ScanInfo.EMPTY`; server-side extra lines for the Iron Man scan card (`protections` / `weakSpots` / `conditions` as translatable `ScanLine`s). Read by scanners on the server only; never send secrets the player could not see |

@@ -157,9 +157,9 @@ public final class IronManRules {
    public static final int MISSILE_MARKS = 4;
    public static final double MISSILE_LOCK_RANGE = 64.0;
    public static final float MISSILE_LOCK_DEG = 4.0F;
-   public static final float MISSILE_HIT = 5.0F;
-   public static final float MISSILE_SPLASH = 2.0F;
-   public static final double MISSILE_SPLASH_RADIUS = 2.0;
+   public static final float MISSILE_HIT = 8.0F;
+   public static final float MISSILE_SPLASH = 4.0F;
+   public static final double MISSILE_SPLASH_RADIUS = 3.0;
    public static final double MISSILE_SPEED = 1.3;
    /** Homing turn per tick (fraction of the way to the target direction). */
    public static final double MISSILE_TURN = 0.22;

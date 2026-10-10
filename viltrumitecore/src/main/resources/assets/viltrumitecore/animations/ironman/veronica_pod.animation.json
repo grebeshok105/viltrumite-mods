@@ -3,34 +3,46 @@
   "animations": {
     "open": {
       "loop": "hold_on_last_frame",
-      "animation_length": 0.6,
+      "animation_length": 0.9,
       "bones": {
         "door_left": {
           "rotation": {
-            "0.0": [
-              0,
-              0,
-              0
-            ],
-            "0.6": [
-              0,
-              75,
-              0
-            ]
+            "0.0": {
+              "vector": [
+                0,
+                -0.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            },
+            "0.9": {
+              "vector": [
+                0,
+                -40.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            }
           }
         },
         "door_right": {
           "rotation": {
-            "0.0": [
-              0,
-              0,
-              0
-            ],
-            "0.6": [
-              0,
-              -75,
-              0
-            ]
+            "0.0": {
+              "vector": [
+                0,
+                0.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            },
+            "0.9": {
+              "vector": [
+                0,
+                40.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            }
           }
         }
       }
@@ -41,30 +53,42 @@
       "bones": {
         "door_left": {
           "rotation": {
-            "0.0": [
-              0,
-              75,
-              0
-            ],
-            "0.6": [
-              0,
-              0,
-              0
-            ]
+            "0.0": {
+              "vector": [
+                0,
+                -40.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            },
+            "0.6": {
+              "vector": [
+                0,
+                -0.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            }
           }
         },
         "door_right": {
           "rotation": {
-            "0.0": [
-              0,
-              -75,
-              0
-            ],
-            "0.6": [
-              0,
-              0,
-              0
-            ]
+            "0.0": {
+              "vector": [
+                0,
+                40.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            },
+            "0.6": {
+              "vector": [
+                0,
+                0.0,
+                0
+              ],
+              "easing": "easeInOutCubic"
+            }
           }
         }
       }

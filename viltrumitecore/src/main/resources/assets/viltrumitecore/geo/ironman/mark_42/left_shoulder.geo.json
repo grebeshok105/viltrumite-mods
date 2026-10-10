@@ -1,0 +1,253 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.left_shoulder",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "armorLeftArm",
+          "pivot": [
+            6.0,
+            18.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42ArmLeft",
+          "pivot": [
+            4.7,
+            22.2,
+            0.0
+          ],
+          "parent": "armorLeftArm"
+        },
+        {
+          "name": "leftShoulder",
+          "pivot": [
+            5.725,
+            31.5,
+            0.0
+          ],
+          "parent": "42ArmLeft"
+        },
+        {
+          "name": "leftShoulder1",
+          "pivot": [
+            5.725,
+            33.5,
+            0.0
+          ],
+          "parent": "leftShoulder"
+        },
+        {
+          "name": "Left_Arm",
+          "pivot": [
+            10.725,
+            11.5,
+            0.0
+          ],
+          "parent": "leftShoulder1",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                112
+              ],
+              "inflate": 0.025
+            }
+          ]
+        },
+        {
+          "name": "leftShoulder2",
+          "pivot": [
+            5.725,
+            32.5,
+            0.0
+          ],
+          "parent": "leftShoulder"
+        },
+        {
+          "name": "Left_Arm_1",
+          "pivot": [
+            10.725,
+            10.5,
+            0.0
+          ],
+          "parent": "leftShoulder2",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                16,
+                112
+              ],
+              "inflate": 0.025
+            }
+          ]
+        },
+        {
+          "name": "leftShoulder3",
+          "pivot": [
+            5.725,
+            31.5,
+            0.0
+          ],
+          "parent": "leftShoulder"
+        },
+        {
+          "name": "Left_Arm_2",
+          "pivot": [
+            10.725,
+            9.5,
+            0.0
+          ],
+          "parent": "leftShoulder3",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                48,
+                112
+              ],
+              "inflate": 0.025
+            }
+          ]
+        },
+        {
+          "name": "leftShoulderLayer",
+          "pivot": [
+            5.725,
+            31.5,
+            0.0
+          ],
+          "parent": "leftShoulder"
+        },
+        {
+          "name": "Left_Arm_3",
+          "pivot": [
+            10.725,
+            9.5,
+            0.0
+          ],
+          "parent": "leftShoulderLayer",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                112
+              ],
+              "inflate": 0.525
+            }
+          ]
+        },
+        {
+          "name": "leftShoulderElbow",
+          "pivot": [
+            5.725,
+            25.5,
+            0.0
+          ],
+          "parent": "leftShoulder"
+        },
+        {
+          "name": "Left_Arm_4",
+          "pivot": [
+            10.725,
+            6.5,
+            0.0
+          ],
+          "parent": "leftShoulderElbow",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                96,
+                96
+              ],
+              "inflate": 0.025
+            }
+          ]
+        },
+        {
+          "name": "Left_Arm_Layer",
+          "pivot": [
+            10.725,
+            9.5,
+            0.0
+          ],
+          "parent": "leftShoulderElbow",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                144,
+                144
+              ],
+              "inflate": 0.525
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

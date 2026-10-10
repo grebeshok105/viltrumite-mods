@@ -77,6 +77,15 @@ public interface HeroDefinition {
    }
 
    /**
+    * Hitbox and eye height factor of this player (both sides, Forge
+    * EntityEvent.Size in HeroSizeEvents). Call refreshDimensions() when it
+    * changes. Default 1 = vanilla.
+    */
+   default float bodyScale(Player player) {
+      return 1.0F;
+   }
+
+   /**
     * Factor on the legacy flight speed (no profile): CRUISE/SONIC velocity uses
     * the player's max flight speed × this. Both sides (movement is client-side).
     */

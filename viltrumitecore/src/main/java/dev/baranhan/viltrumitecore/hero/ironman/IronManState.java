@@ -13,6 +13,7 @@ public final class IronManState {
    private static final String KEY = "IronMan";
    private static final String FLARE_COOLDOWN_KEY = "FlareCooldown";
    private static final String VERONICA_COOLDOWN_KEY = "VeronicaCooldown";
+   private static final String VERONICA_POD_KEY = "VeronicaPod";
    private static final String SIGNATURE_COOLDOWN_KEY = "SignatureCooldown";
    public final Suit suit = new Suit();
    public final Energy energy = new Energy();
@@ -86,24 +87,36 @@ public final class IronManState {
    public final dev.baranhan.viltrumitecore.hero.ironman.mark.MarkRoster roster = new dev.baranhan.viltrumitecore.hero.ironman.mark.MarkRoster();
    /** The worn mark's signature; only the cooldown is persisted (SignatureCooldown). */
    public final dev.baranhan.viltrumitecore.hero.ironman.mark.SignatureState signature = new dev.baranhan.viltrumitecore.hero.ironman.mark.SignatureState();
-   /** Persisted (VeronicaCooldown): starts when the pod leaves (spec §12.2). */
+   /** Persisted (VeronicaCooldown): starts when a pod is called (the pod itself stays). */
    public int veronicaCooldown;
-   /** Transient: entity id of this player's pod, -1 = none. */
-   public int podId = -1;
+   /** Persisted (VeronicaPod): UUID of this player's pod, null = none. The pod stays in the world until a newer call or a hero change. */
+   @Nullable
+   public java.util.UUID podUuid;
    /** Transient: entity id of this player's empty suit, -1 = none (one per owner, spec §12.6). */
    public int emptySuitId = -1;
+   /** Transient: entity id of the empty suit this player is walking into, -1 = none (rooted, no actions). */
+   public int enteringSuitId = -1;
+   /** Transient: facing of the suit Tony is walking out of (exit), null otherwise. */
+   @Nullable
+   public net.minecraft.world.phys.Vec3 exitDir;
    /** Transient: where the flying parts start (pod, old empty suit, sky); synced as actionTarget while equipping. */
    @Nullable
    public net.minecraft.world.phys.Vec3 equipSource;
+
+   // ---- Stage 5: Hulkbuster Mark 48 ----
+   /** Persisted (NBT Hulkbuster): phase, durability, cooldown, partial parts. */
+   public final dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer hulkbuster = new dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterLayer();
+   /** Transient kit state (punch cadence, jackhammer, charge, grab, slam, hop). */
+   public final dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterKit hulkKit = new dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterKit();
 
    /** Missile marks need the JARVIS targeting: helmet closed (spec §10). */
    public boolean canMarkTargets() {
       return this.helmet.closed();
    }
 
-   /** Flight grant: only while fully worn. */
+   /** Flight grant: only while fully worn; the Hulkbuster has no real flight (spec §14.3). */
    public boolean wantsFlight() {
-      return this.suit.worn();
+      return this.suit.worn() && !this.hulkbuster.present();
    }
 
    /** Pure part of HeroDefinition.cleanup (spec §16). */
@@ -117,11 +130,13 @@ public final class IronManState {
       this.threats.clear();
       this.countermeasures.clearForget();
       this.signature.clear();
-      this.podId = -1;
       this.emptySuitId = -1;
+      this.enteringSuitId = -1;
       this.equipSource = null;
+      this.hulkKit.stopChannels();
       switch (reason) {
          case DEATH -> {
+            this.hulkbuster.breakNow();
             this.suit.clear();
             this.glide = false;
             // Spec §9.1/§16: death cancels a pending core explosion and resets the counter.
@@ -143,11 +158,15 @@ public final class IronManState {
             this.helmet.reset();
             this.roster.reset();
             this.veronicaCooldown = 0;
+            // The pod sees the hero change and flies away by itself.
+            this.podUuid = null;
             this.signature.cooldown = 0;
+            this.hulkbuster.reset();
+            this.hulkKit.reset();
          }
       }
 
-      // Spec §16: the pod and the empty suit fly away, a delivery goes back; durability is kept.
+      // Spec §16: the empty suit flies away, a delivery goes back; durability is kept. Veronica stays (user decision 2026-10-10).
       this.roster.recallWorld();
       this.reconcileMark();
    }
@@ -189,6 +208,7 @@ public final class IronManState {
       state.reconcileMark();
       state.veronicaCooldown = original.veronicaCooldown;
       state.signature.cooldown = original.signature.cooldown;
+      state.hulkbuster.copyCooldownFrom(original.hulkbuster);
       return state;
    }
 
@@ -210,7 +230,11 @@ public final class IronManState {
       tag.putInt(FLARE_COOLDOWN_KEY, this.countermeasures.cooldown());
       this.roster.save(tag);
       tag.putInt(VERONICA_COOLDOWN_KEY, this.veronicaCooldown);
+      if (this.podUuid != null) {
+         tag.putUUID(VERONICA_POD_KEY, this.podUuid);
+      }
       tag.putInt(SIGNATURE_COOLDOWN_KEY, this.signature.cooldown);
+      this.hulkbuster.save(tag);
       nbt.put(KEY, tag);
    }
 
@@ -223,9 +247,11 @@ public final class IronManState {
       this.countermeasures.setCooldown(tag.getInt(FLARE_COOLDOWN_KEY));
       this.roster.load(tag);
       this.veronicaCooldown = Math.max(0, tag.getInt(VERONICA_COOLDOWN_KEY));
+      this.podUuid = tag.hasUUID(VERONICA_POD_KEY) ? tag.getUUID(VERONICA_POD_KEY) : null;
       this.signature.clear();
       this.signature.cooldown = Math.max(0, tag.getInt(SIGNATURE_COOLDOWN_KEY));
       this.reconcileMark();
+      this.hulkbuster.load(tag);
       this.glide = false;
    }
 

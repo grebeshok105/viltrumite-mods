@@ -1,0 +1,294 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.viltrumitecore.forearm_launchers",
+    "texture_width": 32,
+    "texture_height": 32
+   },
+   "bones": [
+    {
+     "name": "armorRightArm",
+     "pivot": [
+      -5.0,
+      22.0,
+      0.0
+     ]
+    },
+    {
+     "name": "podRight",
+     "parent": "armorRightArm",
+     "pivot": [
+      -8.4,
+      18.2,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -10.2,
+        13.6,
+        -1.5
+       ],
+       "size": [
+        1.8,
+        4.6,
+        3.0
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      },
+      {
+       "origin": [
+        -8.9,
+        14.2,
+        -1.0
+       ],
+       "size": [
+        0.6,
+        3.4,
+        2.0
+       ],
+       "uv": [
+        0,
+        16
+       ]
+      },
+      {
+       "origin": [
+        -10.4,
+        12.9,
+        -1.7
+       ],
+       "size": [
+        2.2,
+        0.7,
+        3.4
+       ],
+       "uv": [
+        12,
+        16
+       ]
+      },
+      {
+       "origin": [
+        -10.45,
+        16.6,
+        -1.2
+       ],
+       "size": [
+        0.3,
+        1.2,
+        2.4
+       ],
+       "uv": [
+        0,
+        24
+       ]
+      }
+     ]
+    },
+    {
+     "name": "petalARight",
+     "parent": "podRight",
+     "pivot": [
+      -9.3,
+      12.9,
+      -1.5
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -10.1,
+        12.6,
+        -1.5
+       ],
+       "size": [
+        1.6,
+        0.3,
+        1.5
+       ],
+       "uv": [
+        20,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "petalBRight",
+     "parent": "podRight",
+     "pivot": [
+      -9.3,
+      12.9,
+      1.5
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -10.1,
+        12.6,
+        0.0
+       ],
+       "size": [
+        1.6,
+        0.3,
+        1.5
+       ],
+       "uv": [
+        20,
+        4
+       ]
+      }
+     ]
+    },
+    {
+     "name": "armorLeftArm",
+     "pivot": [
+      5.0,
+      22.0,
+      0.0
+     ]
+    },
+    {
+     "name": "podLeft",
+     "parent": "armorLeftArm",
+     "pivot": [
+      8.4,
+      18.2,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        8.4,
+        13.6,
+        -1.5
+       ],
+       "size": [
+        1.8,
+        4.6,
+        3.0
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "mirror": true
+      },
+      {
+       "origin": [
+        8.3,
+        14.2,
+        -1.0
+       ],
+       "size": [
+        0.6,
+        3.4,
+        2.0
+       ],
+       "uv": [
+        0,
+        16
+       ],
+       "mirror": true
+      },
+      {
+       "origin": [
+        8.2,
+        12.9,
+        -1.7
+       ],
+       "size": [
+        2.2,
+        0.7,
+        3.4
+       ],
+       "uv": [
+        12,
+        16
+       ],
+       "mirror": true
+      },
+      {
+       "origin": [
+        10.15,
+        16.6,
+        -1.2
+       ],
+       "size": [
+        0.3,
+        1.2,
+        2.4
+       ],
+       "uv": [
+        0,
+        24
+       ],
+       "mirror": true
+      }
+     ]
+    },
+    {
+     "name": "petalALeft",
+     "parent": "podLeft",
+     "pivot": [
+      9.3,
+      12.9,
+      -1.5
+     ],
+     "cubes": [
+      {
+       "origin": [
+        8.5,
+        12.6,
+        -1.5
+       ],
+       "size": [
+        1.6,
+        0.3,
+        1.5
+       ],
+       "uv": [
+        20,
+        0
+       ],
+       "mirror": true
+      }
+     ]
+    },
+    {
+     "name": "petalBLeft",
+     "parent": "podLeft",
+     "pivot": [
+      9.3,
+      12.9,
+      1.5
+     ],
+     "cubes": [
+      {
+       "origin": [
+        8.5,
+        12.6,
+        0.0
+       ],
+       "size": [
+        1.6,
+        0.3,
+        1.5
+       ],
+       "uv": [
+        20,
+        4
+       ],
+       "mirror": true
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

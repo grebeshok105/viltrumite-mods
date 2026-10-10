@@ -105,6 +105,7 @@ public class ViltrumiteCore {
       dev.baranhan.viltrumitecore.hero.ironman.IronManCombatSounds.init();
       dev.baranhan.viltrumitecore.hero.ironman.IronManJarvisSounds.init();
       dev.baranhan.viltrumitecore.hero.ironman.IronManMarkSounds.init();
+      dev.baranhan.viltrumitecore.hero.ironman.IronManHulkbusterSounds.init();
       SOUND_EVENTS.register(modEventBus);
       modEventBus.addListener(this::commonSetup);
       MinecraftForge.EVENT_BUS.addListener(this::onCommandRegister);

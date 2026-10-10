@@ -163,7 +163,7 @@ public class MicroMissileEntity extends Projectile implements Homing {
 
       if (owner instanceof ServerPlayer player) {
          dev.baranhan.viltrumitecore.hero.fx.HeroFx.flash(player, at);
-         dev.baranhan.viltrumitecore.hero.fx.HeroFx.shockwave(player, at, 0.5F, null, 1.6F);
+         dev.baranhan.viltrumitecore.hero.fx.HeroFx.shockwave(player, at, 0.9F, null, (float)IronManRules.MISSILE_SPLASH_RADIUS);
       }
 
       this.level().playSound(null, at.x, at.y, at.z, IronManCombatSounds.MISSILE_EXPLODE.get(), SoundSource.PLAYERS, 1.2F,

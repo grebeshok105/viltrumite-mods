@@ -33,19 +33,17 @@ public final class IronManVeronica {
    private IronManVeronica() {
    }
 
-   /** Slot press: call the pod, or open the menu while it stands near. */
+   /**
+    * Slot press: the menu while the own pod stands near; otherwise call a new
+    * pod (cooldown from the call) and send the old one away.
+    */
    public static void press(ServerPlayer player, IronManState state) {
       VeronicaPodEntity pod = pod(player, state);
-      if (pod != null) {
-         if (!pod.landed()) {
-            return;
-         }
+      if (pod != null && !pod.landed()) {
+         return;
+      }
 
-         if (player.distanceToSqr(pod) > VeronicaPodEntity.MENU_RANGE * VeronicaPodEntity.MENU_RANGE) {
-            player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_far"), true);
-            return;
-         }
-
+      if (pod != null && player.distanceToSqr(pod) <= VeronicaPodEntity.MENU_RANGE * VeronicaPodEntity.MENU_RANGE) {
          openMenu(player, state, pod);
          return;
       }
@@ -55,14 +53,46 @@ public final class IronManVeronica {
          return;
       }
 
+      java.util.UUID old = state.podUuid;
       ServerLevel level = player.serverLevel();
       Vec3 ground = DropPoint.pick(player.getRandom(), player.position(), surface(level));
-      state.podId = VeronicaPodEntity.drop(player, ground).getId();
+      state.podUuid = VeronicaPodEntity.drop(player, ground).getUUID();
+      state.veronicaCooldown = COOLDOWN;
+      if (old != null) {
+         sendAway(player, old);
+      }
+   }
+
+   /**
+    * A pod leaves only when its online owner is no longer Iron Man or called a
+    * newer pod. A missing state (not loaded yet) keeps it.
+    */
+   public static boolean retired(ServerPlayer owner, java.util.UUID podId) {
+      if (!(owner instanceof dev.baranhan.viltrumitecore.hero.HeroPlayer hero) || hero.getHeroId() != dev.baranhan.viltrumitecore.hero.HeroId.IRON_MAN) {
+         return true;
+      }
+
+      IronManState state = IronManState.of(owner);
+      return state != null && !podId.equals(state.podUuid);
+   }
+
+   /** The replaced pod flies off if its chunk is loaded; otherwise it leaves when it next loads (it checks the owner's pod). */
+   static void sendAway(ServerPlayer player, java.util.UUID id) {
+      for (ServerLevel level : player.server.getAllLevels()) {
+         if (level.getEntity(id) instanceof VeronicaPodEntity pod) {
+            pod.leave();
+            return;
+         }
+      }
    }
 
    static void openMenu(ServerPlayer player, IronManState state, VeronicaPodEntity pod) {
-      int left = Math.max(0, VeronicaPodEntity.LANDED_TICKS - pod.phaseTicks());
-      CoreMessages.sendToPlayer(new VeronicaMenuS2CPacket(VeronicaView.of(state.roster, -1, left)), player);
+      CoreMessages.sendToPlayer(new VeronicaMenuS2CPacket(VeronicaView.of(state.roster, hulkbusterCard(state), VeronicaView.POD_STAYS)), player);
+   }
+
+   /** Hulkbuster card: {@link VeronicaView#HULKBUSTER_ON} while any part is on, else its cooldown (0 = ready). */
+   static int hulkbusterCard(IronManState state) {
+      return state.hulkbuster.present() ? VeronicaView.HULKBUSTER_ON : state.hulkbuster.cooldown();
    }
 
    /** The menu choice: every rule is checked here, the client only displays (spec §12.3). */
@@ -72,18 +102,37 @@ public final class IronManVeronica {
          return;
       }
 
-      MarkId id = MarkId.byId(choice);
-      if (id == null) {
-         return;
-      }
-
       VeronicaPodEntity pod = pod(player, state);
       if (pod == null || !pod.landed() || player.distanceToSqr(pod) > VeronicaPodEntity.MENU_RANGE * VeronicaPodEntity.MENU_RANGE) {
          player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_far"), true);
          return;
       }
 
-      switch (IronManMarks.deliver(player, state, id, pod.position().add(0.0, 2.2, 0.0))) {
+      Vec3 podTop = pod.position().add(0.0, 2.2, 0.0);
+      if (choice == VeronicaView.HULKBUSTER) {
+         switch (dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.IronManHulkbuster.deliver(player, state, podTop)) {
+            case BUSY -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_busy"), true);
+            case UNAVAILABLE -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.mark_unavailable"), true);
+            case NO_ROOM -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.hulkbuster_no_room"), true);
+            default -> {
+            }
+         }
+
+         return;
+      }
+
+      MarkId id = MarkId.byId(choice);
+      if (id == null) {
+         return;
+      }
+
+      // Marks cannot be put on under the Hulkbuster (plan stage 5 Global Constraints).
+      if (state.hulkbuster.present()) {
+         player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_busy"), true);
+         return;
+      }
+
+      switch (IronManMarks.deliver(player, state, id, podTop)) {
          case BUSY -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.veronica_busy"), true);
          case UNAVAILABLE -> player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.mark_unavailable"), true);
          default -> {
@@ -93,11 +142,11 @@ public final class IronManVeronica {
 
    @Nullable
    public static VeronicaPodEntity pod(ServerPlayer player, IronManState state) {
-      if (state.podId < 0) {
+      if (state.podUuid == null) {
          return null;
       }
 
-      Entity entity = player.level().getEntity(state.podId);
+      Entity entity = player.serverLevel().getEntity(state.podUuid);
       if (entity instanceof VeronicaPodEntity pod && pod.ownedBy(player) && pod.phase() != VeronicaPodEntity.Phase.LEAVING) {
          return pod;
       }
@@ -109,12 +158,6 @@ public final class IronManVeronica {
       if (state.veronicaCooldown > 0) {
          state.veronicaCooldown--;
       }
-
-      // The pod vanished without leaving (chunk unload, removed): free the slot, start the cooldown.
-      if (state.podId >= 0 && player.level().getEntity(state.podId) == null) {
-         state.podId = -1;
-         state.veronicaCooldown = Math.max(state.veronicaCooldown, COOLDOWN);
-      }
    }
 
    public static void onPodLanded(ServerPlayer owner, VeronicaPodEntity pod) {
@@ -122,9 +165,8 @@ public final class IronManVeronica {
 
    public static void onPodLeft(ServerPlayer owner, VeronicaPodEntity pod) {
       IronManState state = IronManState.of(owner);
-      if (state != null && state.podId == pod.getId()) {
-         state.podId = -1;
-         state.veronicaCooldown = COOLDOWN;
+      if (state != null && pod.getUUID().equals(state.podUuid)) {
+         state.podUuid = null;
       }
    }
 

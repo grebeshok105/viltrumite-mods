@@ -4,6 +4,7 @@ import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.key;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.strike;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.under;
 
+import dev.baranhan.viltrumitecore.client.anim.pose.PoseRig;
 import dev.baranhan.viltrumitecore.client.regulus.RegulusPoser;
 import dev.baranhan.viltrumitecore.client.render.animation.RegulusAnimationManager;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
@@ -71,7 +72,7 @@ public abstract class RegulusRitualModelMixin<T extends LivingEntity> extends Hu
       if (weight <= 0.001F) {
          return;
       }
-      RegulusPoser.Rig rig = RegulusPoser.rig(model, entity, bookSide, this.cloak);
+      PoseRig rig = RegulusPoser.rig(model, entity, bookSide, this.cloak);
       rig.head(RITUAL_HEAD, 0.0F, weight);
       rig.body(RITUAL_BODY, 0.0F, weight, false);
       rig.mainArm(RITUAL_BOOK_ARM, 0.0F, weight, false);

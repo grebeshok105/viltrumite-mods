@@ -3,166 +3,179 @@
   "minecraft:geometry": [
     {
       "description": {
-        "identifier": "geometry.viltrumitecore.ironman_mark_fist",
-        "texture_width": 16,
-        "texture_height": 16
+        "identifier": "geometry.viltrumitecore.fist",
+        "texture_width": 160,
+        "texture_height": 160
       },
       "bones": [
         {
           "name": "glove",
           "pivot": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42ArmRight",
+          "pivot": [
+            1.2999999999999998,
+            4.199999999999999,
+            0.0
           ],
+          "parent": "glove"
+        },
+        {
+          "name": "rightGauntlet",
+          "pivot": [
+            0.5499999999999998,
+            5.5,
+            0.0
+          ],
+          "parent": "42ArmRight"
+        },
+        {
+          "name": "rightGauntlet1",
+          "pivot": [
+            0.5499999999999998,
+            4.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
           "cubes": [
             {
               "origin": [
-                -2.75,
-                -2.5,
-                -2.75
+                -2.0,
+                -6.0,
+                -2.0
               ],
               "size": [
-                5.5,
-                5.0,
-                5.5
+                4.0,
+                12.0,
+                4.0
               ],
-              "uv": {
-                "up": {
-                  "uv": [
-                    5.5,
-                    0
-                  ],
-                  "uv_size": [
-                    5.5,
-                    5.5
-                  ]
-                },
-                "down": {
-                  "uv": [
-                    11.0,
-                    0
-                  ],
-                  "uv_size": [
-                    5.5,
-                    5.5
-                  ]
-                },
-                "east": {
-                  "uv": [
-                    0,
-                    5.5
-                  ],
-                  "uv_size": [
-                    5.5,
-                    5.0
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    5.5,
-                    5.5
-                  ],
-                  "uv_size": [
-                    5.5,
-                    5.0
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    11.0,
-                    5.5
-                  ],
-                  "uv_size": [
-                    5.5,
-                    5.0
-                  ]
-                },
-                "south": {
-                  "uv": [
-                    16.5,
-                    5.5
-                  ],
-                  "uv_size": [
-                    5.5,
-                    5.0
-                  ]
-                }
-              }
-            },
+              "uv": [
+                32,
+                112
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntlet2",
+          "pivot": [
+            0.5499999999999998,
+            5.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
             {
               "origin": [
-                -1.2,
-                -2.8,
-                2.5
+                -2.0,
+                -6.0,
+                -2.0
               ],
               "size": [
-                2.4,
-                2.4,
-                1.4
+                4.0,
+                12.0,
+                4.0
               ],
-              "uv": {
-                "up": {
-                  "uv": [
-                    1.4,
-                    8
-                  ],
-                  "uv_size": [
-                    2.4,
-                    1.4
-                  ]
-                },
-                "down": {
-                  "uv": [
-                    3.8,
-                    8
-                  ],
-                  "uv_size": [
-                    2.4,
-                    1.4
-                  ]
-                },
-                "east": {
-                  "uv": [
-                    0,
-                    9.4
-                  ],
-                  "uv_size": [
-                    1.4,
-                    2.4
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    1.4,
-                    9.4
-                  ],
-                  "uv_size": [
-                    2.4,
-                    2.4
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    3.8,
-                    9.4
-                  ],
-                  "uv_size": [
-                    1.4,
-                    2.4
-                  ]
-                },
-                "south": {
-                  "uv": [
-                    5.199999999999999,
-                    9.4
-                  ],
-                  "uv_size": [
-                    2.4,
-                    2.4
-                  ]
-                }
-              }
+              "uv": [
+                80,
+                112
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntlet3",
+          "pivot": [
+            0.5499999999999998,
+            6.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                128,
+                96
+              ],
+              "inflate": 0.025,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntletLayer",
+          "pivot": [
+            0.5499999999999998,
+            6.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                128,
+                112
+              ],
+              "inflate": 0.525,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "rightGauntletElbow",
+          "pivot": [
+            0.5499999999999998,
+            4.5,
+            0.0
+          ],
+          "parent": "rightGauntlet",
+          "cubes": [
+            {
+              "origin": [
+                -2.0,
+                -6.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                128
+              ],
+              "inflate": 0.025,
+              "mirror": true
             }
           ]
         }

@@ -15,6 +15,7 @@ The code is the source of truth. If this file and the code disagree, trust the c
 3. Every hero and every active ability MUST have animations: a third-person body pose, a first-person pose, and a visual effect. A hero without animations is not done.
 4. Extend the existing classes and patterns. Do not copy a system to make a "better" one.
 5. If a new effect needs a capability the system does not have, stop and ask the user before you add it.
+6. Ease weights by real time (`System.nanoTime` dt with `1 - exp(-k·dt)`), never with a fixed per-call `Mth.lerp(k, …)`: pose code runs once per render pass (twice with the shader shadow pass) and per frame, so a fixed factor changes speed with the frame rate.
 
 ## 2. System map
 
@@ -27,6 +28,7 @@ The mod has several layers. Each layer has one job. Pick the layer by what you a
 | First-person arms/hands | `FirstPersonXMixin` + `PoseDataManager.FP` | `client/mixin/FirstPerson*Mixin`, flight `ItemInHandRendererMixin` |
 | Smooth on/off blend of a pose | Weight managers | `client/render/animation/*AnimationManager`, `SilhouetteManager` |
 | Animated items and geo entities | Anim core (Blockbench geo + animation JSON) | `viltrumitecore/client/anim/**`, `InfinityGunRenderer` |
+| Whole-body replacement (Hulkbuster Mark 48) | `RenderPlayerEvent.Pre` cancel + `RenderArmEvent` (§7.4) | `client/ironman/hulkbuster/HulkbusterRenderer` |
 | World effects (rings, beams, sparks, blood) | VFX managers on `RenderLevelStageEvent` | `client/render/vfx/*VFXManager`, `MeltedTunnelRenderer` |
 | Screen effects (shake, blur, tint) | Post shader `dash_impact` | `ViltrumiteShaders`, `GameRendererDashMixin`, `shaders/post/dash_impact.json`, `assets/minecraft/shaders/program/dash_impact.*` |
 | Flight screen effects | Post shader `sonic_boom` | flight `GameRendererMixin` |
@@ -52,8 +54,7 @@ Pattern: one mixin per ability on `PlayerModel.setupAnim(LivingEntity;FFFFF)V` a
 | `ChopModelMixin2`, `ThunderclapModelMixin` | 1170 |
 | `BarrageModelMixin` | 1175 |
 | `HomelanderModelMixin` | 1180 |
-| `IronManModelMixin` (hover, glide, heavy-landing kneel) | 1190 |
-| `SignatureModelMixin` (Iron Man mark signatures) | 1195 |
+| `IronManModelMixin` (hover, glide, heavy-landing kneel, every Iron Man combat and mark-signature pose, suit walk-in rest pose) | 1190 |
 | `GrabModelMixin` | 2000 |
 | `BlockModelMixin` | 3000 |
 
@@ -112,7 +113,9 @@ Use a `PlayerRenderer.setupRotations` TAIL mixin (`PunchRendererCoreMixin` 1500,
 
 ## 5. First person
 
-- Each ability has a `FirstPersonXMixin` (Barrage, Block, Chop, Chop2, Grab, Gun, Punch, Thunderclap). Read the nearest one before you write a new one. Copy its structure.
+- Each ability has a `FirstPersonXMixin` (Barrage, Block, Chop, Chop2, Grab, Gun, Punch, Thunderclap; Homelander; Iron Man: `IronManFirstPersonShieldMixin` → `IronManFirstPerson` for every combat pose and the shield guard). Read the nearest one before you write a new one. Copy its structure.
+- Iron Man (Regulus-style, PR #19): `client/ironman/anim/IronManAnimation` is the one client clock per player (shot edges per palm, stance hold, volleys, strike clock with forehand/backhand, nano weapon form/dissolve, missiles, unibeam, signatures); `State.weight(View, Layer, active)` gives separate third/first-person weights. `IronManPoser` keys layers on `PoseRig.begin(...).slerp()` and then aims arms with `client/anim/pose/ArmAim` (direction from the head axes, rotation-to quaternion → Euler ZYX); `IronManFirstPerson` uses `FirstPersonArm` (shoulder pivot) with the same layers. Do not add a separate signature mixin: signatures are a layer in these two classes.
+- An arm that is not the main hand renders in first person only through `AlwaysVisibleOffhandMixin`; a hero adds its `wantsOffhand(player)` there.
 - Flight applies `PoseDataManager.FP` in `ItemInHandRendererMixin` and resets arm pivots in `PlayerRendererMixin`. Do not fight these transforms.
 - Blocking uses `FirstPersonBlockAnimationManager`, a separate weight manager. A pose that renders in both views needs a separate first-person weight.
 
@@ -140,6 +143,7 @@ API:
 - `new AnimationController("main").transitionLength(ticks).onEvent(e -> ...)`.
 - `play(anim)` does not restart the same name. `restart(anim)` always restarts.
 - Per frame, in this order: `controller.play(anim)` → `controller.apply(model, AnimRenderer.time(pt))` → `AnimRenderer.render(..., boneHook)`.
+- Stateless timeline form (no start clock, time comes from synced fields): `AnimationController.seek(anim, model, seconds)` resets and poses one clip; `overlay(anim, model, seconds)` poses only the bones the clip animates; `blend(model, a, sa, b, sb, weight)` lerps two clips per bone.
 - `BoneHook` runs for every bone, also for hidden bones. Use it to attach effects or vanilla arms.
 
 JSON support:
@@ -199,6 +203,22 @@ Decision record: `docs/spikes/2026-10-ironman-reveal.md`. No custom shader
 - Progress must come from synced timeline fields (`actionElapsed/Length`),
   never from a client counter: relog mid-wave stays correct.
 
+### 7.4 Whole-body replacement (Hulkbuster): allowed only through this renderer pattern
+
+Iron Man stage 5 replaces the whole player body with the Mark 48 model. Only this pattern may do that:
+
+1. Use Forge event hooks, not a model mixin. `RenderPlayerEvent.Pre` draws the big body and cancels the vanilla render while ACTIVE. `RenderArmEvent` draws the two big arms and cancels the vanilla arm in first person. Both are in `client/ironman/hulkbuster/HulkbusterRenderer`.
+2. Pose = `AnimationController.blend` (idle or walk, blended by limb swing speed) + `AnimationController.overlay` (one clip for the action). Clip time comes from synced fields (`actionElapsed`, `actionLength`). Loops use wall time. The walk uses walk distance. Never use a client counter for progress.
+3. Geo sits in the armor space of §7.1: feet at y 0, JSON x = vanilla x, pixels. Draw it in the entity frame: `mulPose(YP(180 - bodyYaw))`, then `scale(1.7)`. Do not flip. The entity frame already matches the armor space.
+4. Cancelling the vanilla render also hides its layers, skin and mark pieces. EXITING does not cancel. Tony draws at normal size and steps back. The step is a translation applied in the `RenderPlayerEvent.Pre` stack before vanilla rotates it, so it is in the entity frame.
+5. Locked docking parts use the `PlayerGeoLayer.Provider` `HulkbusterDocking` (the armor bones follow every pose). Flying parts draw in the world (`HulkbusterFlight`, `PartFlight`, AFTER_ENTITIES).
+6. Glow is a `RenderType.eyes` pass, skipped in the shadow pass. Thruster flames are glow-only: their cutout texels are clear, and the bone scale is zero at rest.
+7. `GeoBone.resetToDefault` does not reset `hidden`. A pose that hides bones must set `hidden` every frame.
+8. Hitbox and eye height come from the body scale seam (`HeroDefinition.bodyScale`). This renderer does not change them.
+9. No pose mixin was added for the Hulkbuster, so the priority table in §3.1 is unchanged.
+
+Art: Sind Hulkbuster from the user's archive, `tools/assets/convert_ironman_sind.py` (geo via `tools/tabula2geo.py`, clips baked from the Sind `.fsk` scripts via `tools/fsk2anim.py`). The model is 68 px tall: the renderer scale is `HulkbusterLayer.SCALE × 32/68`. The jackhammer arm is a separate geo with its own texture; it replaces the body bone `pivotLeft` while the jackhammer tool is selected. Thruster fire is a separate geo posed with the same clips and drawn as glow. Tests: `HulkbusterAssetsParseTest` (parse, bones, clip lengths), `HulkbusterPosesTest`, `HulkbusterAssemblyTest`.
+
 ## 8. World VFX
 
 Pattern: a `@EventBusSubscriber(value = Dist.CLIENT, bus = FORGE)` class that renders in `RenderLevelStageEvent` at `AFTER_LEVEL` or `AFTER_PARTICLES`.
@@ -228,21 +248,21 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
 - Camera shake goes through `client/render/vfx/CameraShake` (`addAt` with distance falloff, `add` for local). Do not add a second shake accumulator.
 - Full API list: `.agents/skills/add_hero/references/shared-toolkit.md`.
 
-### 7.3 Mark skins and plates (Iron Man stage 4)
+### 7.3 Mark skins and pieces (Iron Man stage 4)
 
 - Whole mark on (all parts present): the body skin is the mark texture
   `textures/entity/hero/ironman_<mark key>.png`. Helmet open uses a baked copy
   with Tony's head (`MarkSkins`, reload listener, 64x64 layout).
 - Partial, equipping, exiting, or Mark 42 with lost parts: Tony's skin plus one
-  plate per `SuitPart` slice (`geo/ironman/marks/plates/<key>.geo.json`), drawn
-  with `PlayerGeoLayer` in both views. Key = bone, from %, to %, side
-  (`PlateParts.key`). Generated by `tools/assets/make_ironman_stage4_visuals.py`.
-- Plate geo: JSON x = vanilla model x, JSON y = 24 - model y, box UV = vanilla
-  `texOffs`. A vertical slice moves the UV origin by its top row. `BakedGeoModel`
-  mirrors X, so the rest geo is the body frame at player scale (0.9375).
-- Plate pose: `PartWrapAnimator.pose` scales the top-level bone about its own
-  centre (the pivot is the slice centre). Clear `resetBones()` before a direct
-  draw of a shared plate model.
+  archive piece per `SuitPart` (`MarkParts.geo/passes`): Satsu `each_part`
+  pieces (`geo/ironman/marks/parts/`) with the mark skin, Mark 42 Sind pieces
+  (`Mark42Parts`, `geo/ironman/mark_42/`) with the Sind atlas. Drawn with
+  `PlayerGeoLayer` in both views; in the world with `MarkParts.draw`.
+- A whole Satsu mark also draws its own Satsu parts (`MarkExtras`: Mark 7 flaps,
+  Mark 17 chest, War Machine pads, Iron Heart plates) with the raw suit texture.
+- Piece geo has one top-level armor bone pivoted at the piece centre.
+  `PartWrapAnimator.pose` scales that bone about the centre. Clear `resetBones()`
+  before a direct draw of a shared piece model.
 - Glow: `ironman_<key>_glow.png` as `Pass.glow`. Click flash = an extra glow pass of the skin.
 
 ### 8.1 Flying parts and wrap
@@ -251,22 +271,36 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
   `PartFlight.position(launch, live anchor, progress)`. The anchor follows the
   moving player's body yaw. Tumble decays to 0, so the part meets the body
   pose exactly. Parts wait in the pod (no draw) until their launch tick.
-- Wrap: after the flight, `MarkVisuals.collectParts` draws the same plate on the
-  body (`PartWrapAnimator`: open, close, click flash). Locked parts stay as plates.
+- Wrap: after the flight, `MarkVisuals.collectParts` draws the same piece on the
+  body (`PartWrapAnimator`: open, close, click flash). Locked parts stay as pieces.
 - Sounds are local clips. `PartFlightVisuals.onClientTick` plays them at the synced launch and lock ticks.
 
 ### 8.2 Whole-entity renderers (pod, empty suit, debris)
 
 - `VeronicaPodRenderer`: `veronica_pod.geo.json` with `open`/`close` clips
   (`AnimationController.restart` on each phase change). Doors swing open after landing.
-- `EmptySuitRenderer`: shell (mark skin) + interior (`ironman_interior.png`)
-  with the 30-tick `open` clip. Body frame: `mulPose(YP(180 - yRot))`, scale 0.9375.
-- `SuitDebrisRenderer`: one plate, tumbling, fades and shrinks in the last 20 ticks.
+- `EmptySuitRenderer`: opening shell (Satsu `full_body` + helmet cut into a back
+  half and hinged front plates by `tools/assets/opening_shell.py`, mark skin),
+  interior lining (`ironman_interior.png` 128 px grayscale + glow, tinted per mark with
+  `SuitPalette.lining`), `open` (30 ticks) clip on the door bones. Entering is
+  code-driven (`EmptySuitEntity.enterDoor`): plates open while the owner walks up,
+  close legs → arms → chest → faceplate (4 t each, no overshoot); the shell hides
+  once the owner's snapshot shows the mark on; the helmet box hides for the local
+  first-person owner. The walk (approach, turn, step back) is scripted on the client
+  by `SuitEntryDriver`, which also gives `restWeight` for `IronManPoser`. The old
+  `enter` clip is unused. Mark extras only while standing closed. Body frame: `mulPose(YP(180 - yRot))`, scale 0.9375.
+- `VeronicaPodRenderer`: Veronica after the Age of Ultron stills (twin hulls are
+  the door bones), cutout + glow pass.
+- `SuitDebrisRenderer`: one suit piece, tumbling, fades and shrinks in the last 20 ticks.
+- Forearm micro-missile pods (`geo/ironman/missiles/forearm_launchers.geo.json` + `forearm_rockets`, own work, `tools/assets/make_ironman_forearm_launchers.py`): grayscale textures tinted with `SuitPalette` via `PlayerGeoLayer.Pass.cutout(tex, r, g, b)`; pods slide out of the forearm, petals open. Launch point `IronManCombat.forearm(player, right)`.
+- War Machine rounds: `client/ironman/mark/sig/GunRounds` (travelling streaks, muzzle flash, whiz for bystanders, block/body impacts), drawn from `SignatureVfx`.
+- Helmet open (iteration 3): only the iron faceplate opens, the rest of the helmet stays. Nano: `IronManSuitTextures` `cutOpen/glowOpen` (frames without the head front and hat front) plus `face(kind, step)` dissolve steps (8; nanites recede from the middle of the face to the edges, cyan rim). Marks: `MarkSkins` opens only the face region and `MarkFaceplate` (`geo/ironman/marks/faceplate.geo.json`) slides the plate up into the crown with a small outward tilt. `HelmetAnim.gesture` is the hand-to-helmet clock (22 t, smooth, only when the suit stays on — none on exit or retract).
 - `MarkVfx`: pixel motes (fire trail, engine flames, sparks, dust ring) and a
   heat aura (`PixelVfx.bodyShell`). Motes age by client ticks and clear on logout.
 - Animation sign convention: JSON X and Y are negated like `buildBone`, Z is not.
   Parsed-frame checks: door `rotY` -75 turns the +x door edge toward +z.
   Arm `rotZ` +40 on the +x arm is outward. Head `rotX` +35 tilts the top toward +z. Verify in game.
+  For a geo hinge rotated about X (front = -z): a positive bone `rotX` (clip X negative) swings the lower edge forward and up. The empty-suit faceplate (hinge at the top centre) opens with clip X = -105; +105 swung it back through the helmet (fixed in PR #19 iteration 3).
 
 ## 9. Screen effects
 

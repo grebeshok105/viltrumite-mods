@@ -3,9 +3,9 @@
   "minecraft:geometry": [
     {
       "description": {
-        "identifier": "geometry.viltrumitecore.ironman_mark_laser",
-        "texture_width": 16,
-        "texture_height": 16
+        "identifier": "geometry.viltrumitecore.laser_emitters",
+        "texture_width": 32,
+        "texture_height": 32
       },
       "bones": [
         {
@@ -17,328 +17,219 @@
           ]
         },
         {
-          "name": "laserRight",
+          "name": "player",
           "pivot": [
-            -5,
-            22,
-            0
+            0.0,
+            24.0,
+            0.0
           ],
-          "parent": "armorRightArm",
+          "parent": "armorRightArm"
+        },
+        {
+          "name": "inner",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "player",
           "cubes": [
             {
               "origin": [
-                -7.6,
-                13.0,
-                -3.05
+                -8.0,
+                12.0,
+                -2.0
               ],
               "size": [
-                2.6,
-                2.4,
-                1.0
+                4.0,
+                12.0,
+                4.0
               ],
-              "uv": {
-                "up": {
-                  "uv": [
-                    1.0,
-                    0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    1.0
-                  ]
-                },
-                "down": {
-                  "uv": [
-                    3.6,
-                    0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    1.0
-                  ]
-                },
-                "east": {
-                  "uv": [
-                    0,
-                    1.0
-                  ],
-                  "uv_size": [
-                    1.0,
-                    2.4
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    1.0,
-                    1.0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    2.4
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    3.6,
-                    1.0
-                  ],
-                  "uv_size": [
-                    1.0,
-                    2.4
-                  ]
-                },
-                "south": {
-                  "uv": [
-                    4.6,
-                    1.0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    2.4
-                  ]
-                }
-              }
-            },
-            {
-              "origin": [
-                -6.9,
-                13.9,
-                -3.25
+              "uv": [
+                16,
+                16
               ],
-              "size": [
-                1.2,
-                0.8,
-                0.3
-              ],
-              "uv": {
-                "up": {
-                  "uv": [
-                    8.3,
-                    0
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.3
-                  ]
-                },
-                "down": {
-                  "uv": [
-                    9.5,
-                    0
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.3
-                  ]
-                },
-                "east": {
-                  "uv": [
-                    8,
-                    0.3
-                  ],
-                  "uv_size": [
-                    0.3,
-                    0.8
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    8.3,
-                    0.3
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.8
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    9.5,
-                    0.3
-                  ],
-                  "uv_size": [
-                    0.3,
-                    0.8
-                  ]
-                },
-                "south": {
-                  "uv": [
-                    9.799999999999999,
-                    0.3
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.8
-                  ]
-                }
-              }
+              "inflate": 0.015
             }
           ]
         },
         {
-          "name": "armorLeftArm",
+          "name": "laser",
           "pivot": [
-            5,
-            22,
-            0
-          ]
+            -8.0,
+            13.0,
+            0.0
+          ],
+          "parent": "player"
         },
         {
-          "name": "laserLeft",
+          "name": "coverLayer",
           "pivot": [
-            5,
-            22,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
-          "parent": "armorLeftArm",
+          "parent": "laser"
+        },
+        {
+          "name": "rightArmLayerCube",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "coverLayer",
           "cubes": [
             {
               "origin": [
-                5.0,
-                13.0,
-                -3.05
+                -8.0,
+                12.0,
+                -2.0
               ],
               "size": [
-                2.6,
-                2.4,
-                1.0
+                4.0,
+                12.0,
+                4.0
               ],
-              "uv": {
-                "up": {
-                  "uv": [
-                    1.0,
-                    0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    1.0
-                  ]
-                },
-                "down": {
-                  "uv": [
-                    3.6,
-                    0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    1.0
-                  ]
-                },
-                "east": {
-                  "uv": [
-                    0,
-                    1.0
-                  ],
-                  "uv_size": [
-                    1.0,
-                    2.4
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    1.0,
-                    1.0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    2.4
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    3.6,
-                    1.0
-                  ],
-                  "uv_size": [
-                    1.0,
-                    2.4
-                  ]
-                },
-                "south": {
-                  "uv": [
-                    4.6,
-                    1.0
-                  ],
-                  "uv_size": [
-                    2.6,
-                    2.4
-                  ]
-                }
-              }
-            },
+              "uv": [
+                0,
+                16
+              ],
+              "inflate": 0.525
+            }
+          ]
+        },
+        {
+          "name": "cover",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "laser"
+        },
+        {
+          "name": "rightArmCube",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "cover",
+          "cubes": [
             {
               "origin": [
-                5.7,
-                13.9,
-                -3.25
+                -8.0,
+                12.0,
+                -2.0
               ],
               "size": [
-                1.2,
-                0.8,
-                0.3
+                4.0,
+                12.0,
+                4.0
               ],
-              "uv": {
-                "up": {
-                  "uv": [
-                    8.3,
-                    0
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.3
-                  ]
-                },
-                "down": {
-                  "uv": [
-                    9.5,
-                    0
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.3
-                  ]
-                },
-                "east": {
-                  "uv": [
-                    8,
-                    0.3
-                  ],
-                  "uv_size": [
-                    0.3,
-                    0.8
-                  ]
-                },
-                "north": {
-                  "uv": [
-                    8.3,
-                    0.3
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.8
-                  ]
-                },
-                "west": {
-                  "uv": [
-                    9.5,
-                    0.3
-                  ],
-                  "uv_size": [
-                    0.3,
-                    0.8
-                  ]
-                },
-                "south": {
-                  "uv": [
-                    9.799999999999999,
-                    0.3
-                  ],
-                  "uv_size": [
-                    1.2,
-                    0.8
-                  ]
-                }
-              }
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 0.025
+            }
+          ]
+        },
+        {
+          "name": "emitter",
+          "pivot": [
+            -7.0,
+            11.75,
+            0.5
+          ],
+          "parent": "laser"
+        },
+        {
+          "name": "cube",
+          "pivot": [
+            -7.0,
+            13.6,
+            0.0
+          ],
+          "parent": "emitter",
+          "rotation": [
+            0.0,
+            0.0,
+            -60.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7.5,
+                12.1,
+                -1.0
+              ],
+              "size": [
+                1.0,
+                2.0,
+                2.0
+              ],
+              "uv": [
+                20,
+                6
+              ],
+              "inflate": -0.1
+            }
+          ]
+        },
+        {
+          "name": "cube_1",
+          "pivot": [
+            -7.0,
+            11.75,
+            0.5
+          ],
+          "parent": "emitter",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                11.75,
+                -1.5
+              ],
+              "size": [
+                1.0,
+                3.0,
+                3.0
+              ],
+              "uv": [
+                16,
+                0
+              ],
+              "inflate": -0.1
+            }
+          ]
+        },
+        {
+          "name": "cube_2",
+          "pivot": [
+            -7.0,
+            11.75,
+            0.5
+          ],
+          "parent": "emitter",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                11.75,
+                -0.5
+              ],
+              "size": [
+                1.0,
+                3.0,
+                1.0
+              ],
+              "uv": [
+                16,
+                6
+              ]
             }
           ]
         }

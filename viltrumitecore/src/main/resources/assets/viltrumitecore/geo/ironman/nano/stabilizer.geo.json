@@ -1,0 +1,231 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.stabilizer",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "bone",
+          "parent": "armorBody",
+          "pivot": [
+            4.5,
+            24,
+            5.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4,
+                16,
+                5
+              ],
+              "size": [
+                1,
+                12,
+                1
+              ],
+              "inflate": 0.5,
+              "pivot": [
+                4.5,
+                22,
+                5.5
+              ],
+              "rotation": [
+                -44.00703,
+                10.54529,
+                10.72858
+              ],
+              "uv": [
+                60,
+                35
+              ],
+              "mirror": true
+            },
+            {
+              "origin": [
+                4,
+                16,
+                5
+              ],
+              "size": [
+                1,
+                12,
+                1
+              ],
+              "inflate": 0.25,
+              "pivot": [
+                4.5,
+                22,
+                5.5
+              ],
+              "rotation": [
+                -44.00703,
+                10.54529,
+                10.72858
+              ],
+              "uv": [
+                60,
+                22
+              ],
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "bone2",
+          "parent": "armorBody",
+          "pivot": [
+            -4.5,
+            24,
+            5.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -5,
+                16,
+                5
+              ],
+              "size": [
+                1,
+                12,
+                1
+              ],
+              "inflate": 0.5,
+              "pivot": [
+                -4.5,
+                22,
+                5.5
+              ],
+              "rotation": [
+                -44.00703,
+                -10.54529,
+                -10.72858
+              ],
+              "uv": [
+                60,
+                35
+              ]
+            },
+            {
+              "origin": [
+                -5,
+                16,
+                5
+              ],
+              "size": [
+                1,
+                12,
+                1
+              ],
+              "inflate": 0.25,
+              "pivot": [
+                -4.5,
+                22,
+                5.5
+              ],
+              "rotation": [
+                -44.00703,
+                -10.54529,
+                -10.72858
+              ],
+              "uv": [
+                60,
+                22
+              ]
+            }
+          ]
+        },
+        {
+          "name": "bone3",
+          "parent": "armorBody",
+          "pivot": [
+            -4.5,
+            12,
+            5.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -5,
+                10,
+                5
+              ],
+              "size": [
+                1,
+                8,
+                1
+              ],
+              "inflate": 0.25,
+              "pivot": [
+                -4.5,
+                12,
+                5.5
+              ],
+              "rotation": [
+                44.007,
+                -10.54529,
+                10.7286
+              ],
+              "uv": [
+                56,
+                37
+              ]
+            }
+          ]
+        },
+        {
+          "name": "bone4",
+          "parent": "armorBody",
+          "pivot": [
+            4.5,
+            12,
+            5.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4,
+                10,
+                5
+              ],
+              "size": [
+                1,
+                8,
+                1
+              ],
+              "inflate": 0.25,
+              "pivot": [
+                4.5,
+                12,
+                5.5
+              ],
+              "rotation": [
+                44.007,
+                10.54529,
+                -10.7286
+              ],
+              "uv": [
+                56,
+                37
+              ],
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

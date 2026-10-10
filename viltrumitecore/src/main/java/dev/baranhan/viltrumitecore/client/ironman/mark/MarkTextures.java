@@ -6,8 +6,10 @@ import net.minecraft.resources.ResourceLocation;
 /** Texture paths of the mark visuals (64x64 player-skin layout unless noted). */
 public final class MarkTextures {
    public static final ResourceLocation INTERIOR = new ResourceLocation("viltrumitecore", "textures/entity/hero/ironman_interior.png");
-   public static final ResourceLocation ENERGY_HEX = new ResourceLocation("viltrumitecore", "textures/entity/ironman/energy_hex.png");
+   /** Mark force field (Satsu ark_force_field, tinted repulsor cyan; additive). */
+   public static final ResourceLocation ENERGY_SHIELD = new ResourceLocation("viltrumitecore", "textures/entity/ironman/marks/energy_shield.png");
    public static final ResourceLocation POD = new ResourceLocation("viltrumitecore", "textures/entity/ironman/veronica_pod.png");
+   public static final ResourceLocation POD_GLOW = new ResourceLocation("viltrumitecore", "textures/entity/ironman/veronica_pod_glow.png");
 
    private MarkTextures() {
    }
