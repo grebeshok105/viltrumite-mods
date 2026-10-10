@@ -63,9 +63,13 @@ public final class IronManPoser {
       Combat combat = Combat.of(snapshot, partialTick);
       w.advanceCombat(combat, 18.0F);
       MarkState mark = MarkState.of(snapshot);
-      float[] equip = EQUIP.computeIfAbsent(entity, e -> new float[1]);
+      float[] equip = EQUIP.computeIfAbsent(entity, e -> new float[]{0.0F, Float.NaN});
       boolean arming = mark.markOn() && (mark.equipping() || mark.equipPhase() == IronManFlags.EQUIP_PARTIAL);
-      equip[0] = Mth.lerp(0.25F, equip[0], arming ? 1.0F : 0.0F);
+      // Real-time easing: the pose runs once per render pass (shadow pass too), so a per-call lerp would race.
+      float seconds = System.nanoTime() / 1.0E9F;
+      float dt = Float.isNaN(equip[1]) ? 0.0F : Math.min(0.1F, seconds - equip[1]);
+      equip[1] = seconds;
+      equip[0] = Mth.lerp(1.0F - (float)Math.exp(-10.0F * dt), equip[0], arming ? 1.0F : 0.0F);
       if (w.hover < 0.001F && w.glide < 0.001F && w.kneel < 0.001F && w.combatIdle() && gesture < 0.001F && equip[0] < 0.001F) {
          return;
       }
@@ -152,9 +156,9 @@ public final class IronManPoser {
    }
 
    /** Which combat pose runs this frame, and its 0..1 progress (pure on the snapshot). */
-   record Combat(boolean aimRight, boolean aimLeft, float recoil, boolean unibeam, boolean missiles,
+   public record Combat(boolean aimRight, boolean aimLeft, float recoil, boolean unibeam, boolean missiles,
                  float slash, float swing, float windup, boolean lunge, boolean guard) {
-      static Combat of(HeroPublicSnapshot snapshot, float partialTick) {
+      public static Combat of(HeroPublicSnapshot snapshot, float partialTick) {
          int flags = snapshot.heroFlags();
          if (!IronManView.worn(snapshot)) {
             return new Combat(false, false, 0.0F, false, false, -1.0F, -1.0F, -1.0F, false, false);

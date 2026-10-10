@@ -21,7 +21,8 @@ import net.minecraft.world.entity.LivingEntity;
  */
 public final class SignaturePoser {
    private static final WeakHashMap<LivingEntity, Blend> BLENDS = new WeakHashMap<>();
-   private static final float BLEND_RATE = 0.25F;
+   /** Blend speed (1/s), eased by real time: the same at any frame rate and with the shadow pass. */
+   private static final float BLEND_SPEED = 17.3F;
 
    private SignaturePoser() {
    }
@@ -38,6 +39,14 @@ public final class SignaturePoser {
    private static final class Blend {
       Kind kind = Kind.NONE;
       float weight;
+      long lastNanos = System.nanoTime();
+
+      void step(boolean on) {
+         long now = System.nanoTime();
+         float dt = Math.min(0.1F, (now - this.lastNanos) / 1.0E9F);
+         this.lastNanos = now;
+         this.weight = Mth.lerp(1.0F - (float)Math.exp(-BLEND_SPEED * dt), this.weight, on ? 1.0F : 0.0F);
+      }
    }
 
    public static void poseThirdPerson(PlayerModel<?> model, LivingEntity entity) {
@@ -54,7 +63,7 @@ public final class SignaturePoser {
          blend.kind = target;
       }
 
-      blend.weight = Mth.lerp(BLEND_RATE, blend.weight, target == Kind.NONE ? 0.0F : 1.0F);
+      blend.step(target != Kind.NONE);
       if (blend.weight < 0.01F) {
          if (target == Kind.NONE) {
             BLENDS.remove(entity);

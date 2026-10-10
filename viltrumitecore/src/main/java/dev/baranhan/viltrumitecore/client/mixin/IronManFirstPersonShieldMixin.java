@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** First-person Iron Man shield guard on the left arm (same hook as FirstPersonBlockMixin). */
+/** Iron Man first-person arm layer: combat poses and the shield guard (same hook as FirstPersonBlockMixin). */
 @Mixin(ItemInHandRenderer.class)
 public abstract class IronManFirstPersonShieldMixin {
    @Inject(
@@ -24,6 +24,7 @@ public abstract class IronManFirstPersonShieldMixin {
    private void viltrumitecore$ironManShield(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float attackAnim, ItemStack stack,
       float equipAnim, PoseStack poseStack, MultiBufferSource buffer, int combinedLight, CallbackInfo ci) {
       HumanoidArm arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
+      IronManFirstPerson.applyCombat(player, arm, poseStack, partialTicks);
       IronManFirstPerson.applyGuard(player, arm, poseStack);
    }
 }

@@ -164,13 +164,11 @@ public final class SignatureVisuals {
 
    /** Smoothed turret unfold: the folded gun on the back swings out while the signature fires. */
    private static float turretOpen(AbstractClientPlayer player, boolean active, float partialTick) {
-      float[] open = TURRET_OPEN.computeIfAbsent(player, p -> new float[]{0.0F, -1.0F});
-      float now = player.tickCount + partialTick;
-      if (now != open[1]) {
-         open[0] = Mth.lerp(0.2F, open[0], active ? 1.0F : 0.0F);
-         open[1] = now;
-      }
-
+      float[] open = TURRET_OPEN.computeIfAbsent(player, p -> new float[]{0.0F, Float.NaN});
+      float seconds = System.nanoTime() / 1.0E9F;
+      float dt = Float.isNaN(open[1]) ? 0.0F : Math.min(0.1F, seconds - open[1]);
+      open[1] = seconds;
+      open[0] = Mth.lerp(1.0F - (float)Math.exp(-12.0F * dt), open[0], active ? 1.0F : 0.0F);
       return open[0];
    }
 
