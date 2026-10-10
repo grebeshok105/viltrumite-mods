@@ -260,4 +260,31 @@ public class HomelanderHero implements HeroDefinition {
          instance.removeModifier(id);
       }
    }
+
+   /**
+    * Scan: the legacy Viltrumite stats PlayerStatsMixin applies (reduceIncomingDamage,
+    * ignoreWeakDamage), except void / kill damage.
+    */
+   @Override
+   public dev.baranhan.viltrumitecore.hero.ScanInfo scanInfo(Player self) {
+      boolean kit = self instanceof dev.baranhan.viltrumitecore.util.ViltrumiteCorePlayer core && core.isViltrumite();
+      if (!kit || !(self instanceof dev.baranhan.viltrumitecore.util.ViltrumiteStatHolder stats)) {
+         return dev.baranhan.viltrumitecore.hero.ScanInfo.EMPTY;
+      }
+
+      return scanInfoFor(true, stats.getDamageReduction(), stats.getDamageIgnoreThreshold());
+   }
+
+   public static dev.baranhan.viltrumitecore.hero.ScanInfo scanInfoFor(boolean viltrumite, float reductionPercent, float ignoreThreshold) {
+      java.util.List<dev.baranhan.viltrumitecore.hero.ScanLine> protections = new java.util.ArrayList<>();
+      if (viltrumite && reductionPercent > 0.0F) {
+         protections.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.homelander.reduction", Math.round(Math.min(100.0F, reductionPercent))));
+      }
+
+      if (viltrumite && ignoreThreshold > 0.0F) {
+         protections.add(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.homelander.ignore", String.format(java.util.Locale.ROOT, "%.1f", ignoreThreshold)));
+      }
+
+      return new dev.baranhan.viltrumitecore.hero.ScanInfo(protections, java.util.List.of(), java.util.List.of());
+   }
 }

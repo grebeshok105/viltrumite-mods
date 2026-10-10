@@ -1,0 +1,160 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.palms",
+        "texture_width": 4,
+        "texture_height": 4
+      },
+      "bones": [
+        {
+          "name": "armorRightArm",
+          "pivot": [
+            -5.0,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "flameRight",
+          "parent": "armorRightArm",
+          "pivot": [
+            -6.0,
+            12,
+            -0.050000000000000044
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7.1,
+                9,
+                -1.2
+              ],
+              "size": [
+                2.2,
+                3,
+                2.3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "armorLeftArm",
+          "pivot": [
+            5.0,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "flameLeft",
+          "parent": "armorLeftArm",
+          "pivot": [
+            6.0,
+            12,
+            -0.050000000000000044
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4.9,
+                9,
+                -1.2
+              ],
+              "size": [
+                2.2,
+                3,
+                2.3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

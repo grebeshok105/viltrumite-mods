@@ -1,11 +1,13 @@
 package dev.baranhan.viltrumitecore.client.regulus;
 
+import dev.baranhan.viltrumitecore.client.anim.pose.PoseKeys;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.regulus.RegulusRules;
 
 /**
- * Client mirror of the server action ticks plus the keyframe math shared by
- * every Regulus animation layer. Every tick number comes from RegulusRules so
+ * Client mirror of the server action ticks of every Regulus animation layer;
+ * the keyframe math is the shared {@link PoseKeys} (delegates kept for the
+ * existing static imports). Every tick number comes from RegulusRules so
  * the presentation can never drift from the gameplay contract.
  *
  * <p>Keyframe rows are {@code {tick, pitchDeg, yawDeg, rollDeg, x, y, z}}. A
@@ -20,7 +22,7 @@ public final class RegulusPoseTiming {
    public static final int RITUAL_TICKS = RegulusRules.RITUAL_TICKS;
    public static final int MANIA_CHANNEL_TICKS = RegulusRules.MANIA_CHANNEL_TICKS;
    /** Strike keys overshoot their settle pose, same as the Viltrumite punch S2 key. */
-   public static final float OVERSHOOT = 1.15F;
+   public static final float OVERSHOOT = PoseKeys.OVERSHOOT;
 
    private RegulusPoseTiming() {
    }
@@ -75,73 +77,42 @@ public final class RegulusPoseTiming {
    }
 
    public static float[] key(float tick, float pitch, float yaw, float roll, float x, float y, float z) {
-      return new float[]{tick, pitch, yaw, roll, x, y, z};
+      return PoseKeys.key(tick, pitch, yaw, roll, x, y, z);
    }
 
    public static float[] key(float tick, float pitch, float yaw, float roll) {
-      return key(tick, pitch, yaw, roll, 0.0F, 0.0F, 0.0F);
+      return PoseKeys.key(tick, pitch, yaw, roll);
    }
 
    /** Strike key: the settle values pushed {@link #OVERSHOOT} past the target. */
    public static float[] strike(float tick, float pitch, float yaw, float roll, float x, float y, float z) {
-      return key(tick, pitch * OVERSHOOT, yaw * OVERSHOOT, roll * OVERSHOOT, x * OVERSHOOT, y * OVERSHOOT, z * OVERSHOOT);
+      return PoseKeys.strike(tick, pitch, yaw, roll, x, y, z);
    }
 
    /** "The pose underneath" row: enter from / return to locomotion. */
    public static float[] under(float tick) {
-      return new float[]{tick, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN};
+      return PoseKeys.under(tick);
    }
 
    public static boolean isUnder(float[] row) {
-      return Float.isNaN(row[1]);
+      return PoseKeys.isUnder(row);
    }
 
-   /**
-    * Fractional key index for {@code elapsed}: the integer part is the segment
-    * start row, the fraction is the smoothstep-eased progress inside it.
-    * Clamps to the first/last row outside the timeline.
-    */
+   /** See {@link PoseKeys#locate}. */
    public static float locate(float[][] keys, float elapsed) {
-      int last = keys.length - 1;
-      if (elapsed <= keys[0][0]) {
-         return 0.0F;
-      }
-      for (int i = 0; i < last; i++) {
-         float from = keys[i][0];
-         float to = keys[i + 1][0];
-         if (elapsed < to) {
-            float t = clamp01((elapsed - from) / Math.max(1.0E-4F, to - from));
-            return (float)i + t * t * (3.0F - 2.0F * t);
-         }
-      }
-      return (float)last;
+      return PoseKeys.locate(keys, elapsed);
    }
 
-   /**
-    * Samples channel {@code channel} (0..5) of a timeline. {@code base} is the
-    * value underneath; additive rows add to it, absolute rows replace it.
-    */
+   /** See {@link PoseKeys#sample}. */
    public static float sample(float[][] keys, float elapsed, int channel, float base, boolean additive) {
-      float at = locate(keys, elapsed);
-      int i = (int)at;
-      float t = at - (float)i;
-      float a = resolve(keys[i], channel, base, additive);
-      if (t <= 0.0F || i + 1 >= keys.length) {
-         return a;
-      }
-      float b = resolve(keys[i + 1], channel, base, additive);
-      return a + (b - a) * t;
+      return PoseKeys.sample(keys, elapsed, channel, base, additive);
    }
 
    public static float resolve(float[] row, int channel, float base, boolean additive) {
-      if (isUnder(row)) {
-         return base;
-      }
-      float value = row[channel + 1];
-      return additive ? base + value : value;
+      return PoseKeys.resolve(row, channel, base, additive);
    }
 
    public static float clamp01(float value) {
-      return value < 0.0F ? 0.0F : Math.min(1.0F, value);
+      return PoseKeys.clamp01(value);
    }
 }

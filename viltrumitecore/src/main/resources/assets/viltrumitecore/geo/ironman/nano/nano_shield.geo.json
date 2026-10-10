@@ -1,0 +1,112 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.nano_shield",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorLeftArm",
+          "pivot": [
+            5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "shield",
+          "parent": "armorLeftArm",
+          "pivot": [
+            8.75,
+            16,
+            0
+          ],
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                8.45,
+                9,
+                -9.5
+              ],
+              "size": [
+                0.6,
+                14,
+                19
+              ],
+              "uv": {
+                "east": {
+                  "uv": [
+                    58,
+                    28
+                  ],
+                  "uv_size": [
+                    -19,
+                    14
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    38,
+                    28
+                  ],
+                  "uv_size": [
+                    -19,
+                    14
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    39,
+                    28
+                  ],
+                  "uv_size": [
+                    -1,
+                    14
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    59,
+                    28
+                  ],
+                  "uv_size": [
+                    -1,
+                    14
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    39,
+                    9
+                  ],
+                  "uv_size": [
+                    -1,
+                    19
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    40,
+                    28
+                  ],
+                  "uv_size": [
+                    -1,
+                    -19
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,7 @@
     "PlayerHeroMeleeMixin",
     "PlayerHeroMixin",
     "PlayerStatsMixin",
+    "ShulkerBulletAccessor",
     "SolidEntityBypassMixin",
     "WroughtnautDamageBypassMixin"
   ],

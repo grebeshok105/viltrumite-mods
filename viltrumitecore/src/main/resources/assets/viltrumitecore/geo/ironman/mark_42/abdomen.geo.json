@@ -1,0 +1,217 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.abdomen",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0.0,
+            18.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42Body",
+          "pivot": [
+            20.0,
+            24.0,
+            -20.0
+          ],
+          "parent": "armorBody"
+        },
+        {
+          "name": "lowerback",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "42Body"
+        },
+        {
+          "name": "Body",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "lowerback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                0
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "lowerback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                0
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "hips",
+          "pivot": [
+            0.0,
+            24.0,
+            -12.0
+          ],
+          "parent": "lowerback"
+        },
+        {
+          "name": "righthip",
+          "pivot": [
+            -3.0,
+            21.0,
+            2.0
+          ],
+          "parent": "hips",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                16
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                16
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "lefthip",
+          "pivot": [
+            3.0,
+            21.0,
+            2.0
+          ],
+          "parent": "hips"
+        },
+        {
+          "name": "Body_1",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "lefthip",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                16
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_1",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "lefthip",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                16
+              ],
+              "inflate": 0.55
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

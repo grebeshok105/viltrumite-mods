@@ -1,5 +1,6 @@
 package dev.baranhan.viltrumitecore.hero.ironman;
 
+import dev.baranhan.viltrumitecore.ViltrumiteCore;
 import dev.baranhan.viltrumitecore.hero.HeroDebris;
 import dev.baranhan.viltrumitecore.hero.HeroShockwave;
 import dev.baranhan.viltrumitecore.hero.fx.HeroFx;
@@ -10,7 +11,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Server side of touchdowns (spec §8.6; visuals in 1b). SOFT: small dust.
+ * Server side of touchdowns (spec §8.6; poses and sounds in 1b). SOFT: small dust.
  * HEAVY: small shockwave (camera shake through HeroFx.shockwave) + kneel
  * flag. AIR_STRIKE: full shockwave + crater; blocks only through
  * HeroDestruction (mobGriefing).
@@ -25,6 +26,7 @@ final class IronManLandings {
             state.landedAt = player.level().getGameTime();
             BlockState ground = HeroShockwave.groundUnder(player.serverLevel(), player);
             HeroFx.launch(player, player.position(), 0.25F, ground);
+            IronManSounds.play(player, ViltrumiteCore.IRONMAN_LANDING_SOFT.get(), 0.7F, 0.95F + player.getRandom().nextFloat() * 0.1F);
          }
          case HEAVY -> heavy(player, state, (float)LandingKind.equivalentFall(impactSpeed, IronManRules.HEAVY_LANDING.fullPowerFall()));
          case AIR_STRIKE -> airStrike(player, state);
@@ -37,6 +39,7 @@ final class IronManLandings {
       state.landedAt = player.level().getGameTime();
       state.heavyPoseTicks = IronManRules.HEAVY_POSE_TICKS;
       HeroShockwave.land(player, Math.max(fall, IronManRules.HEAVY_FALL), IronManRules.HEAVY_LANDING, 1.0, player::isAlliedTo, null);
+      IronManSounds.play(player, ViltrumiteCore.IRONMAN_LANDING_HEAVY.get(), 1.2F, 1.0F);
    }
 
    static void airStrike(ServerPlayer player, IronManState state) {
@@ -44,6 +47,7 @@ final class IronManLandings {
       state.heavyPoseTicks = IronManRules.HEAVY_POSE_TICKS;
       state.airStrike.consume();
       HeroShockwave.land(player, IronManRules.AIR_STRIKE_LANDING.fullPowerFall(), IronManRules.AIR_STRIKE_LANDING, 1.0, player::isAlliedTo, null);
+      IronManSounds.play(player, ViltrumiteCore.IRONMAN_AIR_STRIKE.get(), 2.0F, 1.0F);
       Vec3 look = player.getLookAngle();
       Vec3 flat = new Vec3(look.x, 0.0, look.z);
       Vec3 forward = flat.lengthSqr() < 1.0E-4 ? new Vec3(0.0, 0.0, 1.0) : flat.normalize();

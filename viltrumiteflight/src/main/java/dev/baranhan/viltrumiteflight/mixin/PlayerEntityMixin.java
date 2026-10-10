@@ -293,7 +293,8 @@ public abstract class PlayerEntityMixin extends LivingEntity implements Viltrumi
          if (profile != null) {
             this.viltrumiteflight$profileMotion(profile, currentState);
          } else if (currentState == FlightState.CRUISE || currentState == FlightState.SONIC) {
-            this.setDeltaMovement(dev.baranhan.viltrumiteflight.util.FlightMotion.legacyVelocity(this.getLookAngle(), this.getFlightThrottle(), this.getMaxFlightSpeed()));
+            this.setDeltaMovement(dev.baranhan.viltrumiteflight.util.FlightMotion.legacyVelocity(this.getLookAngle(), this.getFlightThrottle(),
+               this.getMaxFlightSpeed() * dev.baranhan.viltrumiteflight.util.FlightProfiles.speedScale((Player)(Object)this)));
          }
 
          if (!this.level().isClientSide()) {

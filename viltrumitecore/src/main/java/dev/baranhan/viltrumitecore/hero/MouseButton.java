@@ -7,7 +7,12 @@ package dev.baranhan.viltrumitecore.hero;
 public enum MouseButton {
    PRIMARY,
    SECONDARY,
-   MIDDLE;
+   MIDDLE,
+   /**
+    * Guard key (vanilla swap-hands, default F), not a mouse button: same held
+    * semantics. Claimed through HeroDefinition.guardAction.
+    */
+   GUARD;
 
    public static MouseButton byId(int ordinal) {
       MouseButton[] values = values();

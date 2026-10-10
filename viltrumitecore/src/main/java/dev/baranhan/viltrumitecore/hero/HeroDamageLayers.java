@@ -66,6 +66,11 @@ public final class HeroDamageLayers {
    private HeroDamageLayers() {
    }
 
+   /** Logout: drop a partial-absorb scale that no LivingHurtEvent consumed. */
+   public static void forget(ServerPlayer player) {
+      PENDING_SCALE.remove(player.getUUID());
+   }
+
    // ---- pure pipeline ----
 
    /** LivingAttackEvent step. Iframe hits and bypassing sources never reach a layer. */
