@@ -8,6 +8,7 @@ import dev.baranhan.viltrumitecore.client.anim.render.AnimRenderer;
 import dev.baranhan.viltrumitecore.client.ironman.mark.MarkTextures;
 import dev.baranhan.viltrumitecore.entity.VeronicaPodEntity;
 import java.util.WeakHashMap;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -16,8 +17,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * The Veronica capsule (spec §12.1–§12.2): the pod geo with its door animation.
- * Doors open once it lands and close as it leaves. The fire trail and heat aura
+ * The Veronica module (spec §12.1–§12.2), after the Age of Ultron stills: twin hulls
+ * swing open on hinges once it lands and close as it leaves; core and thrusters glow.
+ * The fire trail and heat aura
  * are drawn by {@link dev.baranhan.viltrumitecore.client.ironman.mark.MarkVfx}.
  */
 public final class VeronicaPodRenderer extends EntityRenderer<VeronicaPodEntity> {
@@ -40,6 +42,9 @@ public final class VeronicaPodRenderer extends EntityRenderer<VeronicaPodEntity>
       drive.update(pod.phase());
       drive.apply(model, partialTick);
       AnimRenderer.render(model, stack, null, buffers.getBuffer(RenderType.entityCutoutNoCull(MarkTextures.POD)), light, OverlayTexture.NO_OVERLAY,
+         1.0F, 1.0F, 1.0F, 1.0F, null);
+      // Core, running lights and thrusters glow (own map, black elsewhere).
+      AnimRenderer.render(model, stack, null, buffers.getBuffer(RenderType.eyes(MarkTextures.POD_GLOW)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
          1.0F, 1.0F, 1.0F, 1.0F, null);
       super.render(pod, entityYaw, partialTick, stack, buffers, light);
    }

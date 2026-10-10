@@ -196,6 +196,24 @@ public final class MarkVfx {
          if (phase == EmptySuitEntity.Phase.OPENING) {
             playAt(level, pos, IronManMarkSounds.MARK_EXIT.get());
          } else if (phase == EmptySuitEntity.Phase.ENTERING) {
+            // Plates swing open as Tony walks up.
+            playAt(level, pos, IronManMarkSounds.MARK_EXIT.get());
+         }
+      }
+
+      if (phase == EmptySuitEntity.Phase.ENTERING) {
+         // One clamp per plate group as it shuts (legs, arms, chest), the helmet lock on the faceplate.
+         int t = suit.clientPhaseAge();
+         int[] from = EmptySuitEntity.ENTER_CLOSE_FROM;
+         for (int group = 0; group < from.length; group++) {
+            if (t == from[group] + EmptySuitEntity.ENTER_CLOSE_TICKS) {
+               boolean face = group == EmptySuitEntity.GROUP_FACE;
+               level.playLocalSound(pos.x, pos.y + (face ? 1.6 : 1.0), pos.z, face ? IronManMarkSounds.HELMET_LOCK.get() : IronManMarkSounds.PART_CLAMP.get(),
+                  SoundSource.PLAYERS, 1.0F, 0.9F + group * 0.08F, false);
+            }
+         }
+
+         if (t == EmptySuitEntity.ENTER_SEAL) {
             playAt(level, pos, IronManMarkSounds.MARK_ENTER.get());
          }
       }

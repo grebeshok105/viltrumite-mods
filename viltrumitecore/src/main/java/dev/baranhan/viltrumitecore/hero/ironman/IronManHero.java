@@ -246,6 +246,11 @@ public class IronManHero implements HeroDefinition {
       }
 
       IronManState hulkState = IronManState.of(player);
+      if (hulkState != null && hulkState.enteringSuitId >= 0) {
+         // Walking into the empty suit: the entry plays out, nothing else starts (spec §12.6).
+         return false;
+      }
+
       if (hulkState != null && hulkState.hulkbuster.busy() && action != HeroAction.SUIT) {
          // Parts assembling or climbing out: rooted, nothing else starts (plan stage 5 Task 5).
          return false;
@@ -310,10 +315,26 @@ public class IronManHero implements HeroDefinition {
 
       return switch (button) {
          case PRIMARY -> claimsPrimary(worn, flightState(player)) || claimsWeapon(worn, weapon) ? HeroAction.PRIMARY_ATTACK : null;
-         case SECONDARY -> !worn || player.isShiftKeyDown() ? null : interactTarget(player) != null ? HeroAction.INTERACT : HeroAction.SECONDARY_USE;
+         case SECONDARY -> secondaryAction(worn, player.isShiftKeyDown(), !player.isShiftKeyDown() && interactTarget(player) != null);
          case MIDDLE -> worn ? HeroAction.TOOL_CYCLE : null;
          default -> null;
       };
+   }
+
+   /**
+    * RMB: the hero interaction (own empty suit) works without armor too
+    * (spec §12.6); the RMB tool needs the suit. Shift+RMB stays vanilla.
+    */
+   static HeroAction secondaryAction(boolean worn, boolean shift, boolean interactTarget) {
+      if (shift) {
+         return null;
+      }
+
+      if (interactTarget) {
+         return HeroAction.INTERACT;
+      }
+
+      return worn ? HeroAction.SECONDARY_USE : null;
    }
 
    static boolean claimsWeapon(boolean worn, boolean weaponFormed) {

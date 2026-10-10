@@ -47,7 +47,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 /**
  * Pixel VFX of the mark signatures (animation-system §8): micro-laser beam, the
- * Mark 17 pulses, the War Machine tracers with muzzle flash and casings, the
+ * Mark 17 pulses, the War Machine rounds ({@link GunRounds}: travelling tracers,
+ * muzzle flash, whiz, impact sparks and chips) and casings, the
  * rocket fist flame trail, the slam dive trail and the Mark 15 screen tint.
  * Everything reads the synced snapshot or the synced entities.
  */
@@ -96,6 +97,7 @@ public final class SignatureVfx {
          lastLevel = level;
          CASINGS.clear();
          GUN_ELAPSED.clear();
+         GunRounds.clear();
       }
 
       if (level == null || client.isPaused()) {
@@ -113,10 +115,23 @@ public final class SignatureVfx {
          // The server fires on even ticks, so a new odd elapsed value is a fresh shot.
          int elapsed = snapshot.actionElapsed();
          Integer previous = GUN_ELAPSED.put(player.getUUID(), elapsed);
-         if (elapsed % SignatureRules.GUN_INTERVAL == 1 && (previous == null || previous != elapsed) && CASINGS.size() < CASING_MAX) {
-            spawnCasing(player, level.random);
+         if (elapsed % SignatureRules.GUN_INTERVAL == 1 && (previous == null || previous != elapsed)) {
+            if (CASINGS.size() < CASING_MAX) {
+               spawnCasing(player, level.random);
+            }
+
+            Vec3 point = snapshot.actionTarget();
+            if (point != null) {
+               Vec3 shoulder = shoulder(player, 1.0F);
+               Vec3 toPoint = point.subtract(shoulder);
+               if (toPoint.lengthSqr() > 1.0) {
+                  GunRounds.fire(level, player, shoulder.add(toPoint.normalize().scale(0.9)), point);
+               }
+            }
          }
       }
+
+      GunRounds.tick(level);
 
       Iterator<Casing> casings = CASINGS.iterator();
       while (casings.hasNext()) {
@@ -165,6 +180,7 @@ public final class SignatureVfx {
             }
          }
 
+         GunRounds.draw(buffer, cameraPos, camera, partialTick);
          for (Casing casing : CASINGS) {
             PixelVfx.billboardPixel(buffer, cameraPos, camera, casing.pos, 0.05F, 255, 210, 90, 230);
          }
@@ -205,7 +221,7 @@ public final class SignatureVfx {
    }
 
    private static boolean hasWork(ClientLevel level) {
-      if (!CASINGS.isEmpty()) {
+      if (!CASINGS.isEmpty() || GunRounds.busy()) {
          return true;
       }
 
@@ -246,7 +262,6 @@ public final class SignatureVfx {
                drawPulse(buffer, cameraPos, camera, player, point, partialTick);
             }
          }
-         case WAR_MACHINE_MK2 -> drawTracer(buffer, cameraPos, camera, player, point, elapsed, partialTick);
          case IRON_HEART_MK3 -> {
             if (active && IronManFlags.is(flags, IronManFlags.Field.SIGNATURE_AUX)) {
                drawDive(buffer, cameraPos, camera, player, point, partialTick);
@@ -271,21 +286,6 @@ public final class SignatureVfx {
       PixelVfx.beamDots(buffer, cameraPos, camera, from, point, 0.06F, 0.13F, 230, 250, 255, (int)(240 * flicker));
       PixelVfx.crossGlow(buffer, cameraPos, camera, from, 0.35F, 170, 230, 255, 230);
       PixelVfx.crossGlow(buffer, cameraPos, camera, point, 0.45F, 170, 230, 255, 230);
-   }
-
-   private static void drawTracer(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Player player, Vec3 point, int elapsed, float partialTick) {
-      Vec3 shoulder = shoulder(player, partialTick);
-      Vec3 toPoint = point.subtract(shoulder);
-      if (toPoint.lengthSqr() < 1.0E-6) {
-         return;
-      }
-
-      Vec3 muzzle = shoulder.add(toPoint.normalize().scale(0.9));
-      PixelVfx.beamDots(buffer, cameraPos, camera, muzzle, point, 0.4F, 0.03F, 255, 220, 120, 170);
-      PixelVfx.billboardPixel(buffer, cameraPos, camera, point, 0.1F, 255, 200, 100, 200);
-      if (elapsed % SignatureRules.GUN_INTERVAL == 1) {
-         PixelVfx.crossGlow(buffer, cameraPos, camera, muzzle, 0.25F, 255, 200, 90, 230);
-      }
    }
 
    private static void drawDive(BufferBuilder buffer, Vec3 cameraPos, Camera camera, Player player, Vec3 start, float partialTick) {

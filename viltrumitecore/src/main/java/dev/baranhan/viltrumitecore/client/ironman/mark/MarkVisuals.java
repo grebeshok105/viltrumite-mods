@@ -5,6 +5,7 @@ import dev.baranhan.viltrumitecore.client.ironman.IronManCombatParts;
 import dev.baranhan.viltrumitecore.client.ironman.veronica.PartWrapAnimator;
 import dev.baranhan.viltrumitecore.entity.ViltrumiteEntities;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.EquipTimeline;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.SuitPart;
 import java.util.List;
@@ -45,7 +46,8 @@ public final class MarkVisuals {
          return Optional.empty();
       }
 
-      return Optional.of(MarkSkins.INSTANCE.skin(state.mark(), !state.helmetClosed()));
+      float closed = dev.baranhan.viltrumitecore.client.ironman.HelmetAnim.progress(player, snapshot, net.minecraft.client.Minecraft.getInstance().getFrameTime());
+      return Optional.of(MarkSkins.INSTANCE.skin(state.mark(), closed < 0.999F));
    }
 
    public static void collectParts(AbstractClientPlayer player, HeroPublicSnapshot snapshot, float partialTick, boolean firstPerson, List<PlayerGeoLayer.Part> out) {
@@ -60,6 +62,18 @@ public final class MarkVisuals {
             out.add(extras);
          }
 
+         if (!firstPerson) {
+            PlayerGeoLayer.Part plate = MarkFaceplate.part(state.mark(), dev.baranhan.viltrumitecore.client.ironman.HelmetAnim.progress(player, snapshot, partialTick));
+            if (plate != null) {
+               out.add(plate);
+            }
+         }
+
+         return;
+      }
+
+      // Exit: the empty suit opens around Tony, who walks out without any plates.
+      if (state.equipPhase() == IronManFlags.EQUIP_EXITING) {
          return;
       }
 

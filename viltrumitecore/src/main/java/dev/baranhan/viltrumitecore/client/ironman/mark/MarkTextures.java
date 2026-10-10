@@ -9,6 +9,7 @@ public final class MarkTextures {
    /** Mark force field (Satsu ark_force_field, tinted repulsor cyan; additive). */
    public static final ResourceLocation ENERGY_SHIELD = new ResourceLocation("viltrumitecore", "textures/entity/ironman/marks/energy_shield.png");
    public static final ResourceLocation POD = new ResourceLocation("viltrumitecore", "textures/entity/ironman/veronica_pod.png");
+   public static final ResourceLocation POD_GLOW = new ResourceLocation("viltrumitecore", "textures/entity/ironman/veronica_pod_glow.png");
 
    private MarkTextures() {
    }

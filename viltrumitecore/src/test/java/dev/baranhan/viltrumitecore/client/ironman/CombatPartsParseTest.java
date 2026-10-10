@@ -43,12 +43,38 @@ class CombatPartsParseTest {
 
    @Test
    void shieldsAndBodyPartsSitOnTheirPlayerParts() throws IOException {
-      assertTop(load("geo/ironman/nano/nano_shield.geo.json"), PlayerBoneMap.Part.LEFT_ARM);
-      assertTop(load("geo/ironman/marks/energy_shield.geo.json"), PlayerBoneMap.Part.BODY);
-      assertTop(load("geo/ironman/marks/energy_shield_first_person.geo.json"), PlayerBoneMap.Part.RIGHT_ARM);
-      BakedGeoModel rockets = load("geo/ironman/nano/shoulder_rockets.geo.json");
-      assertTop(rockets, PlayerBoneMap.Part.BODY);
-      assertNotNull(rockets.getBone("shoulder_rockets"));
+      BakedGeoModel shield = load("geo/ironman/nano/nano_shield.geo.json");
+      assertTop(shield, PlayerBoneMap.Part.LEFT_ARM);
+      assertNotNull(shield.getBone("shield"));
+      BakedGeoModel pods = load("geo/ironman/missiles/shoulder_launchers.geo.json");
+      assertTop(pods, PlayerBoneMap.Part.BODY);
+      for (String bone : List.of("leftcannon", "rightcannon", "left_lpanel", "right_rpanel")) {
+         assertNotNull(pods.getBone(bone), bone);
+      }
+
+      BakedGeoModel tips = load("geo/ironman/missiles/shoulder_rockets.geo.json");
+      for (String bone : List.of("bone2", "bone3", "leftrockets1", "rightrockets3")) {
+         assertNotNull(tips.getBone(bone), bone);
+      }
+
+      assertNotNull(load("geo/ironman/missiles/arm_rocket.geo.json").getBone("rocket"));
+      // PR 19 iteration 2: the launchers live on the forearms, one pod per arm, rockets under the same pod bones.
+      BakedGeoModel forearm = load("geo/ironman/missiles/forearm_launchers.geo.json");
+      BakedGeoModel forearmTips = load("geo/ironman/missiles/forearm_rockets.geo.json");
+      for (BakedGeoModel geo : List.of(forearm, forearmTips)) {
+         assertEquals(List.of(PlayerBoneMap.Part.RIGHT_ARM, PlayerBoneMap.Part.LEFT_ARM),
+            geo.topLevelBones().stream().map(b -> PlayerBoneMap.of(b.name)).toList());
+         assertNotNull(geo.getBone("podRight"));
+         assertNotNull(geo.getBone("podLeft"));
+      }
+
+      for (String bone : List.of("petalARight", "petalBRight", "petalALeft", "petalBLeft")) {
+         assertNotNull(forearm.getBone(bone), bone);
+      }
+
+      assertFalse(forearmTips.getBone("rocketsRight").cubes.isEmpty());
+      assertFalse(forearmTips.getBone("rocketsLeft").cubes.isEmpty());
+      assertNotNull(load("geo/ironman/missiles/missile.geo.json").getBone("missile"));
       BakedGeoModel rods = load("geo/ironman/nano/stabilizer.geo.json");
       assertTop(rods, PlayerBoneMap.Part.BODY);
       assertEquals(4, rods.topLevelBones().get(0).children.size());

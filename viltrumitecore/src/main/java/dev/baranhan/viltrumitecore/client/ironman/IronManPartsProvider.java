@@ -28,16 +28,29 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
          return;
       }
 
-      // Stage 3: an open helmet folds the mask back along the head (HelmetAnim), Tony's face shows.
+      // Helmet (spec §10): the mask stays on, only the iron faceplate opens. Nano: the plate's nanites
+      // recede from the middle of the face to its edges (and flow back when closing).
       int frame = helmetFrame(player, snapshot, partialTick);
       if (!firstPerson && IronManView.helmet(frame) && !MarkState.of(snapshot).markOn()) {
-         ResourceLocation cut = IronManSuitTextures.INSTANCE.cut(frame);
+         float closed = HelmetAnim.progress(player, snapshot, partialTick);
+         boolean plate = closed >= 0.999F;
+         ResourceLocation cut = plate ? IronManSuitTextures.INSTANCE.cut(frame) : IronManSuitTextures.INSTANCE.cutOpen(frame);
          if (cut != null) {
-            List<PlayerGeoLayer.Pass> passes = new ArrayList<>(3);
+            List<PlayerGeoLayer.Pass> passes = new ArrayList<>(6);
             passes.add(PlayerGeoLayer.Pass.cutout(cut));
-            ResourceLocation glow = IronManSuitTextures.INSTANCE.glow(frame);
+            ResourceLocation glow = plate ? IronManSuitTextures.INSTANCE.glow(frame) : IronManSuitTextures.INSTANCE.glowOpen(frame);
             if (glow != null) {
                passes.add(PlayerGeoLayer.Pass.glow(glow));
+            }
+
+            if (!plate) {
+               int step = (int)Math.ceil(closed * IronManSuitTextures.FACE_FRAMES - 0.001F);
+               for (int kind = 0; kind < 3; kind++) {
+                  ResourceLocation face = IronManSuitTextures.INSTANCE.face(kind, step);
+                  if (face != null) {
+                     passes.add(kind == 0 ? PlayerGeoLayer.Pass.cutout(face) : PlayerGeoLayer.Pass.glow(face));
+                  }
+               }
             }
 
             ResourceLocation damage = NanoDamageVisuals.INSTANCE.texture(player, snapshot);
@@ -60,8 +73,8 @@ public final class IronManPartsProvider implements PlayerGeoLayer.Provider {
       dev.baranhan.viltrumitecore.client.ironman.mark.sig.SignatureVisuals.collectParts(player, snapshot, partialTick, firstPerson, out);
    }
 
-   /** Reveal frame of the helmet part: the suit wave frame, capped by the helmet fold. */
+   /** Reveal frame of the helmet part: the suit wave frame (an open helmet only opens the faceplate). */
    public static int helmetFrame(net.minecraft.world.entity.Entity player, HeroPublicSnapshot snapshot, float partialTick) {
-      return Math.min(IronManView.frame(snapshot, partialTick), HelmetAnim.frame(HelmetAnim.progress(player, snapshot, partialTick)));
+      return IronManView.frame(snapshot, partialTick);
    }
 }

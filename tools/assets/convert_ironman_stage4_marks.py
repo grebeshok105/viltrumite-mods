@@ -16,8 +16,9 @@ Writes (every output is listed in tools/assets/ironman_sources.md):
   suit clip can drive them;
 - geo/ironman/marks/{booster,booster_blast,turret}.geo.json and
   animations/ironman/marks/war_machine_turret.animation.json (signatures);
-- geo/ironman/marks/{empty_suit,suit_expulsion}.geo.json (the empty suit shell
-  is full_body plus the helmet head box; the expulsion tendrils play on exit);
+- geo/ironman/marks/empty_suit{,_interior}.geo.json + animations/ironman/empty_suit.animation.json:
+  the opening shell (tools/assets/opening_shell.py): full_body plus the helmet box cut into a
+  back half and hinged front plates, with an interior lining in every half;
 - textures/entity/ironman/marks/<mark>_suit{,_glow}.png: the raw suit textures
   for the extras (the baked skins carry the helmet in the head rows, which
   the extras' UVs also use).
@@ -31,6 +32,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from convert_ironman_stage1b import bones_of, premultiplied, write_b64, write_geo  # noqa: E402
+import opening_shell  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RES = os.path.join(ROOT, "viltrumitecore", "src", "main", "resources", "assets", "viltrumitecore")
@@ -179,17 +181,99 @@ def signatures(src):
                {"format_version": "1.8.0", "animations": {k: clips[k] for k in ("start_on", "end")}})
 
 
+# Opening shell (spec §12.5): door bone -> (top bone, hinge pivot, hinge axis, open angle in degrees).
+DOORS = {
+    "body_door_left": ("armorbody", [4.5, 18, -3.5], 1, -110.0), "body_door_right": ("armorbody", [-4.5, 18, -3.5], 1, 110.0),
+    "left_arm_door": ("armorleftarm", [8.5, 18, -2.8], 1, -100.0), "right_arm_door": ("armorrightarm", [-8.5, 18, -2.8], 1, 100.0),
+    "left_leg_door": ("armorleftleg", [4.4, 6, -2.5], 1, -95.0), "right_leg_door": ("armorrightleg", [-4.4, 6, -2.5], 1, 95.0),
+    "faceplate": ("armorhead", [0, 32.5, 0], 0, -105.0),  # negative X lifts the lower edge forward and up, outside the head
+}
+# Interior atlas regions in 64 px space (the 128 px ironman_interior.png has 2 texels per unit): u, v, w, h.
+LINING = {
+    "torso": {"south": (0, 0, 8, 13), "north": (0, 0, 8, 13), "east": (32, 0, 3, 13), "west": (32, 0, 3, 13), "up": (36, 0, 8, 3), "down": (36, 0, 8, 3)},
+    "limb": {"south": (8, 0, 4, 12), "north": (8, 0, 4, 12), "east": (32, 0, 2, 12), "west": (32, 0, 2, 12), "up": (36, 4, 4, 2), "down": (36, 4, 4, 2)},
+    "helmet": {"south": (12, 0, 8, 8), "north": (12, 0, 8, 8), "east": (32, 0, 4, 8), "west": (32, 0, 4, 8), "up": (36, 0, 8, 4), "down": (36, 0, 8, 4)},
+    "torso_door": {"north": (20, 0, 4, 13), "south": (20, 0, 4, 13), "east": (32, 0, 3, 13), "west": (32, 0, 3, 13), "up": (36, 0, 4, 3), "down": (36, 0, 4, 3)},
+    "limb_door": {"north": (24, 0, 4, 12), "south": (24, 0, 4, 12), "east": (32, 0, 2, 12), "west": (32, 0, 2, 12), "up": (36, 4, 4, 2), "down": (36, 4, 4, 2)},
+    "faceplate": {"north": (12, 16, 8, 8), "south": (12, 16, 8, 8), "east": (32, 0, 4, 8), "west": (32, 0, 4, 8), "up": (36, 0, 8, 4), "down": (36, 0, 8, 4)},
+}
+INF = 1.0e6
+
+
 def empty_suit(src):
-    shell = merged(src, [ARMOR + "iron_man/full_body/main.geo.json"])
+    """Satsu full_body + helmet box cut into a back half and hinged front plates, with an interior lining."""
+    fb = {b["name"]: b for b in geometry(src, ARMOR + "iron_man/full_body/main.geo.json")}
     helmet = [c for b in geometry(src, ARMOR + "all_helmet/main.geo.json") if b["name"] == "red" for c in b["cubes"]]
-    for b in shell:
-        if b["name"] == "armorhead":
-            b["cubes"] = helmet
-    if not any(b["name"] == "armorhead" for b in shell):
-        shell.insert(0, {"name": "armorhead", "pivot": SHELL_PIVOTS["armorHead"], "cubes": helmet})
-    write_geo("geo/ironman/marks/empty_suit.geo.json", shell, 64, 64)
-    tendrils = bones_of(src, ARMOR + "iron_man/model_50/abilities/suit_expulsion.geo.json")["armorBody"]["cubes"]
-    write_geo("geo/ironman/marks/suit_expulsion.geo.json", [{"name": "armorbody", "pivot": [0, 18, 0], "cubes": tendrils}], 64, 64)
+    tops = {"armorhead": [0, 24, 0], "armorbody": [0, 18, 0], "armorrightarm": [-5, 22, 0], "armorleftarm": [5, 22, 0],
+            "armorrightleg": [-1.9, 12, 0], "armorleftleg": [1.9, 12, 0]}
+    shell = {name: [] for name in list(tops) + list(DOORS)}
+    inner = {name: [] for name in list(tops) + list(DOORS)}
+
+    def inner_layer(c):
+        return c.get("inflate", 0.0) < 0.4
+
+    def split_front_back(c, back_bone, door_bone, kind, door_kind, open_extra=()):
+        back = opening_shell.cut(c, 2, 0.0, INF, drop_low=True)
+        front = opening_shell.cut(c, 2, -INF, 0.0, drop_high=True)
+        if back:
+            shell[back_bone].append(back)
+            if inner_layer(c):
+                inner[back_bone].append(opening_shell.lining(back, {"north"} | set(open_extra), LINING[kind]))
+        if front:
+            shell[door_bone].append(front)
+            if inner_layer(c):
+                inner[door_bone].append(opening_shell.lining(front, {"south"} | set(open_extra), LINING[door_kind]))
+
+    for c in fb["armorBody"]["cubes"]:
+        if c.get("rotation"):
+            shell["body_door_left" if c["origin"][0] > 0 else "body_door_right"].append(copy.deepcopy(c))
+            continue
+        back = opening_shell.cut(c, 2, 0.0, INF, drop_low=True)
+        front = opening_shell.cut(c, 2, -INF, 0.0, drop_high=True)
+        if back:
+            shell["armorbody"].append(back)
+            if inner_layer(c):
+                inner["armorbody"].append(opening_shell.lining(back, {"north"}, LINING["torso"]))
+        for door, (a0, a1, low, high, edge) in {"body_door_left": (0.0, INF, True, False, "west"),
+                                                "body_door_right": (-INF, 0.0, False, True, "east")}.items():
+            half = front and opening_shell.cut(front, 0, a0, a1, drop_low=low, drop_high=high)
+            if half:
+                shell[door].append(half)
+                if inner_layer(c):
+                    inner[door].append(opening_shell.lining(half, {"south", edge}, LINING["torso_door"]))
+    for side in ("Right", "Left"):
+        for c in fb["armor%sArm" % side]["cubes"]:
+            split_front_back(c, "armor%sarm" % side.lower(), "%s_arm_door" % side.lower(), "limb", "limb_door")
+        for c in fb["armor%sLeg" % side]["cubes"]:
+            split_front_back(c, "armor%sleg" % side.lower(), "%s_leg_door" % side.lower(), "limb", "limb_door")
+    for c in helmet:
+        split_front_back(c, "armorhead", "faceplate", "helmet", "faceplate", open_extra=("down",))
+
+    def bones(cubes):
+        out = [{"name": name, "pivot": pivot, "cubes": cubes[name]} for name, pivot in tops.items()]
+        out += [{"name": door, "parent": top, "pivot": pivot, "cubes": cubes[door]} for door, (top, pivot, _, _) in DOORS.items()]
+        return out
+
+    write_geo("geo/ironman/marks/empty_suit.geo.json", bones(shell), 64, 64)
+    write_geo("geo/ironman/marks/empty_suit_interior.geo.json", bones(inner), 64, 64)
+    write_json("animations/ironman/empty_suit.animation.json", {"format_version": "1.8.0", "animations": {
+        # Exit: plates swing open, stay open while Tony walks out, close again (EmptySuitEntity.OPEN_TICKS = 1.5 s).
+        "open": door_clip([(0.0, 0.0), (0.3, 1.0), (1.1, 1.0), (1.5, 0.0)], 1.5),
+        # Enter: open fast, Tony steps in, close (ENTER_TICKS = 0.5 s).
+        "enter": door_clip([(0.0, 0.0), (0.15, 1.0), (0.3, 1.0), (0.5, 0.0)], 0.5),
+    }})
+
+
+def door_clip(keys, length):
+    bones = {}
+    for door, (_, _, axis, angle) in DOORS.items():
+        frames = {}
+        for t, k in keys:
+            rot = [0.0, 0.0, 0.0]
+            rot[axis] = round(angle * k, 3)
+            frames["%g" % t] = {"vector": rot, "easing": "easeOutCubic" if k else "easeInOutSine"}
+        bones[door] = {"rotation": frames}
+    return {"loop": "hold_on_last_frame", "animation_length": length, "bones": bones}
 
 
 def write_json(rel, doc):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Iron Man Stage 4 art, own work (style of make_ironman_stage2_icons.py).
 
-The suit interior skin, the Veronica pod icon and seven signature icons. The mark
+The opening-shell interior atlas (128 px, with a glow map), the Veronica pod icon and seven signature icons. The mark
 skins come from the archive (tools/bake_suit_skin.py, tools/assets/convert_ironman_sind.py).
 
 Run: python3 tools/assets/make_ironman_stage4_assets.py [OUT_ROOT]
@@ -47,25 +47,94 @@ def put(px, x, y, col):
         px[x, y] = tuple(col) if len(col) == 4 else tuple(col) + (255,)
 
 
-def interior():
-    rng = random.Random(7)
-    img = Image.new("RGBA", (64, 64), (24, 26, 32, 255))
+# Interior atlas of the opening shell (tools/assets/opening_shell.py LINING regions, 64 px UV space at 2 texels
+# per unit): torso lining, limb lining, helmet lining, torso door, limb door, faceplate, side walls, top/bottom.
+LINING_PX = {"torso": (0, 0, 16, 26), "limb": (16, 0, 8, 24), "helmet": (24, 0, 16, 16), "torso_door": (40, 0, 8, 26),
+             "limb_door": (48, 0, 8, 24), "faceplate": (24, 32, 16, 16), "wall": (64, 0, 8, 26), "cap": (72, 0, 16, 12)}
+GRAPHITE = (30, 32, 38)
+PAD_LIGHT = (58, 62, 72)
+PAD_DARK = (18, 19, 23)
+BRASS = (186, 142, 62)
+BRASS_LIGHT = (232, 196, 110)
+STEEL_D = (70, 74, 84)
+CABLE = (112, 30, 34)
+GLOW_CYAN = (110, 225, 255)
+
+
+def padded(img, box, cell=4):
+    """Quilted padding: diamond cells, lit top-left, shadowed bottom-right."""
     px = img.load()
-    for y in range(64):
-        for x in range(64):
-            col = (38, 42, 52) if (x + y) % 8 == 0 or (x - y) % 8 == 0 else (24, 26, 32)
-            if rng.random() < 0.08:
-                col = tuple(v + 4 for v in col)
+    x0, y0, x1, y1 = box
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            u, v = (x - x0) % cell, (y - y0 + ((x - x0) // cell) % 2 * cell // 2) % cell
+            col = GRAPHITE
+            if u == 0 or v == 0:
+                col = PAD_DARK
+            elif u == 1 and v == 1:
+                col = PAD_LIGHT
+            elif u == cell - 1 or v == cell - 1:
+                col = (24, 25, 30)
             px[x, y] = col + (255,)
-    for k, (c0, amp, per) in enumerate(((14, 4, 18), (44, 5, 22), (30, 3, 14))):
-        for x in range(64):
-            y = int(round(c0 + amp * math.sin(2 * math.pi * x / per + k)))
-            px[x, y] = (10, 11, 15, 255)
-            px[x, y - 1] = (66, 70, 80, 255)
-    for x0, y0, n in ((4, 6, 6), (40, 22, 8), (12, 52, 5), (48, 58, 6), (20, 36, 6)):
-        for i in range(n):
-            px[x0 + i, y0] = (46, 168, 210, 255)
-    return img
+
+
+def frame_edge(d, box, colour=BRASS):
+    x0, y0, x1, y1 = box
+    d.rectangle((x0, y0, x1 - 1, y1 - 1), outline=colour)
+
+
+def interior():
+    img = Image.new("RGBA", (128, 128), PAD_DARK + (255,))
+    glow = Image.new("RGBA", (128, 128), (0, 0, 0, 255))
+    d, g = ImageDraw.Draw(img), ImageDraw.Draw(glow)
+    for key in ("torso", "limb", "helmet"):
+        x0, y0, w, h = LINING_PX[key]
+        padded(img, (x0, y0, x0 + w, y0 + h))
+        frame_edge(d, (x0, y0, x0 + w, y0 + h), STEEL_D)
+    # Torso: spine channel with segment plates, two status lights.
+    x0, y0, w, h = LINING_PX["torso"]
+    cx = x0 + w // 2
+    d.rectangle((cx - 2, y0 + 2, cx + 1, y0 + h - 3), fill=(22, 23, 28))
+    for y in range(y0 + 3, y0 + h - 3, 3):
+        d.rectangle((cx - 2, y, cx + 1, y + 1), fill=STEEL_D)
+        d.point((cx - 1, y), fill=BRASS_LIGHT)
+    for lx in (x0 + 3, x0 + w - 4):
+        d.rectangle((lx, y0 + 3, lx, y0 + 5), fill=GLOW_CYAN)
+        g.rectangle((lx, y0 + 3, lx, y0 + 5), fill=GLOW_CYAN)
+    # Limb lining: a cable down the middle.
+    x0, y0, w, h = LINING_PX["limb"]
+    d.line((x0 + w // 2, y0 + 1, x0 + w // 2, y0 + h - 2), fill=CABLE)
+    # Helmet lining: the padded inside with the sensor band.
+    x0, y0, w, h = LINING_PX["helmet"]
+    d.rectangle((x0 + 2, y0 + 6, x0 + w - 3, y0 + 7), fill=STEEL_D)
+    # Door insides: dark plates, brass pistons, a cyan light strip on the free edge.
+    for key in ("torso_door", "limb_door"):
+        x0, y0, w, h = LINING_PX[key]
+        d.rectangle((x0, y0, x0 + w - 1, y0 + h - 1), fill=(36, 38, 45))
+        for y in range(y0 + 4, y0 + h - 1, 5):
+            d.line((x0, y, x0 + w - 1, y), fill=PAD_DARK)
+        d.rectangle((x0 + 2, y0 + 2, x0 + 3, y0 + h - 3), fill=BRASS)
+        d.line((x0 + 2, y0 + 2, x0 + 2, y0 + h - 3), fill=BRASS_LIGHT)
+        for y in (y0 + 2, y0 + h - 3):
+            d.rectangle((x0 + 1, y - 1, x0 + 4, y), fill=STEEL_D)
+        d.line((x0 + w - 2, y0 + 2, x0 + w - 2, y0 + h - 3), fill=GLOW_CYAN)
+        g.line((x0 + w - 2, y0 + 2, x0 + w - 2, y0 + h - 3), fill=GLOW_CYAN)
+        frame_edge(d, (x0, y0, x0 + w, y0 + h), STEEL_D)
+    # Faceplate inside: the HUD eye slits glow from behind.
+    x0, y0, w, h = LINING_PX["faceplate"]
+    d.rectangle((x0, y0, x0 + w - 1, y0 + h - 1), fill=(26, 27, 32))
+    for ex in (x0 + 2, x0 + 9):
+        d.rectangle((ex, y0 + 6, ex + 4, y0 + 7), fill=GLOW_CYAN)
+        g.rectangle((ex, y0 + 6, ex + 4, y0 + 7), fill=GLOW_CYAN)
+    d.rectangle((x0 + 5, y0 + 10, x0 + 10, y0 + 11), fill=STEEL_D)
+    frame_edge(d, (x0, y0, x0 + w, y0 + h), STEEL_D)
+    # Shell thickness: red armour with a brass seam; top / bottom caps.
+    for key in ("wall", "cap"):
+        x0, y0, w, h = LINING_PX[key]
+        d.rectangle((x0, y0, x0 + w - 1, y0 + h - 1), fill=(120, 18, 24))
+        d.line((x0, y0 + 1, x0 + w - 1, y0 + 1), fill=BRASS)
+        d.line((x0 + 1, y0, x0 + 1, y0 + h - 1), fill=BRASS)
+    return img, glow
 
 
 def veronica():
@@ -264,7 +333,9 @@ SIGNATURES = (
 
 
 def main(out_root):
-    write(interior(), HERO + "ironman_interior.png", out_root)
+    inside, inside_glow = interior()
+    write(inside, HERO + "ironman_interior.png", out_root)
+    write(inside_glow, HERO + "ironman_interior_glow.png", out_root)
     write(veronica(), ICON + "veronica.png", out_root)
     for name, fn in SIGNATURES:
         write(fn(), ICON + "sig_%s.png" % name, out_root)

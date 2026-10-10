@@ -29,6 +29,10 @@ public final class IronManMarkSounds {
    public static final RegistryObject<SoundEvent> STARBOOST = reg("ironman_starboost");
    public static final RegistryObject<SoundEvent> PULSE_UNIBEAM = reg("ironman_pulse_unibeam");
    public static final RegistryObject<SoundEvent> SHOULDER_GUN = reg("ironman_shoulder_gun");
+   /** War Machine rounds (client-side, PR 19 iteration 2): passing close by, into blocks, into bodies. */
+   public static final RegistryObject<SoundEvent> BULLET_WHIZ = reg("ironman_bullet_whiz");
+   public static final RegistryObject<SoundEvent> BULLET_IMPACT = reg("ironman_bullet_impact");
+   public static final RegistryObject<SoundEvent> BULLET_HIT = reg("ironman_bullet_hit");
    public static final RegistryObject<SoundEvent> SLAM_IMPACT = reg("ironman_slam_impact");
 
    private IronManMarkSounds() {
