@@ -94,6 +94,9 @@ public final class IronManState {
    public java.util.UUID podUuid;
    /** Transient: entity id of this player's empty suit, -1 = none (one per owner, spec §12.6). */
    public int emptySuitId = -1;
+   /** Transient: facing of the suit Tony is walking out of (exit), null otherwise. */
+   @Nullable
+   public net.minecraft.world.phys.Vec3 exitDir;
    /** Transient: where the flying parts start (pod, old empty suit, sky); synced as actionTarget while equipping. */
    @Nullable
    public net.minecraft.world.phys.Vec3 equipSource;

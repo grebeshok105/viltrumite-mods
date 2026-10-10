@@ -112,11 +112,11 @@ public final class IronManMarks {
       Suit suit = state.suit;
       if (suit.markWorn()) {
          MarkId old = suit.mark();
-         Vec3 at = player.position();
          float yaw = player.getYRot();
+         // Swap: the old suit stands a step ahead, Tony stays where the new parts arrive (no launch).
+         Vec3 at = player.position().add(Vec3.directionFromRotation(0.0F, yaw).scale(0.9));
          suit.dropMark();
          placeEmptySuit(player, state, old, at, yaw);
-         stepOut(player);
       } else if (suit.partial()) {
          MarkId old = suit.mark();
          suit.dropMark();
@@ -147,7 +147,7 @@ public final class IronManMarks {
          float yaw = player.getYRot();
          if (suit.startExit(Suit.EXIT_TICKS)) {
             placeEmptySuit(player, state, mark, at, yaw);
-            stepOut(player);
+            state.exitDir = Vec3.directionFromRotation(0.0F, yaw);
          }
 
          return true;
@@ -165,11 +165,21 @@ public final class IronManMarks {
       return suit.equipping() || suit.exiting();
    }
 
-   private static void stepOut(ServerPlayer player) {
-      Vec3 look = player.getLookAngle();
-      Vec3 flat = new Vec3(look.x, 0.0, look.z);
-      flat = flat.lengthSqr() < 1.0E-6 ? Vec3.directionFromRotation(0.0F, player.getYRot()) : flat.normalize();
-      player.setDeltaMovement(flat.x * 0.45, 0.25, flat.z * 0.45);
+   /** Exit walk window (suit ticks): the plates are open, Tony walks out of the front (no launch). */
+   public static final int WALK_OUT_FROM = 8;
+   public static final int WALK_OUT_TO = 20;
+   public static final double WALK_OUT_SPEED = 0.11;
+
+   /** Tony steps out of the open suit at a walking pace along the suit's facing. */
+   private static void walkOut(ServerPlayer player, IronManState state) {
+      int t = state.suit.ticks();
+      Vec3 dir = state.exitDir;
+      if (dir == null || t < WALK_OUT_FROM || t > WALK_OUT_TO || !player.onGround()) {
+         return;
+      }
+
+      Vec3 motion = player.getDeltaMovement();
+      player.setDeltaMovement(dir.x * WALK_OUT_SPEED, motion.y, dir.z * WALK_OUT_SPEED);
       player.hurtMarked = true;
    }
 
@@ -321,6 +331,12 @@ public final class IronManMarks {
          if (state.spec().helmetForcedOpen() && state.helmet.closed()) {
             state.helmet.toggle();
          }
+      }
+
+      if (suit.exiting()) {
+         walkOut(player, state);
+      } else {
+         state.exitDir = null;
       }
 
       slow(player, suit.equipping() || suit.exiting());

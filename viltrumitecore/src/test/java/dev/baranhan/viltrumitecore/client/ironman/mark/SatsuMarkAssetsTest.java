@@ -90,6 +90,12 @@ class SatsuMarkAssetsTest {
          assertNotNull(shell.getBone(bone), bone);
       }
 
-      assertFalse(load("geo/ironman/marks/suit_expulsion.geo.json").getBone("armorbody").cubes.isEmpty());
+      for (String door : List.of("body_door_left", "body_door_right", "left_arm_door", "right_arm_door", "left_leg_door", "right_leg_door", "faceplate")) {
+         assertNotNull(shell.getBone(door), door);
+         assertNotNull(load("geo/ironman/marks/empty_suit_interior.geo.json").getBone(door), door);
+      }
+
+      JsonObject suitClips = JsonParser.parseString(Files.readString(ROOT.resolve("animations/ironman/empty_suit.animation.json"))).getAsJsonObject();
+      assertTrue(AnimationParser.parse(suitClips).keySet().containsAll(List.of("open", "enter")));
    }
 }

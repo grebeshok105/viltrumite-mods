@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Iron Man Stage 4 client art (own work, generated, committed):
 
-- geo/ironman/marks/empty_suit_interior.geo.json: the inside of the empty suit (the
-  shell is Satsu full_body, tools/assets/convert_ironman_stage4_marks.py);
-- geo/ironman/veronica/veronica_pod.geo.json + animations/ironman/*.animation.json;
+- geo/ironman/veronica/veronica_pod.geo.json + animations/ironman/veronica_pod.animation.json;
 - textures/entity/ironman/veronica_pod.png (binassets, base64).
 
 Geometry convention (client/anim/geo/BakedGeoModel): JSON x = vanilla player model x,
@@ -61,17 +59,6 @@ def write_json(path, data):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
         f.write('\n')
-
-
-def empty_suit_files():
-    inner = []
-    for key in ['body', 'head', 'right_arm', 'left_arm', 'right_leg', 'left_leg']:
-        mn, size, uv, bone_name, pivot = BOXES[key]
-        centre = centroid(mn, size)
-        joint = list(pivot) if key != 'body' else [0, centre[1], 0]
-        inner.append({'name': bone_name, 'pivot': joint, 'cubes': [cube(mn, size, uv, INTERIOR_INFLATE)]})
-    write_json(os.path.join(RES, 'geo', 'ironman', 'marks', 'empty_suit_interior.geo.json'),
-               geometry('geometry.viltrumitecore.empty_suit_interior', inner))
 
 
 def pack(boxes, width=128):
@@ -135,23 +122,6 @@ def pod_animation():
     write_json(os.path.join(RES, 'animations', 'ironman', 'veronica_pod.animation.json'), doc)
 
 
-def empty_suit_animation():
-    def keys(values):
-        return {'0.0': [0, 0, 0], '0.5': values, '1.0': values, '1.5': [0, 0, 0]}
-    doc = {
-        'format_version': '1.8.0',
-        'animations': {
-            'open': {'loop': 'hold_on_last_frame', 'animation_length': 1.5, 'bones': {
-                'armorrightarm': {'rotation': keys([0, 0, 40])},
-                'armorleftarm': {'rotation': keys([0, 0, -40])},
-                'armorhead': {'rotation': keys([-35, 0, 0])},
-                'armorbody': {'scale': {'0.0': [1, 1, 1], '0.5': [1.12, 1, 1.12], '1.0': [1.12, 1, 1.12], '1.5': [1, 1, 1]}},
-            }},
-        },
-    }
-    write_json(os.path.join(RES, 'animations', 'ironman', 'empty_suit.animation.json'), doc)
-
-
 def paint_hull(img, uv, size, colour):
     w, h, d = size
     u, v = uv
@@ -191,10 +161,8 @@ def pod_texture():
 
 
 def main():
-    empty_suit_files()
     pod_geo()
     pod_animation()
-    empty_suit_animation()
     pod_texture()
 
 

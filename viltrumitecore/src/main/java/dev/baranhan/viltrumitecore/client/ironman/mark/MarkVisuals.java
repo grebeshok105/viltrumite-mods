@@ -5,6 +5,7 @@ import dev.baranhan.viltrumitecore.client.ironman.IronManCombatParts;
 import dev.baranhan.viltrumitecore.client.ironman.veronica.PartWrapAnimator;
 import dev.baranhan.viltrumitecore.entity.ViltrumiteEntities;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.EquipTimeline;
 import dev.baranhan.viltrumitecore.hero.ironman.mark.SuitPart;
 import java.util.List;
@@ -60,6 +61,11 @@ public final class MarkVisuals {
             out.add(extras);
          }
 
+         return;
+      }
+
+      // Exit: the empty suit opens around Tony, who walks out without any plates.
+      if (state.equipPhase() == IronManFlags.EQUIP_EXITING) {
          return;
       }
 
