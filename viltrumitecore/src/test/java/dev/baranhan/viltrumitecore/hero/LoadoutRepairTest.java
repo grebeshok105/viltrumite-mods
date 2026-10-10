@@ -29,14 +29,25 @@ class LoadoutRepairTest {
       Arrays.fill(slots, "");
       slots[IronManAbilities.SUIT_SLOT] = IronManAbilities.SUIT;
       assertFalse(HeroRegistry.needsLoadoutReset(slots, IronManAbilities::owns));
-      assertArrayEquals(IronManAbilities.defaultLoadout(), HeroRegistry.fillMissingDefaults(slots, IronManAbilities.defaultLoadout()));
+      // Old save: no offered set yet, the slots count as given.
+      assertArrayEquals(IronManAbilities.defaultLoadout(),
+         HeroRegistry.fillMissingDefaults(slots, IronManAbilities.defaultLoadout(), HeroRegistry.defaultIds(slots)));
+   }
+
+   @Test
+   void removedAbilityStaysRemoved() {
+      String[] defaults = IronManAbilities.defaultLoadout();
+      String[] slots = defaults.clone();
+      slots[IronManAbilities.MISSILES_SLOT] = "";
+      assertArrayEquals(slots, HeroRegistry.fillMissingDefaults(slots, defaults, HeroRegistry.defaultIds(defaults)));
    }
 
    @Test
    void fillingKeepsThePlayersSlots() {
       String[] defaults = {"a", "b", "c", ""};
       String[] slots = {"b", "", "x", null};
-      assertArrayEquals(new String[]{"b", "a", "x", "c"}, HeroRegistry.fillMissingDefaults(slots, defaults));
-      assertArrayEquals(new String[]{"a", "b"}, HeroRegistry.fillMissingDefaults(new String[]{"a", "b"}, new String[]{"a", "b", "c"}));
+      java.util.Set<String> none = java.util.Set.of();
+      assertArrayEquals(new String[]{"b", "a", "x", "c"}, HeroRegistry.fillMissingDefaults(slots, defaults, none));
+      assertArrayEquals(new String[]{"a", "b"}, HeroRegistry.fillMissingDefaults(new String[]{"a", "b"}, new String[]{"a", "b", "c"}, none));
    }
 }

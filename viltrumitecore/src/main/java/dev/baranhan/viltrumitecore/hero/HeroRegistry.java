@@ -100,6 +100,8 @@ public final class HeroRegistry {
          for (int slot = 0; slot < 18; slot++) {
             abilityUser.setAbilityInSlot(slot, slot < loadout.length ? loadout[slot] : "");
          }
+
+         abilityUser.setOfferedAbilities(defaultIds(loadout));
       }
 
       heroPlayer.viltrumitecore$setHeroSession(new HeroSession(id, UUID.randomUUID(), false));
@@ -173,8 +175,9 @@ public final class HeroRegistry {
    /**
     * Repair the slots after login / a repeated choice: a slot holding an ability
     * the current hero does not own (e.g. a migrated Viltrumite save) resets the
-    * whole loadout to the hero's default. Otherwise default abilities missing
-    * from every slot (added to the hero by a later version) are filled in.
+    * whole loadout to the hero's default. Otherwise default abilities the hero
+    * never gave this player (added by a later version) are filled in once; an
+    * ability the player removed stays removed.
     */
    public static void repairLoadout(ServerPlayer player) {
       if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
@@ -192,20 +195,43 @@ public final class HeroRegistry {
          return;
       }
 
-      String[] filled = fillMissingDefaults(slots, hero.defaultLoadout());
+      String[] defaults = hero.defaultLoadout();
+      // A save from before the offered set: what is in the slots counts as given.
+      java.util.Set<String> offered = abilityUser.getOfferedAbilities();
+      if (offered == null) {
+         offered = defaultIds(slots);
+      }
+
+      String[] filled = fillMissingDefaults(slots, defaults, offered);
       for (int slot = 0; slot < 18; slot++) {
          if (!java.util.Objects.equals(filled[slot], slots[slot])) {
             abilityUser.setAbilityInSlot(slot, filled[slot]);
          }
       }
+
+      java.util.Set<String> given = new java.util.LinkedHashSet<>(offered);
+      given.addAll(defaultIds(defaults));
+      abilityUser.setOfferedAbilities(given);
+   }
+
+   /** Non-empty ids of a slot array. */
+   public static java.util.Set<String> defaultIds(String[] slots) {
+      java.util.Set<String> ids = new java.util.LinkedHashSet<>();
+      for (String id : slots) {
+         if (id != null && !id.isEmpty()) {
+            ids.add(id);
+         }
+      }
+
+      return ids;
    }
 
    /**
-    * Slots with every default ability present: a missing one goes to its default
-    * slot when that is empty, else to the first empty slot; with no empty slot it
-    * stays out. Slots the player filled are never overwritten.
+    * Slots with every default ability that is not in {@code offered} present: a
+    * missing one goes to its default slot when that is empty, else to the first
+    * empty slot; with no empty slot it stays out. Filled slots are never overwritten.
     */
-   public static String[] fillMissingDefaults(String[] slots, String[] defaults) {
+   public static String[] fillMissingDefaults(String[] slots, String[] defaults, java.util.Set<String> offered) {
       String[] out = new String[slots.length];
       java.util.Set<String> present = new java.util.HashSet<>();
       for (int i = 0; i < slots.length; i++) {
@@ -217,7 +243,7 @@ public final class HeroRegistry {
 
       for (int i = 0; i < defaults.length; i++) {
          String id = defaults[i];
-         if (id == null || id.isEmpty() || present.contains(id)) {
+         if (id == null || id.isEmpty() || present.contains(id) || offered.contains(id)) {
             continue;
          }
 
@@ -248,6 +274,8 @@ public final class HeroRegistry {
          String id = slot < loadout.length ? loadout[slot] : null;
          abilityUser.setAbilityInSlot(slot, id == null ? "" : id);
       }
+
+      abilityUser.setOfferedAbilities(defaultIds(loadout));
    }
 
    /** True when any non-empty slot holds an ability the hero does not own. */

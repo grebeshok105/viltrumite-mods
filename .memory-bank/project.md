@@ -33,6 +33,8 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Owner sections are deduplicated by content (`pushOwnerSection`). To restart a client timer with the same content (re-scan of the same target), push `Section.EMPTY` first.
 - Binary assets pushed through GitHub MCP live as base64 in `viltrumitecore/src/main/binassets/**.b64`; Gradle `decodeBinaryAssets` writes them to resources.
 
+- Loadout: NBT `ViltrumiteOfferedAbilities` (server only) = default abilities the current hero already gave. `repairLoadout` fills only defaults outside it, so new abilities of a later version reach old saves once and a slot the player cleared stays empty. A save without the key counts its current slots as given. `changeHero`/`resetLoadout` set it to the defaults; the respawn clone copies it.
+
 ## Iron Man visuals (Stage 1b)
 - 3D parts on player parts: `client/anim/render/PlayerGeoLayer` (+ `PlayerBoneMap`, first person via `PlayerGeoHandMixin`); providers register once (`IronManPartsProvider`: helmet + flames). Skill §7.1.
 - Suit reveal: no custom shader (Oculus). `RevealMask` distance field → 16 frames baked at runtime into `DynamicTexture`s (`IronManSuitTextures`, reload listener in `ViltrumiteCoreClient`); `skin` frame is the player skin via `HeroSkins.skinVariant`. Decision: `docs/spikes/2026-10-ironman-reveal.md`. Skill §7.2.
