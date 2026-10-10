@@ -54,8 +54,7 @@ Pattern: one mixin per ability on `PlayerModel.setupAnim(LivingEntity;FFFFF)V` a
 | `ChopModelMixin2`, `ThunderclapModelMixin` | 1170 |
 | `BarrageModelMixin` | 1175 |
 | `HomelanderModelMixin` | 1180 |
-| `IronManModelMixin` (hover, glide, heavy-landing kneel) | 1190 |
-| `SignatureModelMixin` (Iron Man mark signatures) | 1195 |
+| `IronManModelMixin` (hover, glide, heavy-landing kneel, every Iron Man combat and mark-signature pose, suit walk-in rest pose) | 1190 |
 | `GrabModelMixin` | 2000 |
 | `BlockModelMixin` | 3000 |
 
@@ -115,6 +114,7 @@ Use a `PlayerRenderer.setupRotations` TAIL mixin (`PunchRendererCoreMixin` 1500,
 ## 5. First person
 
 - Each ability has a `FirstPersonXMixin` (Barrage, Block, Chop, Chop2, Grab, Gun, Punch, Thunderclap; Homelander; Iron Man: `IronManFirstPersonShieldMixin` → `IronManFirstPerson` for every combat pose and the shield guard). Read the nearest one before you write a new one. Copy its structure.
+- Iron Man (Regulus-style, PR #19): `client/ironman/anim/IronManAnimation` is the one client clock per player (shot edges per palm, stance hold, volleys, strike clock with forehand/backhand, nano weapon form/dissolve, missiles, unibeam, signatures); `State.weight(View, Layer, active)` gives separate third/first-person weights. `IronManPoser` keys layers on `PoseRig.begin(...).slerp()` and then aims arms with `client/anim/pose/ArmAim` (direction from the head axes, rotation-to quaternion → Euler ZYX); `IronManFirstPerson` uses `FirstPersonArm` (shoulder pivot) with the same layers. Do not add a separate signature mixin: signatures are a layer in these two classes.
 - An arm that is not the main hand renders in first person only through `AlwaysVisibleOffhandMixin`; a hero adds its `wantsOffhand(player)` there.
 - Flight applies `PoseDataManager.FP` in `ItemInHandRendererMixin` and resets arm pivots in `PlayerRendererMixin`. Do not fight these transforms.
 - Blocking uses `FirstPersonBlockAnimationManager`, a separate weight manager. A pose that renders in both views needs a separate first-person weight.
@@ -281,17 +281,26 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
   (`AnimationController.restart` on each phase change). Doors swing open after landing.
 - `EmptySuitRenderer`: opening shell (Satsu `full_body` + helmet cut into a back
   half and hinged front plates by `tools/assets/opening_shell.py`, mark skin),
-  interior lining (`ironman_interior.png` 128 px + glow), `open` (30 ticks) /
-  `enter` (10 ticks) clips on the door bones; mark extras only while standing
-  closed. Body frame: `mulPose(YP(180 - yRot))`, scale 0.9375.
+  interior lining (`ironman_interior.png` 128 px grayscale + glow, tinted per mark with
+  `SuitPalette.lining`), `open` (30 ticks) clip on the door bones. Entering is
+  code-driven (`EmptySuitEntity.enterDoor`): plates open while the owner walks up,
+  close legs → arms → chest → faceplate (4 t each, no overshoot); the shell hides
+  once the owner's snapshot shows the mark on; the helmet box hides for the local
+  first-person owner. The walk (approach, turn, step back) is scripted on the client
+  by `SuitEntryDriver`, which also gives `restWeight` for `IronManPoser`. The old
+  `enter` clip is unused. Mark extras only while standing closed. Body frame: `mulPose(YP(180 - yRot))`, scale 0.9375.
 - `VeronicaPodRenderer`: Veronica after the Age of Ultron stills (twin hulls are
   the door bones), cutout + glow pass.
 - `SuitDebrisRenderer`: one suit piece, tumbling, fades and shrinks in the last 20 ticks.
+- Forearm micro-missile pods (`geo/ironman/missiles/forearm_launchers.geo.json` + `forearm_rockets`, own work, `tools/assets/make_ironman_forearm_launchers.py`): grayscale textures tinted with `SuitPalette` via `PlayerGeoLayer.Pass.cutout(tex, r, g, b)`; pods slide out of the forearm, petals open. Launch point `IronManCombat.forearm(player, right)`.
+- War Machine rounds: `client/ironman/mark/sig/GunRounds` (travelling streaks, muzzle flash, whiz for bystanders, block/body impacts), drawn from `SignatureVfx`.
+- Helmet open (iteration 3): only the iron faceplate opens, the rest of the helmet stays. Nano: `IronManSuitTextures` `cutOpen/glowOpen` (frames without the head front and hat front) plus `face(kind, step)` dissolve steps (8; nanites recede from the middle of the face to the edges, cyan rim). Marks: `MarkSkins` opens only the face region and `MarkFaceplate` (`geo/ironman/marks/faceplate.geo.json`) slides the plate up into the crown with a small outward tilt. `HelmetAnim.gesture` is the hand-to-helmet clock (22 t, smooth, only when the suit stays on — none on exit or retract).
 - `MarkVfx`: pixel motes (fire trail, engine flames, sparks, dust ring) and a
   heat aura (`PixelVfx.bodyShell`). Motes age by client ticks and clear on logout.
 - Animation sign convention: JSON X and Y are negated like `buildBone`, Z is not.
   Parsed-frame checks: door `rotY` -75 turns the +x door edge toward +z.
   Arm `rotZ` +40 on the +x arm is outward. Head `rotX` +35 tilts the top toward +z. Verify in game.
+  For a geo hinge rotated about X (front = -z): a positive bone `rotX` (clip X negative) swings the lower edge forward and up. The empty-suit faceplate (hinge at the top centre) opens with clip X = -105; +105 swung it back through the helmet (fixed in PR #19 iteration 3).
 
 ## 9. Screen effects
 

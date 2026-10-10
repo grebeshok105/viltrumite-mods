@@ -505,7 +505,36 @@
     "category": "player",
     "subtitle": "subtitles.viltrumitecore.ironman_shoulder_gun",
     "sounds": [
-      "viltrumitecore:ironman/shoulder_gun"
+      "viltrumitecore:ironman/shoulder_gun",
+      "viltrumitecore:ironman/shoulder_gun_2",
+      "viltrumitecore:ironman/shoulder_gun_3"
+    ]
+  },
+  "ironman_bullet_whiz": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_bullet_whiz",
+    "sounds": [
+      "viltrumitecore:ironman/bullet_whiz",
+      "viltrumitecore:ironman/bullet_whiz_2",
+      "viltrumitecore:ironman/bullet_whiz_3"
+    ]
+  },
+  "ironman_bullet_impact": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_bullet_impact",
+    "sounds": [
+      "viltrumitecore:ironman/bullet_impact",
+      "viltrumitecore:ironman/bullet_impact_2",
+      "viltrumitecore:ironman/bullet_impact_3",
+      "viltrumitecore:ironman/bullet_impact_4"
+    ]
+  },
+  "ironman_bullet_hit": {
+    "category": "player",
+    "subtitle": "subtitles.viltrumitecore.ironman_bullet_hit",
+    "sounds": [
+      "viltrumitecore:ironman/bullet_hit",
+      "viltrumitecore:ironman/bullet_hit_2"
     ]
   },
   "ironman_slam_impact": {

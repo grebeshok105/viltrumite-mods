@@ -225,6 +225,11 @@ public class PlayerGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerMode
          return new Pass(texture, Kind.CUTOUT, 1.0F, 1.0F, 1.0F, 1.0F);
       }
 
+      /** Cutout pass multiplied by a colour (light-grayscale textures tinted to the suit). */
+      public static Pass cutout(ResourceLocation texture, float r, float g, float b) {
+         return new Pass(texture, Kind.CUTOUT, r, g, b, 1.0F);
+      }
+
       public static Pass glow(ResourceLocation texture) {
          return new Pass(texture, Kind.GLOW, 1.0F, 1.0F, 1.0F, 1.0F);
       }

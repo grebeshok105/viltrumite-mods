@@ -33,7 +33,30 @@ import net.minecraft.world.phys.Vec3;
 public class EmptySuitEntity extends Entity implements HeroInteractable {
    /** Exit animation: open 10, hold 10, close 10 (Tony steps out meanwhile). */
    public static final int OPEN_TICKS = 30;
-   public static final int ENTER_TICKS = 10;
+   /**
+    * Entering (owner walks in from the front): approach the front point
+    * 0–14, turn round 14–24, step back into the shell 24–32 (the owner is
+    * snapped exactly onto the suit at {@link #ENTER_SEAL}), then the plates
+    * close one group after another 32–46: legs, arms, chest, faceplate.
+    */
+   public static final int ENTER_TICKS = 46;
+   public static final int ENTER_APPROACH = 14;
+   public static final int ENTER_TURN = 24;
+   public static final int ENTER_SEAL = 32;
+   /** Plates swing open while the owner approaches. */
+   public static final int ENTER_DOORS_OPEN = 8;
+   /** Closing order (spec §12.6): legs, arms, chest, faceplate; 4 ticks each, overlapping by one. */
+   public static final int[] ENTER_CLOSE_FROM = {32, 35, 38, 41};
+   public static final int ENTER_CLOSE_TICKS = 4;
+   public static final int GROUP_LEGS = 0;
+   public static final int GROUP_ARMS = 1;
+   public static final int GROUP_CHEST = 2;
+   public static final int GROUP_FACE = 3;
+   /** Where the owner stands before turning round: this far in front of the suit. */
+   public static final double ENTER_FRONT = 0.85;
+   /** Entering only from the front: max horizontal distance and min cos of the angle off the suit's facing. */
+   public static final double ENTER_FRONT_RANGE = 3.0;
+   public static final double ENTER_FRONT_COS = 0.34;
    public static final int LEAVE_TICKS = 60;
    public static final double ENTER_REACH = 4.5;
    public static final double LEAVE_RANGE = 96.0;
@@ -136,11 +159,7 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
                this.setPhase(Phase.STANDING);
             }
          }
-         case ENTERING -> {
-            if (this.phaseTicks >= ENTER_TICKS) {
-               this.discard();
-            }
-         }
+         case ENTERING -> this.tickEntering();
          case LEAVING -> {
             if (this.phaseTicks >= LEAVE_TICKS || this.getY() > this.level().getMaxBuildHeight() + 64) {
                this.discard();
@@ -179,9 +198,82 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
       }
    }
 
-   /** The owner walks in: plates open, the entity disappears after ENTER_TICKS. */
+   /** The owner walks in: plates open, the owner turns and steps back in, the plates close (ENTER_TICKS). */
    public void startEntering() {
       this.setPhase(Phase.ENTERING);
+   }
+
+   private void tickEntering() {
+      ServerPlayer owner = IronManOwned.owner(this, this.ownerId());
+      IronManState state = owner == null ? null : IronManState.of(owner);
+      if (state == null || state.enteringSuitId != this.getId()) {
+         // Owner gone or interrupted: the suit stays standing (or flies home without an owner).
+         this.setPhase(Phase.STANDING);
+         if (owner != null && state != null) {
+            IronManMarks.abortEntering(owner, state, this);
+         } else {
+            this.leave();
+         }
+
+         return;
+      }
+
+      if (this.phaseTicks == ENTER_SEAL) {
+         // The client walked the owner here already; this only removes the last few millimetres.
+         owner.connection.teleport(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+         owner.setYHeadRot(this.getYRot());
+         owner.setYBodyRot(this.getYRot());
+      }
+
+      if (this.phaseTicks >= ENTER_TICKS) {
+         IronManMarks.finishEntering(owner, state, this);
+         this.discard();
+      }
+   }
+
+   /** Unit vector the suit faces (its front). */
+   public Vec3 facing() {
+      return Vec3.directionFromRotation(0.0F, this.getYRot());
+   }
+
+   /** Spot in front of the suit where the owner turns round. */
+   public Vec3 frontPoint() {
+      return this.position().add(this.facing().scale(ENTER_FRONT));
+   }
+
+   /** True when {@code at} is in front of the suit, close enough to walk in (spec §12.6: only from the front). */
+   public boolean inFront(Vec3 at) {
+      double dx = at.x - this.getX();
+      double dz = at.z - this.getZ();
+      double dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > ENTER_FRONT_RANGE) {
+         return false;
+      }
+
+      if (dist < 1.0E-3) {
+         return false;
+      }
+
+      Vec3 facing = this.facing();
+      return (facing.x * dx + facing.z * dz) / dist > ENTER_FRONT_COS;
+   }
+
+   /** Open fraction 0..1 of a plate group at an entering time (ticks, fractional). */
+   public static float enterDoor(int group, float t) {
+      if (t < ENTER_DOORS_OPEN) {
+         return easeInOut(Math.max(0.0F, t) / ENTER_DOORS_OPEN);
+      }
+
+      float from = ENTER_CLOSE_FROM[group];
+      if (t <= from) {
+         return 1.0F;
+      }
+
+      return 1.0F - easeInOut(Math.min(1.0F, (t - from) / ENTER_CLOSE_TICKS));
+   }
+
+   private static float easeInOut(float x) {
+      return x < 0.5F ? 4.0F * x * x * x : 1.0F - (float)Math.pow(-2.0F * x + 2.0F, 3.0) / 2.0F;
    }
 
    @Override
