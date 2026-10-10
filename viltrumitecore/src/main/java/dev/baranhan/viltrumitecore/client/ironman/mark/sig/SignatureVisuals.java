@@ -29,7 +29,7 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
  * Client entry of the seven mark signatures (spec §13): geo parts on the body
  * (Mark 7 emitters, Mark 42 glove, Mark 15 shimmer shell, Mark 39 booster,
  * War Machine turret), the rocket fist entity renderer. Beams, tracers and
- * casings are in {@link SignatureVfx}, the poses in {@link SignaturePoser}.
+ * casings are in {@link SignatureVfx}, the poses in IronManPoser and IronManFirstPerson.
  */
 public final class SignatureVisuals {
    private static final String TEXTURE_DIR = "textures/entity/ironman/marks/";
