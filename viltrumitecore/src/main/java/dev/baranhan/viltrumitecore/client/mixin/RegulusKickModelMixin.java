@@ -4,6 +4,7 @@ import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.key;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.strike;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.under;
 
+import dev.baranhan.viltrumitecore.client.anim.pose.PoseRig;
 import dev.baranhan.viltrumitecore.client.regulus.RegulusPoser;
 import dev.baranhan.viltrumitecore.client.render.animation.RegulusAnimationManager;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
@@ -87,7 +88,7 @@ public abstract class RegulusKickModelMixin<T extends LivingEntity> extends Huma
          return;
       }
       float elapsed = RegulusAnimationManager.castTime(entity, Minecraft.getInstance().getFrameTime());
-      RegulusPoser.Rig rig = RegulusPoser.rig((PlayerModel<?>)(Object)this, entity, this.cloak);
+      PoseRig rig = RegulusPoser.rig((PlayerModel<?>)(Object)this, entity, this.cloak);
       rig.head(KICK_HEAD, elapsed, cast);
       rig.body(KICK_BODY, elapsed, cast, false);
       rig.mainLeg(KICK_MAIN_LEG, elapsed, cast, false);

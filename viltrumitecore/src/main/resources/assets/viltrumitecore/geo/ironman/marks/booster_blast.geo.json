@@ -1,0 +1,161 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.booster_blast",
+        "texture_width": 4,
+        "texture_height": 4
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "boosterBlast",
+          "parent": "armorBody",
+          "pivot": [
+            0.0,
+            16.96716,
+            5.6644
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3.55479,
+                13.96716,
+                4.81443
+              ],
+              "size": [
+                1.2,
+                3,
+                1.7
+              ],
+              "pivot": [
+                4.25479,
+                14.96716,
+                4.76443
+              ],
+              "rotation": [
+                7.5,
+                4.95,
+                -0.65
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    3,
+                    0
+                  ],
+                  "uv_size": [
+                    -3,
+                    3
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -4.75479,
+                13.96716,
+                4.81443
+              ],
+              "size": [
+                1.2,
+                3,
+                1.7
+              ],
+              "pivot": [
+                -4.25479,
+                14.96716,
+                4.76443
+              ],
+              "rotation": [
+                7.5,
+                -4.95,
+                0.65
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    0,
+                    0
+                  ],
+                  "uv_size": [
+                    3,
+                    3
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.helmet",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "armorHead",
+          "pivot": [
+            0.0,
+            28.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42Helmet",
+          "pivot": [
+            0.0,
+            24.0,
+            -16.0
+          ],
+          "parent": "armorHead"
+        },
+        {
+          "name": "helmetback",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "42Helmet",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                32,
+                0
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "strap",
+          "pivot": [
+            0.0,
+            28.0,
+            0.0
+          ],
+          "parent": "helmetback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                32,
+                32
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "helmetpanel2",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "helmetback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                64
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "helmetpanel3",
+          "pivot": [
+            0.0,
+            32.0,
+            -4.0
+          ],
+          "parent": "helmetpanel2",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                32,
+                64
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "helmetpanel1",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "helmetback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                32,
+                48
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "helmetbottompanel1",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "helmetback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                16
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                32,
+                16
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "helmetbottompanel2",
+          "pivot": [
+            0.0,
+            24.0,
+            -4.0
+          ],
+          "parent": "helmetbottompanel1",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                48
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "helmetbottompanel3",
+          "pivot": [
+            0.0,
+            24.0,
+            4.0
+          ],
+          "parent": "helmetbottompanel1",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                80
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "faceplate_42Faceplate",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "armorHead",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                0,
+                96
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8.0,
+                8.0,
+                8.0
+              ],
+              "uv": [
+                32,
+                96
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

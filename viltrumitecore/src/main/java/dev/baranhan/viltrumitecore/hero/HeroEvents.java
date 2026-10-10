@@ -67,6 +67,7 @@ public final class HeroEvents {
          }
 
          newAbility.setActivePage(oldAbility.getActivePage());
+         newAbility.setOfferedAbilities(oldAbility.getOfferedAbilities());
          HeroRegistry.repairLoadout(newPlayer);
       }
    }
@@ -220,6 +221,7 @@ public final class HeroEvents {
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeldInputs.releaseAll(player);
+         HeroDamageLayers.forget(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DISCONNECT);
       }
    }
@@ -237,6 +239,17 @@ public final class HeroEvents {
          } else {
             HeroRegistry.repairLoadout(player);
          }
+      }
+   }
+
+   /**
+    * Guard seam: a hero that owns the swap-hands key cancels the vanilla swap
+    * on the server too, so a forged swap packet does nothing.
+    */
+   @SubscribeEvent
+   public static void onSwapHands(net.minecraftforge.event.entity.living.LivingSwapItemsEvent.Hands event) {
+      if (event.getEntity() instanceof ServerPlayer player && HeroRegistry.get(player).blocksHandSwap(player)) {
+         event.setCanceled(true);
       }
    }
 

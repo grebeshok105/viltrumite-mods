@@ -83,6 +83,158 @@ public final class IronManRules {
    /** Energy 0: glide down at this speed (blocks per tick). */
    public static final float FLIGHT_GLIDE_SINK = 0.12F;
 
+
+   // ---- Stage 2: nano combat kit (spec §8, §9, §18; plan Task 1) ----
+   // Damage is per hit with an explicit interval. Sustained ranged damage is
+   // at best equal to the Homelander laser (1.5 every 4 t = 0.375/t).
+   /** Repulsor tap: release before this many ticks of charge. */
+   public static final int REPULSOR_TAP_TICKS = 4;
+   public static final int REPULSOR_CHARGE_MAX = 20;
+   /** Ticks between two repulsor shots (3.0 every 8 t = 0.375/t). */
+   public static final int REPULSOR_COOLDOWN = 8;
+   public static final float REPULSOR_SHOT = 3.0F;
+   public static final float REPULSOR_CHARGED_MIN = 4.0F;
+   public static final float REPULSOR_CHARGED_MAX = 8.0F;
+   /** Volley total from both hands (two bolts of half each). */
+   public static final float REPULSOR_VOLLEY = 12.0F;
+   public static final double REPULSOR_SPEED = 3.0;
+   public static final double REPULSOR_RANGE = 48.0;
+   public static final double REPULSOR_KNOCKBACK_TAP = 0.3;
+   public static final double REPULSOR_KNOCKBACK_MAX = 1.6;
+   /** Shot against the flight direction brakes: velocity x(1 - BRAKE * power). */
+   public static final double REPULSOR_BRAKE = 0.5;
+   /** normalized shot · velocity below this counts as a back shot. */
+   public static final double REPULSOR_BRAKE_DOT = -0.6;
+   public static final double REPULSOR_LIFT = 0.6;
+   public static final float REPULSOR_LIFT_PITCH = 60.0F;
+   public static final float REPULSOR_SHOCKWAVE_PITCH = 70.0F;
+   public static final double REPULSOR_SHOCKWAVE_RADIUS = 4.0;
+   public static final float REPULSOR_SHOCKWAVE_DAMAGE = 4.0F;
+   public static final double REPULSOR_SHOCKWAVE_KNOCKBACK = 1.2;
+   /** Recoil pose flag after a shot. */
+   public static final int REPULSOR_RECOIL_TICKS = 6;
+
+   public static final int UNIBEAM_CHARGE = 20;
+   public static final int UNIBEAM_MAX = 60;
+   public static final int UNIBEAM_OVERHEAT_LOCK = 40;
+   public static final int UNIBEAM_HIT_INTERVAL = 4;
+   public static final float UNIBEAM_HIT = 1.5F;
+   public static final float UNIBEAM_HIT_FAR = 0.75F;
+   public static final double UNIBEAM_NEAR = 8.0;
+   /** Client scorch marks of repulsors / Unibeam (same budget as Homelander's lasers). */
+   public static final int SCORCH_MAX = 256;
+   public static final long SCORCH_LIFETIME = 600L;
+   public static final double UNIBEAM_RANGE = 48.0;
+   public static final double UNIBEAM_RADIUS = 0.6;
+   public static final float UNIBEAM_TURN_DEG = 3.0F;
+   /** Velocity added along the beam on every damage hit (push, not hold). */
+   public static final double UNIBEAM_PUSH = 0.35;
+   public static final double UNIBEAM_BLIND_RANGE = 12.0;
+   public static final float UNIBEAM_BLIND_ANGLE = 25.0F;
+   /** Flash ticks: in the beam / looking into it / owner / PvP cap. */
+   public static final int FLASH_BEAM_TICKS = 30;
+   public static final int FLASH_LOOK_TICKS = 16;
+   public static final int FLASH_OWNER_TICKS = 6;
+   public static final int FLASH_PVP_MAX_TICKS = 20;
+   public static final int UNIBEAM_MOB_BLIND_TICKS = 40;
+
+   public static final int OVERDRAFT_SPUTTER_AT = 40;
+   public static final int OVERDRAFT_EXPLODE_AFTER_SPUTTER = 30;
+   public static final float OVERDRAFT_DAMAGE_MULT = 1.5F;
+   public static final float CORE_EXPLOSION_POWER = 12.0F;
+   public static final float CORE_EXPLOSION_POWER_RELEASED = 8.0F;
+   /** HP the player keeps after the own core explosion (2 hearts). */
+   public static final float CORE_SURVIVE_HP = 4.0F;
+   /** Own core explosion damage is floored for this many ticks after the blast (deferred payouts). */
+   public static final int CORE_EXPLOSION_WINDOW = 40;
+   public static final double CORE_EXTRA_KNOCKBACK_RADIUS = 10.0;
+   public static final double CORE_EXTRA_KNOCKBACK = 2.0;
+   public static final double CORE_SELF_LAUNCH = 1.6;
+   /** Nano suit lock after a core explosion (~30 s). */
+   public static final int NANO_LOST_TICKS = 600;
+
+   public static final int MISSILE_FLAPS = 10;
+   public static final int MISSILE_MARKS = 4;
+   public static final double MISSILE_LOCK_RANGE = 64.0;
+   public static final float MISSILE_LOCK_DEG = 4.0F;
+   public static final float MISSILE_HIT = 8.0F;
+   public static final float MISSILE_SPLASH = 4.0F;
+   public static final double MISSILE_SPLASH_RADIUS = 3.0;
+   public static final double MISSILE_SPEED = 1.3;
+   /** Homing turn per tick (fraction of the way to the target direction). */
+   public static final double MISSILE_TURN = 0.22;
+   public static final int MISSILE_LIFETIME = 100;
+   /** Fan spread of the launch (degrees between missiles). */
+   public static final float MISSILE_FAN_DEG = 14.0F;
+   /** Mark brackets stay this long after the last sweep over the target. */
+   public static final int MISSILE_MARK_SHOW = 60;
+
+   /** Nano weapon forming wave from the wrist. */
+   public static final int NANO_FORM_TICKS = 8;
+   public static final float BLADE = 7.0F;
+   public static final float HAMMER = 9.0F;
+   public static final float HAMMER_SLAM = 5.0F;
+   public static final double BLADE_REACH = 3.5;
+   public static final float BLADE_ARC_DEG = 100.0F;
+   public static final int BLADE_SWING_TICKS = 8;
+   public static final int HAMMER_SWING_TICKS = 14;
+   public static final int BLADE_SUNDER_TICKS = 100;
+   public static final double BLADE_DASH_RANGE = 8.0;
+   public static final int BLADE_DASH_TICKS = 4;
+   public static final double HAMMER_REACH = 3.5;
+   public static final double HAMMER_KNOCKBACK = 2.2;
+   public static final double HAMMER_SLAM_RADIUS = 4.0;
+   public static final double HAMMER_SLAM_LIFT = 0.9;
+   /** Airborne target hit by the hammer is driven down with this vy. */
+   public static final double HAMMER_SLAM_DOWN = -2.0;
+   public static final int HAMMER_CHARGE_MAX = 20;
+   public static final double HAMMER_LAUNCH_MIN = 1.2;
+   public static final double HAMMER_LAUNCH_MAX = 2.6;
+   public static final int HAMMER_LAUNCH_TICKS = 20;
+   /** Soft blocks a launched target breaks (destroy speed at most this). */
+   public static final float HAMMER_SOFT_HARDNESS = 1.5F;
+
+   public static final int PERFECT_BLOCK_TICKS = 5;
+   /** Front cone of the shield: full angle. */
+   public static final float SHIELD_CONE_DEG = 120.0F;
+   public static final double SHIELD_PERFECT_KNOCKBACK = 2.0;
+
+   /** Heavy hit (after armor) that shows nano damage zones. */
+   public static final float NANO_DAMAGE_HIT = 6.0F;
+   public static final int NANO_REPAIR_TICKS = 60;
+
+   // ---- Stage 3: helmet, JARVIS, scan, countermeasures (spec §10, §11) ----
+   /** Nanite fold / unfold of the helmet. */
+   public static final int HELMET_TOGGLE_TICKS = 12;
+   /** Threat list refresh period and range (spec §11.1). */
+   public static final int THREAT_SCAN_INTERVAL = 5;
+   public static final double THREAT_RANGE = 32.0;
+   /** A player looking at us: cos of the view cone half angle. */
+   public static final double THREAT_LOOK_DOT = 0.95;
+   /** Projectile arrows: path passes this close to the player. */
+   public static final double THREAT_PROJECTILE_MISS = 2.0;
+   /** JARVIS hints: low energy warning below this. */
+   public static final float JARVIS_LOW_ENERGY = 20.0F;
+   /** Voice: global gap after a line ends, ticks (≥ 4 s). */
+   public static final int JARVIS_GLOBAL_GAP = 80;
+   /** Scan (spec §11.2): aim this long on the same target. */
+   public static final int SCAN_TICKS = 30;
+   public static final double SCAN_RANGE = 48.0;
+   /** Line of sight / aim may be lost this long before the scan is cancelled. */
+   public static final int SCAN_LOS_GRACE = 10;
+   /** A started scan without any target gives up after this. */
+   public static final int SCAN_IDLE_TIMEOUT = 200;
+   /** Through-wall highlight and card lifetime after a scan. */
+   public static final int SCAN_HIGHLIGHT_TICKS = 200;
+   /** Countermeasures (spec §11.3). */
+   public static final int COUNTERMEASURES_COOLDOWN = 400;
+   public static final int FLARE_COUNT = 8;
+   public static final int FLARE_LIFE = 60;
+   public static final double FLARE_HOMING_RANGE = 24.0;
+   public static final double FLARE_MOB_RANGE = 32.0;
+   /** Mobs lose the player for this long (~2 s). */
+   public static final int FLARE_FORGET_TICKS = 40;
+
    private static final dev.baranhan.viltrumiteflight.util.FlightProfile GLIDE_PROFILE = new dev.baranhan.viltrumiteflight.util.FlightProfile(
       1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, true, FLIGHT_GLIDE_SINK);
 

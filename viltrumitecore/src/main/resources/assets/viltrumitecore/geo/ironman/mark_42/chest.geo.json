@@ -1,0 +1,476 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.chest",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0.0,
+            18.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42Body",
+          "pivot": [
+            20.0,
+            24.0,
+            -20.0
+          ],
+          "parent": "armorBody"
+        },
+        {
+          "name": "reactor",
+          "pivot": [
+            0.0,
+            7.0,
+            0.0
+          ],
+          "parent": "42Body"
+        },
+        {
+          "name": "reactormiddle",
+          "pivot": [
+            0.0,
+            7.0,
+            0.0
+          ],
+          "parent": "reactor"
+        },
+        {
+          "name": "Body",
+          "pivot": [
+            0.0,
+            7.0,
+            0.0
+          ],
+          "parent": "reactormiddle",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                0
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer",
+          "pivot": [
+            0.0,
+            7.2,
+            0.0
+          ],
+          "parent": "reactormiddle",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                88,
+                0
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "reactortop",
+          "pivot": [
+            0.0,
+            9.0,
+            6.0
+          ],
+          "parent": "reactor"
+        },
+        {
+          "name": "Body_1",
+          "pivot": [
+            0.0,
+            7.0,
+            0.0
+          ],
+          "parent": "reactortop",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                16
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "reactorbottom",
+          "pivot": [
+            0.0,
+            8.0,
+            6.0
+          ],
+          "parent": "reactor"
+        },
+        {
+          "name": "Body_2",
+          "pivot": [
+            0.0,
+            6.0,
+            0.0
+          ],
+          "parent": "reactorbottom",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                32
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_1",
+          "pivot": [
+            0.0,
+            5.675,
+            0.0
+          ],
+          "parent": "reactorbottom",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                88,
+                32
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "obliques",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "reactor"
+        },
+        {
+          "name": "Body_3",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "obliques",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                48
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_2",
+          "pivot": [
+            0.0,
+            0.2,
+            0.0
+          ],
+          "parent": "obliques",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                88,
+                48
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "innerobliques",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "obliques"
+        },
+        {
+          "name": "Body_4",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "innerobliques",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                64
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_3",
+          "pivot": [
+            0.0,
+            0.2,
+            0.0
+          ],
+          "parent": "innerobliques",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                88,
+                64
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "abs",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "reactor"
+        },
+        {
+          "name": "topabs",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "abs"
+        },
+        {
+          "name": "Body_5",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "topabs",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                64
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_4",
+          "pivot": [
+            0.0,
+            0.2,
+            0.0
+          ],
+          "parent": "topabs",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                64
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "bottomabs",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "abs"
+        },
+        {
+          "name": "Body_6",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "bottomabs",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                80
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_5",
+          "pivot": [
+            0.0,
+            0.2,
+            0.0
+          ],
+          "parent": "bottomabs",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                80
+              ],
+              "inflate": 0.55
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

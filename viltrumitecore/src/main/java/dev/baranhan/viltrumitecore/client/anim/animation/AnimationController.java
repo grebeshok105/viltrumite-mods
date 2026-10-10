@@ -120,47 +120,7 @@ public class AnimationController {
             blend = (float)(elapsedTicks / (double)this.transitionTicks);
          }
 
-         for (Animation.BoneAnimation ba : this.current.boneAnimations().values()) {
-            GeoBone bone = model.getBone(ba.boneName());
-            if (bone != null) {
-               float rx = ba.rotX().sample(t);
-               float ry = ba.rotY().sample(t);
-               float rz = ba.rotZ().sample(t);
-               float px = ba.posX().sample(t);
-               float py = ba.posY().sample(t);
-               float pz = ba.posZ().sample(t);
-               float sx = ba.scaleX().sample(t);
-               float sy = ba.scaleY().sample(t);
-               float sz = ba.scaleZ().sample(t);
-               float targetRotX = bone.initRotX + rx;
-               float targetRotY = bone.initRotY + ry;
-               float targetRotZ = bone.initRotZ + rz;
-               if (blend < 1.0F) {
-                  float[] from = this.snapshot.get(bone.name);
-                  if (from != null) {
-                     targetRotX = lerp(from[0], targetRotX, blend);
-                     targetRotY = lerp(from[1], targetRotY, blend);
-                     targetRotZ = lerp(from[2], targetRotZ, blend);
-                     px = lerp(from[3], px, blend);
-                     py = lerp(from[4], py, blend);
-                     pz = lerp(from[5], pz, blend);
-                     sx = lerp(from[6], sx, blend);
-                     sy = lerp(from[7], sy, blend);
-                     sz = lerp(from[8], sz, blend);
-                  }
-               }
-
-               bone.rotX = targetRotX;
-               bone.rotY = targetRotY;
-               bone.rotZ = targetRotZ;
-               bone.posX = px;
-               bone.posY = py;
-               bone.posZ = pz;
-               bone.scaleX = sx;
-               bone.scaleY = sy;
-               bone.scaleZ = sz;
-            }
-         }
+         poseBones(this.current, model, t, blend, this.snapshot);
       }
    }
 
@@ -186,6 +146,103 @@ public class AnimationController {
 
          this.lastEventSeconds = t;
       }
+   }
+
+   private static void poseBones(Animation animation, BakedGeoModel model, double t, float blend, Map<String, float[]> from) {
+      for (Animation.BoneAnimation ba : animation.boneAnimations().values()) {
+         GeoBone bone = model.getBone(ba.boneName());
+         if (bone != null) {
+            float rx = ba.rotX().sample(t);
+            float ry = ba.rotY().sample(t);
+            float rz = ba.rotZ().sample(t);
+            float px = ba.posX().sample(t);
+            float py = ba.posY().sample(t);
+            float pz = ba.posZ().sample(t);
+            float sx = ba.scaleX().sample(t);
+            float sy = ba.scaleY().sample(t);
+            float sz = ba.scaleZ().sample(t);
+            float targetRotX = bone.initRotX + rx;
+            float targetRotY = bone.initRotY + ry;
+            float targetRotZ = bone.initRotZ + rz;
+            if (blend < 1.0F) {
+               float[] fromPose = from == null ? null : from.get(bone.name);
+               if (fromPose != null) {
+                  targetRotX = lerp(fromPose[0], targetRotX, blend);
+                  targetRotY = lerp(fromPose[1], targetRotY, blend);
+                  targetRotZ = lerp(fromPose[2], targetRotZ, blend);
+                  px = lerp(fromPose[3], px, blend);
+                  py = lerp(fromPose[4], py, blend);
+                  pz = lerp(fromPose[5], pz, blend);
+                  sx = lerp(fromPose[6], sx, blend);
+                  sy = lerp(fromPose[7], sy, blend);
+                  sz = lerp(fromPose[8], sz, blend);
+               }
+            }
+
+            bone.rotX = targetRotX;
+            bone.rotY = targetRotY;
+            bone.rotZ = targetRotZ;
+            bone.posX = px;
+            bone.posY = py;
+            bone.posZ = pz;
+            bone.scaleX = sx;
+            bone.scaleY = sy;
+            bone.scaleZ = sz;
+         }
+      }
+   }
+
+   /** Poses the model at a clip time in seconds: synced timelines drive the time, no start clock. */
+   public static void seek(Animation animation, BakedGeoModel model, double seconds) {
+      model.resetBones();
+      poseBones(animation, model, seconds, 1.0F, null);
+   }
+
+   /** Poses only the bones the clip animates, over the current pose (upper body over a walk). */
+   public static void overlay(Animation animation, BakedGeoModel model, double seconds) {
+      poseBones(animation, model, seconds, 1.0F, null);
+   }
+
+   /** Two clips blended per bone: weight 0 = a at secondsA, weight 1 = b at secondsB. */
+   public static void blend(BakedGeoModel model, Animation a, double secondsA, Animation b, double secondsB, float weight) {
+      seek(a, model, secondsA);
+      Map<String, float[]> from = new HashMap<>();
+      for (GeoBone bone : model.allBones()) {
+         from.put(bone.name, pose(bone));
+      }
+
+      seek(b, model, secondsB);
+      float w = Math.max(0.0F, Math.min(1.0F, weight));
+      for (GeoBone bone : model.allBones()) {
+         float[] start = from.get(bone.name);
+         if (start == null) {
+            continue;
+         }
+
+         float[] end = pose(bone);
+         float[] mixed = new float[end.length];
+         for (int i = 0; i < mixed.length; i++) {
+            mixed[i] = lerp(start[i], end[i], w);
+         }
+
+         setPose(bone, mixed);
+      }
+   }
+
+   private static float[] pose(GeoBone bone) {
+      return new float[]{bone.rotX, bone.rotY, bone.rotZ, bone.posX, bone.posY, bone.posZ, bone.scaleX, bone.scaleY, bone.scaleZ};
+   }
+
+   private static void setPose(GeoBone bone, float[] v) {
+      bone.rotX = v[0];
+      bone.rotY = v[1];
+      bone.rotZ = v[2];
+      bone.posX = v[3];
+      bone.posY = v[4];
+      bone.posZ = v[5];
+      bone.scaleX = v[6];
+      bone.scaleY = v[7];
+      bone.scaleZ = v[8];
    }
 
    private static float lerp(float from, float to, float f) {

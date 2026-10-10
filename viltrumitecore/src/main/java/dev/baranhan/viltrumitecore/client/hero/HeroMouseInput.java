@@ -87,10 +87,15 @@ public final class HeroMouseInput {
       boolean focused = client.screen == null && client.isWindowActive();
       for (MouseButton button : MouseButton.values()) {
          int i = button.ordinal();
+         if (button == MouseButton.GUARD) {
+            // The guard key has its own edges (HeroGuardInput, before vanilla keybinds).
+            continue;
+         }
+
          KeyMapping key = switch (button) {
             case PRIMARY -> client.options.keyAttack;
             case SECONDARY -> client.options.keyUse;
-            case MIDDLE -> heart;
+            default -> heart;
          };
          boolean clicked = button == MouseButton.MIDDLE ? heartClicked : CLICKED[i];
          CLICKED[i] = false;

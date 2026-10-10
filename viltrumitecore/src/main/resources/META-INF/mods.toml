@@ -75,7 +75,7 @@ mandatory = true
 
 # Hangi versiyonlar kabul edilsin?
 # [1.0.0,) demek -> Sürüm 1.0.0 veya üstü olan her şeyi kabul et demek.
-versionRange = "[1.9.0,)"
+versionRange = "[1.10.0,)"
 
 # Yüklenme sırası. AFTER yapmalısın ki, o mod senin modundan ÖNCE yüklensin.
 # Böylece sen onun kodlarını hata almadan kendi içinde kullanabilirsin.

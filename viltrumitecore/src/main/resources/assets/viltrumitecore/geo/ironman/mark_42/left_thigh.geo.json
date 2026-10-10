@@ -1,0 +1,360 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.left_thigh",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "armorLeftLeg",
+          "pivot": [
+            2.0,
+            6.0,
+            0.1
+          ]
+        },
+        {
+          "name": "42LegLeft",
+          "pivot": [
+            2.0,
+            12.0,
+            0.1
+          ],
+          "parent": "armorLeftLeg"
+        },
+        {
+          "name": "left_thigh",
+          "pivot": [
+            3.6,
+            0.0,
+            0.1
+          ],
+          "parent": "42LegLeft",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                128
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                144
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_innerthigh",
+          "pivot": [
+            1.9,
+            16.0,
+            0.1
+          ],
+          "parent": "left_thigh",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                16,
+                144
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                32,
+                144
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_innerthighplate",
+          "pivot": [
+            1.9,
+            16.0,
+            0.1
+          ],
+          "parent": "left_thigh",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                48,
+                144
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                144
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_thighup",
+          "pivot": [
+            1.9,
+            16.0,
+            0.1
+          ],
+          "parent": "left_thigh",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                16,
+                128
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                32,
+                128
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_thighup_inner",
+          "pivot": [
+            1.9,
+            16.0,
+            0.1
+          ],
+          "parent": "left_thighup",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                48,
+                128
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                64,
+                128
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_thighbottom",
+          "pivot": [
+            1.9,
+            16.0,
+            0.1
+          ],
+          "parent": "42LegLeft",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                80,
+                128
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                96,
+                128
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_thighbottom_inner",
+          "pivot": [
+            1.9,
+            16.0,
+            0.1
+          ],
+          "parent": "left_thighbottom",
+          "cubes": [
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                80,
+                144
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                0.0,
+                0.0,
+                -1.9
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                96,
+                144
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.helmet_fire",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorHead",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42Helmet",
+          "pivot": [
+            0.0,
+            24.0,
+            -16.0
+          ],
+          "parent": "armorHead"
+        },
+        {
+          "name": "helmetback",
+          "pivot": [
+            0.0,
+            24.0,
+            0.25
+          ],
+          "parent": "42Helmet"
+        },
+        {
+          "name": "bone3",
+          "pivot": [
+            3.0,
+            29.75,
+            4.1
+          ],
+          "parent": "helmetback",
+          "rotation": [
+            15.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "fire",
+          "pivot": [
+            3.0,
+            29.25,
+            4.1
+          ],
+          "parent": "bone3",
+          "rotation": [
+            180.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -5.0,
+                21.25,
+                -3.9
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_1",
+          "pivot": [
+            3.25,
+            29.75,
+            4.1
+          ],
+          "parent": "bone3",
+          "rotation": [
+            180.0,
+            0.0,
+            22.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.25,
+                22.25,
+                -3.9
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_2",
+          "pivot": [
+            3.0,
+            29.75,
+            3.85
+          ],
+          "parent": "bone3",
+          "rotation": [
+            -90.0,
+            67.5,
+            90.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.5,
+                22.25,
+                -4.15
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_3",
+          "pivot": [
+            2.75,
+            29.75,
+            4.1
+          ],
+          "parent": "bone3",
+          "rotation": [
+            0.0,
+            0.0,
+            157.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.75,
+                22.25,
+                -3.9
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_4",
+          "pivot": [
+            3.0,
+            29.75,
+            4.35
+          ],
+          "parent": "bone3",
+          "rotation": [
+            90.0,
+            -67.5,
+            90.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.5,
+                22.25,
+                -3.65
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "bone4",
+          "pivot": [
+            -3.0,
+            29.75,
+            4.1
+          ],
+          "parent": "helmetback",
+          "rotation": [
+            15.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "fire_5",
+          "pivot": [
+            -3.0,
+            29.25,
+            4.1
+          ],
+          "parent": "bone4",
+          "rotation": [
+            180.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11.0,
+                21.25,
+                -3.9
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_6",
+          "pivot": [
+            -2.75,
+            29.75,
+            4.1
+          ],
+          "parent": "bone4",
+          "rotation": [
+            180.0,
+            0.0,
+            22.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10.25,
+                22.25,
+                -3.9
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_7",
+          "pivot": [
+            -3.0,
+            29.75,
+            3.85
+          ],
+          "parent": "bone4",
+          "rotation": [
+            -90.0,
+            67.5,
+            90.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10.5,
+                22.25,
+                -4.15
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_8",
+          "pivot": [
+            -3.25,
+            29.75,
+            4.1
+          ],
+          "parent": "bone4",
+          "rotation": [
+            0.0,
+            0.0,
+            157.5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10.75,
+                22.25,
+                -3.9
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire_9",
+          "pivot": [
+            -3.0,
+            29.75,
+            4.35
+          ],
+          "parent": "bone4",
+          "rotation": [
+            90.0,
+            -67.5,
+            90.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10.5,
+                22.25,
+                -3.65
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.5,
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -22,6 +22,12 @@ public class ClientModEvents {
    @SubscribeEvent
    public static void registerRenderers(RegisterRenderers event) {
       event.registerEntityRenderer((EntityType)ViltrumiteEntities.METEOR.get(), MeteorRenderer::new);
+      // Iron Man projectiles are drawn as pixels by IronManCombatVfx.
+      event.registerEntityRenderer(ViltrumiteEntities.REPULSOR_BLAST.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+      event.registerEntityRenderer(ViltrumiteEntities.MICRO_MISSILE.get(), dev.baranhan.viltrumitecore.client.ironman.MissileRenderer::new);
+      event.registerEntityRenderer(ViltrumiteEntities.FLARE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+      dev.baranhan.viltrumitecore.client.ironman.mark.MarkVisuals.registerRenderers(event);
+      dev.baranhan.viltrumitecore.client.ironman.mark.sig.SignatureVisuals.registerRenderers(event);
    }
 
    @SubscribeEvent

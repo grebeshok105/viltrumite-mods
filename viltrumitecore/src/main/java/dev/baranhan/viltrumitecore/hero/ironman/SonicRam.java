@@ -38,10 +38,16 @@ public final class SonicRam {
       long now = player.level().getGameTime();
       Vec3 push = velocity.normalize().scale(IronManRules.RAM_KNOCKBACK).add(0.0, 0.2, 0.0);
       for (Entity entity : player.level().getEntities(player, swept, e -> FlyBy.valid(player, e))) {
-         if (due(state.ramHits, entity.getUUID(), now)
-            && entity.hurt(player.damageSources().playerAttack(player), IronManRules.RAM_DAMAGE)) {
+         if (!due(state.ramHits, entity.getUUID(), now)) {
+            continue;
+         }
+
+         if (entity.hurt(player.damageSources().playerAttack(player), IronManRules.RAM_DAMAGE)) {
             FlyBy.push((LivingEntity)entity, push);
             IronManSounds.play(player, dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_FLYBY_HIT.get(), 1.4F, 0.7F);
+         } else {
+            // i-frames ate the hit: try again next tick instead of waiting the rehit window
+            state.ramHits.remove(entity.getUUID());
          }
       }
    }
