@@ -417,7 +417,7 @@ public final class IronManMarks {
       return DamageAbsorb.ABSORBED;
    }
 
-   /** Dimension change (spec §16): the suit on Tony stays, a delivery and the empty suit go back. */
+   /** Dimension change (spec §16): the suit on Tony stays, a delivery and the empty suit go back; Veronica stays where it landed. */
    public static void onDimensionChange(ServerPlayer player, IronManState state) {
       if (state.suit.equipping()) {
          MarkId mark = state.suit.mark();
@@ -427,7 +427,6 @@ public final class IronManMarks {
 
       state.roster.recallWorld();
       state.emptySuitId = -1;
-      state.podId = -1;
       state.equipSource = null;
    }
 

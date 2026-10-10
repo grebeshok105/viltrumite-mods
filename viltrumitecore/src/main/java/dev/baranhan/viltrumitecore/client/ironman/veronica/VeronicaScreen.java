@@ -102,8 +102,10 @@ public final class VeronicaScreen extends Screen {
       int scan = this.top + 2 + (int)(System.currentTimeMillis() / 40L % Math.max(1, height - 4));
       graphics.fill(this.left + 1, scan, this.left + width - 1, scan + 1, 0x2890E8FF);
       graphics.drawCenteredString(this.font, this.title, this.left + width / 2, this.top + 8, ACCENT);
-      long seconds = Math.max(0, (this.view.podTicksLeft() + 19) / 20);
-      graphics.drawString(this.font, Component.translatable("gui.viltrumitecore.veronica.pod_time", seconds), this.left + 8, this.top + height - 16, DIM, false);
+      if (this.view.podTicksLeft() >= 0) {
+         long seconds = (this.view.podTicksLeft() + 19) / 20;
+         graphics.drawString(this.font, Component.translatable("gui.viltrumitecore.veronica.pod_time", seconds), this.left + 8, this.top + height - 16, DIM, false);
+      }
 
       float time = (System.currentTimeMillis() % 100000L) / 1000.0F;
       for (int i = 0; i < cardCount(); i++) {

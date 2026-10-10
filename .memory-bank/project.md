@@ -65,7 +65,8 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - `Suit` holds the mark states (`MARK`, `EQUIPPING`, `EXITING`, `MARK_PARTIAL`, appended to `SuitState`); `Suit.tick()` returns `Event.MARK_ON/EXITED`, `interrupt()` keeps locked parts as `MARK_PARTIAL`. Saved EQUIPPING/EXITING become NONE.
 - Every system reads `IronManState.spec()` (`SuitSpec`: nano defaults or `MarkSpec` + Mark 42 lost parts), never nano constants for armor, missiles, Unibeam charge, shield cost, recoil, drain, weapon and flight speed.
 - Damage order: shield (`IronManCombat.absorb`) → mark durability (`IronManMarks.absorb`, whole hit, no spill) → nano armor → Tony. A worn mark breaks on the next tick: debris + `Suit.autoNano()` (nano on at once, wave is visual only).
-- Pod and empty suit (`VeronicaPodEntity`, `EmptySuitEntity`) are not saved and leave by themselves when the owner is offline, dead, in another level, far (> 96) or the owner's `podId`/`emptySuitId` no longer names them.
+- Veronica pod is permanent (user decision 2026-10-10): saved with the chunk (owner UUID, phase), linked by UUID (`IronManState.podUuid`, NBT `VeronicaPod`). It leaves only when the online owner is not Iron Man or called a newer pod (`IronManVeronica.retired`). A new call is allowed when the pod is beyond the menu range; the cooldown starts at the call.
+- The empty suit (`EmptySuitEntity`) is not saved and leaves when the owner is offline, dead, in another level, far (> 96) or `emptySuitId` no longer names it.
 - Part flight is client-only: server syncs `EQUIP_PHASE`, the SUIT timeline (`EquipTimeline`, 50 t delivery / 20 t enter), `variant` (mark + parts) and the parts source as `actionTarget`.
 - Signatures: `mark/MarkSignature` per mark (`MarkSignatures`), state in `IronManState.signature`; slot 3 in a mark and the RMB `SIGNATURE` tool route to it; cooldown in `extraCooldowns[3]`.
 

@@ -19,6 +19,9 @@ public record VeronicaView(int[] location, float[] durability, int[] cooldown, i
    /** {@link #hulkbuster()} value while the Hulkbuster is on Tony. */
    public static final int HULKBUSTER_ON = -2;
 
+   /** {@code podTicksLeft} of a pod that stays (no time limit). */
+   public static final int POD_STAYS = -1;
+
    public static VeronicaView of(MarkRoster roster, int hulkbuster, int podTicksLeft) {
       int n = MarkId.count();
       int[] location = new int[n];
