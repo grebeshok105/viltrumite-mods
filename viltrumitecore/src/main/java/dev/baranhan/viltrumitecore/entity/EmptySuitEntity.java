@@ -43,6 +43,8 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
    public static final int ENTER_APPROACH = 14;
    public static final int ENTER_TURN = 24;
    public static final int ENTER_SEAL = 32;
+   /** Ticks the closed shell stays after the mark is on the owner (hidden by the renderer once the owner shows it). */
+   public static final int SEAL_LINGER = 4;
    /** Plates swing open while the owner approaches. */
    public static final int ENTER_DOORS_OPEN = 8;
    /** Closing order (spec §12.6): legs, arms, chest, faceplate; 4 ticks each, overlapping by one. */
@@ -64,6 +66,8 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
    private static final EntityDataAccessor<Byte> MARK = SynchedEntityData.defineId(EmptySuitEntity.class, EntityDataSerializers.BYTE);
    private static final EntityDataAccessor<Byte> PHASE = SynchedEntityData.defineId(EmptySuitEntity.class, EntityDataSerializers.BYTE);
    private int phaseTicks;
+   /** Server: the mark is on the owner already; the shell lingers (still drawn until the owner's snapshot shows the mark). */
+   private boolean sealed;
    private int clientPhaseStart;
 
    public enum Phase {
@@ -204,6 +208,16 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
    }
 
    private void tickEntering() {
+      if (this.sealed) {
+         // Kept a few ticks after the mark went on: the entity removal must not reach the client
+         // before the owner's mark snapshot, or Tony's own skin flashes for a frame.
+         if (this.phaseTicks >= ENTER_TICKS + SEAL_LINGER) {
+            this.discard();
+         }
+
+         return;
+      }
+
       ServerPlayer owner = IronManOwned.owner(this, this.ownerId());
       IronManState state = owner == null ? null : IronManState.of(owner);
       if (state == null || state.enteringSuitId != this.getId()) {
@@ -227,7 +241,8 @@ public class EmptySuitEntity extends Entity implements HeroInteractable {
 
       if (this.phaseTicks >= ENTER_TICKS) {
          IronManMarks.finishEntering(owner, state, this);
-         this.discard();
+         dev.baranhan.viltrumitecore.hero.HeroRegistry.syncSnapshot(owner);
+         this.sealed = true;
       }
    }
 
