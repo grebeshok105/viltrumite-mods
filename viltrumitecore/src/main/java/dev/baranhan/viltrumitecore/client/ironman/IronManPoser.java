@@ -178,7 +178,22 @@ public final class IronManPoser {
          ArmAim.aim(model.leftArm, dir, 0.0F, gesture);
       }
 
+      float rest = dev.baranhan.viltrumitecore.client.ironman.mark.SuitEntryDriver.restWeight(entity, partialTick);
+      if (rest > 0.001F) {
+         // Walking into the empty suit: straight rest pose, so the closing plates meet the limbs (spec §12.6).
+         restPose(model, rest);
+      }
+
       PoseRig.copyLayers(model);
+   }
+
+   private static void restPose(PlayerModel<?> model, float k) {
+      for (net.minecraft.client.model.geom.ModelPart part : new net.minecraft.client.model.geom.ModelPart[]{
+         model.head, model.body, model.rightArm, model.leftArm, model.rightLeg, model.leftLeg}) {
+         part.xRot = Mth.lerp(k, part.xRot, 0.0F);
+         part.yRot = Mth.lerp(k, part.yRot, 0.0F);
+         part.zRot = Mth.lerp(k, part.zRot, 0.0F);
+      }
    }
 
    /** Combat layers: keyed poses on the rig, then the aimed arms on top. */

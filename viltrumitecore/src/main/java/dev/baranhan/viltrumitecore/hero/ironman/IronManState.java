@@ -94,6 +94,8 @@ public final class IronManState {
    public java.util.UUID podUuid;
    /** Transient: entity id of this player's empty suit, -1 = none (one per owner, spec §12.6). */
    public int emptySuitId = -1;
+   /** Transient: entity id of the empty suit this player is walking into, -1 = none (rooted, no actions). */
+   public int enteringSuitId = -1;
    /** Transient: facing of the suit Tony is walking out of (exit), null otherwise. */
    @Nullable
    public net.minecraft.world.phys.Vec3 exitDir;
@@ -129,6 +131,7 @@ public final class IronManState {
       this.countermeasures.clearForget();
       this.signature.clear();
       this.emptySuitId = -1;
+      this.enteringSuitId = -1;
       this.equipSource = null;
       this.hulkKit.stopChannels();
       switch (reason) {

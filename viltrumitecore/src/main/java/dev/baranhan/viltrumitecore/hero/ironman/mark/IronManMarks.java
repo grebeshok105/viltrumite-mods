@@ -144,7 +144,8 @@ public final class IronManMarks {
          state.stopCombat();
          HeldInputs.releaseAll(player);
          Vec3 at = player.position();
-         float yaw = player.getYRot();
+         // The suit stays exactly as Tony stood in it: body facing, not the camera.
+         float yaw = player.yBodyRot;
          if (suit.startExit(Suit.EXIT_TICKS)) {
             placeEmptySuit(player, state, mark, at, yaw);
             state.exitDir = Vec3.directionFromRotation(0.0F, yaw);
@@ -247,24 +248,66 @@ public final class IronManMarks {
          return false;
       }
 
-      if (state.suit.state() != dev.baranhan.viltrumitecore.hero.ironman.SuitState.NONE) {
-         state.suit.retractNanoInstantly();
+      if (!suit.inFront(who.position())) {
+         // Only from the front (spec §12.6): the plates open towards the face.
+         who.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.enter_front"), true);
+         return false;
       }
 
+      if (state.suit.state() != dev.baranhan.viltrumitecore.hero.ironman.SuitState.NONE) {
+         state.suit.retractNanoInstantly();
+         IronManSounds.play(who, dev.baranhan.viltrumitecore.ViltrumiteCore.IRONMAN_NANO_RETRACT.get(), 1.0F, 1.2F);
+      }
+
+      stopSignature(who, state);
       state.stopCombat();
+      HeldInputs.releaseAll(who);
       state.roster.move(mark, MarkLocation.EMPTY, MarkLocation.IN_DELIVERY);
       state.emptySuitId = -1;
-      suit.startEntering();
-      who.connection.teleport(suit.getX(), suit.getY(), suit.getZ(), suit.getYRot(), who.getXRot());
-      state.suit.startEquip(mark, false, 0);
+      state.enteringSuitId = suit.getId();
       state.equipSource = null;
+      // No teleport and no flying parts: the client walks Tony in (SuitEntryDriver), the suit stays where it stood.
+      suit.startEntering();
       return true;
+   }
+
+   /** The plates closed around Tony: the mark is on (spec §12.6). */
+   public static void finishEntering(ServerPlayer who, IronManState state, EmptySuitEntity suit) {
+      MarkId mark = suit.mark();
+      state.enteringSuitId = -1;
+      if (mark == null || state.roster.location(mark) != MarkLocation.IN_DELIVERY || !state.suit.equipNow(mark)) {
+         if (mark != null && state.roster.location(mark) == MarkLocation.IN_DELIVERY) {
+            state.roster.move(mark, MarkLocation.IN_DELIVERY, MarkLocation.STORED);
+         }
+
+         return;
+      }
+
+      onSuitEvent(who, state, Suit.Event.MARK_ON);
+   }
+
+   /** Entering interrupted (control, death...): the suit stays where it stands, empty. */
+   public static void abortEntering(ServerPlayer who, IronManState state, EmptySuitEntity suit) {
+      MarkId mark = suit.mark();
+      if (state.enteringSuitId == suit.getId()) {
+         state.enteringSuitId = -1;
+      }
+
+      if (mark != null && state.roster.location(mark) == MarkLocation.IN_DELIVERY) {
+         state.roster.move(mark, MarkLocation.IN_DELIVERY, MarkLocation.EMPTY);
+         state.emptySuitId = suit.getId();
+      }
    }
 
    // ---- per tick ----
 
    /** Before Suit.tick: control interrupts the equip; locked parts stay (spec §16, plan Task 7). */
    public static void onControl(ServerPlayer player, IronManState state) {
+      if (state.enteringSuitId >= 0) {
+         // Control breaks the walk-in; the suit entity sees it and stays standing.
+         state.enteringSuitId = -1;
+      }
+
       boolean equipping = state.suit.equipping();
       MarkId mark = state.suit.mark();
       MarkId gone = state.suit.interrupt();
@@ -443,6 +486,7 @@ public final class IronManMarks {
 
       state.roster.recallWorld();
       state.emptySuitId = -1;
+      state.enteringSuitId = -1;
       state.equipSource = null;
    }
 

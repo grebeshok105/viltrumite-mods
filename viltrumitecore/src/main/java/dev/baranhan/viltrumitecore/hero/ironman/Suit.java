@@ -188,6 +188,22 @@ public final class Suit {
       return true;
    }
 
+   /** The empty suit closed around Tony (spec §12.6): the whole mark is on at once, no flying parts. */
+   public boolean equipNow(MarkId id) {
+      if (this.state != SuitState.NONE) {
+         return false;
+      }
+
+      this.state = SuitState.MARK;
+      this.ticks = 0;
+      this.mark = id;
+      this.delivery = false;
+      this.startParts = SuitPart.fullMask(id);
+      this.parts = this.startParts;
+      this.autoNanoTicks = 0;
+      return true;
+   }
+
    /** "Костюм" in a mark: plates open and Tony steps out (spec §12.5). */
    public boolean startExit(int length) {
       if (this.state != SuitState.MARK) {

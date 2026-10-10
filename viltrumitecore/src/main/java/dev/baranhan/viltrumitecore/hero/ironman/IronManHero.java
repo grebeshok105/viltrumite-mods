@@ -246,6 +246,11 @@ public class IronManHero implements HeroDefinition {
       }
 
       IronManState hulkState = IronManState.of(player);
+      if (hulkState != null && hulkState.enteringSuitId >= 0) {
+         // Walking into the empty suit: the entry plays out, nothing else starts (spec §12.6).
+         return false;
+      }
+
       if (hulkState != null && hulkState.hulkbuster.busy() && action != HeroAction.SUIT) {
          // Parts assembling or climbing out: rooted, nothing else starts (plan stage 5 Task 5).
          return false;
