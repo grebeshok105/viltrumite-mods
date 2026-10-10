@@ -173,7 +173,8 @@ public final class HeroRegistry {
    /**
     * Repair the slots after login / a repeated choice: a slot holding an ability
     * the current hero does not own (e.g. a migrated Viltrumite save) resets the
-    * whole loadout to the hero's default.
+    * whole loadout to the hero's default. Otherwise default abilities missing
+    * from every slot (added to the hero by a later version) are filled in.
     */
    public static void repairLoadout(ServerPlayer player) {
       if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
@@ -188,7 +189,52 @@ public final class HeroRegistry {
 
       if (needsLoadoutReset(slots, hero::ownsAbility)) {
          resetLoadout(player);
+         return;
       }
+
+      String[] filled = fillMissingDefaults(slots, hero.defaultLoadout());
+      for (int slot = 0; slot < 18; slot++) {
+         if (!java.util.Objects.equals(filled[slot], slots[slot])) {
+            abilityUser.setAbilityInSlot(slot, filled[slot]);
+         }
+      }
+   }
+
+   /**
+    * Slots with every default ability present: a missing one goes to its default
+    * slot when that is empty, else to the first empty slot; with no empty slot it
+    * stays out. Slots the player filled are never overwritten.
+    */
+   public static String[] fillMissingDefaults(String[] slots, String[] defaults) {
+      String[] out = new String[slots.length];
+      java.util.Set<String> present = new java.util.HashSet<>();
+      for (int i = 0; i < slots.length; i++) {
+         out[i] = slots[i] == null ? "" : slots[i];
+         if (!out[i].isEmpty()) {
+            present.add(out[i]);
+         }
+      }
+
+      for (int i = 0; i < defaults.length; i++) {
+         String id = defaults[i];
+         if (id == null || id.isEmpty() || present.contains(id)) {
+            continue;
+         }
+
+         int target = i < out.length && out[i].isEmpty() ? i : -1;
+         for (int j = 0; target < 0 && j < out.length; j++) {
+            if (out[j].isEmpty()) {
+               target = j;
+            }
+         }
+
+         if (target >= 0) {
+            out[target] = id;
+            present.add(id);
+         }
+      }
+
+      return out;
    }
 
    /** Put the hero's default loadout into all 18 slots (legacy save migration, repair). */
