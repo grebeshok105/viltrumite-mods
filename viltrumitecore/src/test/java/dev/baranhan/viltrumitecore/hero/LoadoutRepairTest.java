@@ -35,6 +35,16 @@ class LoadoutRepairTest {
    }
 
    @Test
+   void formerIronManDefaultMovesToTheNewPages() {
+      String[] old = IronManAbilities.previousDefaultLoadouts()[0];
+      assertTrue(HeroRegistry.isPreviousDefault(old, IronManAbilities.previousDefaultLoadouts()));
+      assertFalse(HeroRegistry.isPreviousDefault(IronManAbilities.defaultLoadout(), IronManAbilities.previousDefaultLoadouts()));
+      String[] moved = old.clone();
+      moved[0] = "";
+      assertFalse(HeroRegistry.isPreviousDefault(moved, IronManAbilities.previousDefaultLoadouts()));
+   }
+
+   @Test
    void removedAbilityStaysRemoved() {
       String[] defaults = IronManAbilities.defaultLoadout();
       String[] slots = defaults.clone();

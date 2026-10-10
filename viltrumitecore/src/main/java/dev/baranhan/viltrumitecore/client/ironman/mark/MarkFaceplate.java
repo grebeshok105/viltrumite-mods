@@ -8,39 +8,45 @@ import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * The iron faceplate of a mark helmet (spec §10): a plate over the head front
- * (and hat front) textured from the mark skin. While the helmet opens it slides
- * up into the crown (shrinks towards its top edge, tilting a little outward),
- * and slides back down when it closes. The face under it comes from
- * {@link MarkSkins} (only the face region is Tony's). Drawn only while the
- * helmet is not fully closed: closed, the skin carries the plate.
+ * The iron faceplate of a mark helmet (spec §10): a rigid plate over the head
+ * front (and hat front) textured from the mark skin. Opening, it glides up over
+ * the forehead along the head (a 90° turn about the head centre, lifted a
+ * little off the surface mid-way so the helmet edge never pokes through) and
+ * rests on the crown; closing runs the same path back. No squashing. Its eyes
+ * go dark while it is up. The face under it comes from {@link MarkSkins}
+ * (only the face region is Tony's). Not drawn when fully closed: then the skin
+ * carries the plate.
  */
 public final class MarkFaceplate {
    public static final ResourceLocation GEO = new ResourceLocation("viltrumitecore", "geo/ironman/marks/faceplate.geo.json");
-   /** How far (px) the plate rises above its closed place at full open. */
-   private static final float RISE = 1.5F;
-   /** Outward tilt (degrees) in the middle of the motion. */
-   private static final float TILT = 14.0F;
+   /** Extra lift (px) off the head surface in the middle of the turn. */
+   private static final float LIFT = 1.9F;
+   /** Below this closure the plate's glow (eyes) is off. */
+   private static final float GLOW_FROM = 0.2F;
 
    private MarkFaceplate() {
    }
 
-   /** Plate part for a helmet closure 0 (open) .. 1 (closed), or null when closed / fully open. */
+   /** Plate part for a helmet closure 0 (open, on the crown) .. 1 (closed), or null when fully closed. */
    @Nullable
    public static PlayerGeoLayer.Part part(MarkId mark, float closed) {
-      if (closed >= 0.999F || closed <= 0.001F) {
+      if (closed >= 0.999F) {
          return null;
       }
 
-      float open = ease(1.0F - closed);
-      List<PlayerGeoLayer.Pass> passes = List.of(PlayerGeoLayer.Pass.cutout(MarkTextures.skin(mark)), PlayerGeoLayer.Pass.glow(MarkTextures.glow(mark)));
+      float t = ease(1.0F - closed);
+      float angle = (float)(Math.PI * 0.5 * t);
+      float lift = LIFT * (float)Math.sin(Math.PI * t);
+      List<PlayerGeoLayer.Pass> passes = closed > GLOW_FROM
+         ? List.of(PlayerGeoLayer.Pass.cutout(MarkTextures.skin(mark)), PlayerGeoLayer.Pass.glow(MarkTextures.glow(mark)))
+         : List.of(PlayerGeoLayer.Pass.cutout(MarkTextures.skin(mark)));
       return new PlayerGeoLayer.Part(GEO, passes, geo -> {
          GeoBone plate = geo.getBone("faceplate");
          if (plate != null) {
-            plate.scaleY = Math.max(0.001F, 1.0F - open);
-            plate.posY = RISE * open;
-            // Positive rotX about the top-front hinge swings the lower edge forward (outward, never into the head).
-            plate.rotX = plate.initRotX + (float)Math.toRadians(TILT * Math.sin(Math.PI * open));
+            // Pivot = head centre: positive rotX carries the front face up onto the top face.
+            plate.rotX = plate.initRotX + angle;
+            plate.posY = lift * (float)Math.sin(angle);
+            plate.posZ = -lift * (float)Math.cos(angle);
          }
       });
    }

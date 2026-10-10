@@ -12,8 +12,8 @@ import net.minecraft.nbt.CompoundTag;
  */
 public final class HulkbusterLayer {
    public static final String KEY = "Hulkbuster";
-   public static final float DURABILITY = 400.0F;
-   public static final double ARMOR = 24.0;
+   public static final float DURABILITY = 800.0F;
+   public static final double ARMOR = 30.0;
    public static final int COOLDOWN = 12000;
    public static final int DROP_TICKS = 20;
    public static final int ASSEMBLE_TICKS = 60;

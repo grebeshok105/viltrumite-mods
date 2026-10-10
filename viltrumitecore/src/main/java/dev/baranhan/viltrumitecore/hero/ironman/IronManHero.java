@@ -25,6 +25,7 @@ public class IronManHero implements HeroDefinition {
    private static final UUID ARMOR_ID = UUID.fromString("7c3e9a51-2f6d-4b8e-a1c4-3d5f6e7a8b01");
    private static final UUID TOUGHNESS_ID = UUID.fromString("7c3e9a51-2f6d-4b8e-a1c4-3d5f6e7a8b02");
    private static final UUID KNOCKBACK_ID = UUID.fromString("7c3e9a51-2f6d-4b8e-a1c4-3d5f6e7a8b03");
+   private static final UUID HEALTH_ID = UUID.fromString("7c3e9a51-2f6d-4b8e-a1c4-3d5f6e7a8b04");
 
    @Override
    public HeroId id() {
@@ -230,6 +231,11 @@ public class IronManHero implements HeroDefinition {
    }
 
    @Override
+   public String[][] previousDefaultLoadouts() {
+      return IronManAbilities.previousDefaultLoadouts();
+   }
+
+   @Override
    public boolean allowsExternalControl(LivingEntity target, ControlKind kind) {
       return true;
    }
@@ -315,10 +321,35 @@ public class IronManHero implements HeroDefinition {
 
       return switch (button) {
          case PRIMARY -> claimsPrimary(worn, flightState(player)) || claimsWeapon(worn, weapon) ? HeroAction.PRIMARY_ATTACK : null;
-         case SECONDARY -> secondaryAction(worn, player.isShiftKeyDown(), !player.isShiftKeyDown() && interactTarget(player) != null);
+         case SECONDARY -> {
+            boolean shift = player.isShiftKeyDown();
+            boolean interact = !shift && interactTarget(player) != null;
+            // An item in either hand (food, blocks, buckets...) keeps vanilla RMB; the drawn blade has no RMB.
+            if (!interact && (handsBusy(player) || rightTool(player) == dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.NANO_BLADE)) {
+               yield null;
+            }
+
+            yield secondaryAction(worn, shift, interact);
+         }
          case MIDDLE -> worn ? HeroAction.TOOL_CYCLE : null;
          default -> null;
       };
+   }
+
+   /** Vanilla use wins while the player holds anything (both sides read the synced hand items). */
+   static boolean handsBusy(Player player) {
+      return !player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty();
+   }
+
+   /** Current RMB tool on either side: the synced flag on the client, the state on the server. */
+   static dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool rightTool(Player player) {
+      if (player.level().isClientSide()) {
+         HeroPublicSnapshot snapshot = ((dev.baranhan.viltrumitecore.hero.HeroPlayer)player).getHeroSnapshot();
+         return dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.byId(IronManFlags.get(snapshot.heroFlags(), IronManFlags.Field.RMB_TOOL));
+      }
+
+      IronManState state = IronManState.of(player);
+      return state == null ? dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool.REPULSOR : state.rightTool;
    }
 
    /**
@@ -530,7 +561,6 @@ public class IronManHero implements HeroDefinition {
             state.heldTool = state.rightTool;
             switch (state.rightTool) {
                case REPULSOR -> state.repulsor.press();
-               case NANO_BLADE -> IronManCombat.bladeDash(player, state);
                case NANO_HAMMER -> state.hammerCharge = state.arsenal.forming() || state.energy.weaponsLocked() ? -1 : 0;
                case SIGNATURE -> signaturePress(player, state);
                default -> {
@@ -995,6 +1025,10 @@ public class IronManHero implements HeroDefinition {
       modifier(player, Attributes.ARMOR, ARMOR_ID, "Iron Man nano armor", spec.armor(), armored);
       modifier(player, Attributes.ARMOR_TOUGHNESS, TOUGHNESS_ID, "Iron Man nano toughness", spec.toughness(), armored);
       modifier(player, Attributes.KNOCKBACK_RESISTANCE, KNOCKBACK_ID, "Iron Man nano stability", spec.knockbackRes(), armored);
+      modifier(player, Attributes.MAX_HEALTH, HEALTH_ID, "Iron Man suit health", IronManRules.SUIT_HEALTH_BONUS, armored);
+      if (player.getHealth() > player.getMaxHealth()) {
+         player.setHealth(player.getMaxHealth());
+      }
    }
 
    private static void modifier(ServerPlayer player, Attribute attribute, UUID id, String name, double amount, boolean present) {

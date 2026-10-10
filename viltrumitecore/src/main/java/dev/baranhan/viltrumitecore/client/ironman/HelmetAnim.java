@@ -61,6 +61,9 @@ public final class HelmetAnim {
       return s[2] > 0.5F ? s[1] : 1.0F - s[1];
    }
 
+   /** A mark counts as settled (helmet toggles animate) this many ticks after it is fully on. */
+   private static final float SETTLE_TICKS = 6.0F;
+
    /** Hand-to-helmet gesture length (ticks): rise, short hold, lower. */
    public static final int GESTURE_TICKS = 22;
 
@@ -123,8 +126,21 @@ public final class HelmetAnim {
          }
 
          boolean closed = closedFlag(snapshot);
-         float[] s = STATE.computeIfAbsent(player, p -> new float[]{closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, -1.0F});
-         boolean worn = IronManView.worn(snapshot) && dev.baranhan.viltrumitecore.client.ironman.mark.MarkState.of(snapshot).equipPhase() == 0;
+         float[] s = STATE.computeIfAbsent(player, p -> new float[]{closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, -1.0F, 0.0F});
+         dev.baranhan.viltrumitecore.client.ironman.mark.MarkState mark = dev.baranhan.viltrumitecore.client.ironman.mark.MarkState.of(snapshot);
+         boolean worn = IronManView.worn(snapshot) && mark.equipPhase() == 0;
+         // Ticks the mark has been fully on (s[4]). Getting into a mark puts its helmet on with the
+         // parts, so the flag that flips around the entry must not replay the close (nor the gesture).
+         s[4] = mark.markOn() && worn ? Math.min(s[4] + 1.0F, 100.0F) : 0.0F;
+         if (mark.markOn() && s[4] < SETTLE_TICKS) {
+            float target = closed ? 1.0F : 0.0F;
+            s[0] = target;
+            s[1] = target;
+            s[2] = target;
+            s[3] = -1.0F;
+            continue;
+         }
+
          if (closed != s[2] > 0.5F) {
             // Gesture only for a toggle with the suit on; the suit coming off (exit, retract) gets none.
             s[3] = worn ? 0.0F : -1.0F;

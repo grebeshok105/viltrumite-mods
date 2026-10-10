@@ -190,7 +190,7 @@ public final class HeroRegistry {
          slots[slot] = abilityUser.getAbilityInSlot(slot);
       }
 
-      if (needsLoadoutReset(slots, hero::ownsAbility)) {
+      if (needsLoadoutReset(slots, hero::ownsAbility) || isPreviousDefault(slots, hero.previousDefaultLoadouts())) {
          resetLoadout(player);
          return;
       }
@@ -276,6 +276,24 @@ public final class HeroRegistry {
       }
 
       abilityUser.setOfferedAbilities(defaultIds(loadout));
+   }
+
+   /** True when the slots equal one of the hero's former default layouts (null and "" are the same). */
+   public static boolean isPreviousDefault(String[] slots, String[][] previous) {
+      for (String[] old : previous) {
+         boolean same = true;
+         for (int i = 0; i < Math.max(slots.length, old.length) && same; i++) {
+            String a = i < slots.length && slots[i] != null ? slots[i] : "";
+            String b = i < old.length && old[i] != null ? old[i] : "";
+            same = a.equals(b);
+         }
+
+         if (same) {
+            return true;
+         }
+      }
+
+      return false;
    }
 
    /** True when any non-empty slot holds an ability the hero does not own. */

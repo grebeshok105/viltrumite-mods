@@ -3,11 +3,12 @@ package dev.baranhan.viltrumitecore.hero.ironman.scan;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManRules;
 
 /**
- * Scan timeline (spec §11.2), pure. Press starts scan mode; the entity under
- * the crosshair accumulates {@link IronManRules#SCAN_TICKS} of aim, a new
- * entity under the crosshair resets the count. Cancelled when the target dies,
- * leaves {@link IronManRules#SCAN_RANGE}, aim / line of sight is lost longer
- * than {@link IronManRules#SCAN_LOS_GRACE}, or the helmet opens.
+ * Scan timeline (spec §11.2), pure. One press starts scan mode and locks the
+ * first offered target (the server offers the entity under the crosshair or
+ * the one closest to it in a cone); the lock then scans by itself — no aiming —
+ * for {@link IronManRules#SCAN_TICKS} of line of sight. Cancelled when the
+ * target dies, leaves {@link IronManRules#SCAN_RANGE}, line of sight is lost
+ * longer than {@link IronManRules#SCAN_LOS_GRACE}, or the helmet opens.
  */
 public final class ScanProgress {
    public enum Event {
@@ -58,16 +59,21 @@ public final class ScanProgress {
       this.idleTicks = 0;
    }
 
-   /** The entity the server should check this tick: the aimed one, else the current target. */
-   public int resolve(int aimedId) {
-      return aimedId >= 0 ? aimedId : this.targetId;
+   /** True while scan mode waits for a target to lock (the server then offers one). */
+   public boolean seeking() {
+      return this.active && this.targetId < 0;
+   }
+
+   /** The entity the server should check this tick: the locked target, else the offered one. */
+   public int resolve(int offeredId) {
+      return this.targetId >= 0 ? this.targetId : offeredId;
    }
 
    /**
-    * One tick. aimedId = scannable entity under the crosshair (-1 = none);
-    * the other inputs describe {@link #resolve(int)} of that id.
+    * One tick. offeredId = target candidate while nothing is locked (-1 = none,
+    * ignored once locked); the other inputs describe {@link #resolve(int)}.
     */
-   public Event tick(int aimedId, boolean targetAlive, double distance, boolean lineOfSight, boolean helmetClosed) {
+   public Event tick(int offeredId, boolean targetAlive, double distance, boolean lineOfSight, boolean helmetClosed) {
       if (!this.active) {
          return Event.NONE;
       }
@@ -77,8 +83,8 @@ public final class ScanProgress {
          return Event.CANCELLED;
       }
 
-      if (aimedId >= 0 && aimedId != this.targetId) {
-         this.targetId = aimedId;
+      if (this.targetId < 0 && offeredId >= 0) {
+         this.targetId = offeredId;
          this.ticks = 0;
          this.lostTicks = 0;
       }
@@ -97,7 +103,7 @@ public final class ScanProgress {
          return Event.CANCELLED;
       }
 
-      if (aimedId == this.targetId && lineOfSight) {
+      if (lineOfSight) {
          this.ticks++;
          this.lostTicks = 0;
       } else if (++this.lostTicks > IronManRules.SCAN_LOS_GRACE) {

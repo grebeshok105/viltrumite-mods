@@ -21,8 +21,8 @@
           "parent": "armorHead",
           "pivot": [
             0,
-            32.5,
-            -4.6
+            28,
+            0
           ],
           "cubes": [
             {

@@ -45,13 +45,13 @@ public record MarkSpec(
    private static final Map<MarkId, MarkSpec> TABLE = new EnumMap<>(MarkId.class);
 
    static {
-      put(new MarkSpec(MarkId.MARK_7, 120.0F, 16.0, 4.0, 0.3, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 20, 1.0F, false, false, 9));
-      put(new MarkSpec(MarkId.MARK_42, 100.0F, 15.0, 3.0, 0.3, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 20, 1.0F, false, false, 14));
-      put(new MarkSpec(MarkId.MARK_15, 80.0F, 11.0, 2.0, 0.2, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 20, 1.0F, true, true, 7));
-      put(new MarkSpec(MarkId.MARK_39, 100.0F, 14.0, 3.0, 0.25, 1.35F, 0.6F, 0.85F, 1.0F, 4, 1.0F, 20, 1.0F, false, false, 9));
-      put(new MarkSpec(MarkId.MARK_17, 110.0F, 15.0, 3.0, 0.3, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 10, 1.0F, false, false, 9));
-      put(new MarkSpec(MarkId.WAR_MACHINE_MK2, 150.0F, 18.0, 5.0, 0.5, 0.8F, 1.5F, 1.0F, 1.0F, 8, 1.4F, 20, 0.8F, false, false, 9));
-      put(new MarkSpec(MarkId.IRON_HEART_MK3, 180.0F, 20.0, 6.0, 0.9, 0.8F, 1.0F, 1.0F, 1.5F, 4, 1.0F, 20, 0.2F, false, false, 9));
+      put(new MarkSpec(MarkId.MARK_7, 240.0F, 30.0, 8.0, 0.3, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 20, 1.0F, false, false, 9));
+      put(new MarkSpec(MarkId.MARK_42, 200.0F, 30.0, 6.0, 0.3, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 20, 1.0F, false, false, 14));
+      put(new MarkSpec(MarkId.MARK_15, 160.0F, 22.0, 4.0, 0.2, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 20, 1.0F, true, true, 7));
+      put(new MarkSpec(MarkId.MARK_39, 200.0F, 28.0, 6.0, 0.25, 1.35F, 0.6F, 0.85F, 1.0F, 4, 1.0F, 20, 1.0F, false, false, 9));
+      put(new MarkSpec(MarkId.MARK_17, 220.0F, 30.0, 6.0, 0.3, 1.0F, 1.0F, 1.0F, 1.0F, 4, 1.0F, 10, 1.0F, false, false, 9));
+      put(new MarkSpec(MarkId.WAR_MACHINE_MK2, 300.0F, 30.0, 10.0, 0.5, 0.8F, 1.5F, 1.0F, 1.0F, 8, 1.4F, 20, 0.8F, false, false, 9));
+      put(new MarkSpec(MarkId.IRON_HEART_MK3, 360.0F, 30.0, 12.0, 0.9, 0.8F, 1.0F, 1.0F, 1.5F, 4, 1.0F, 20, 0.2F, false, false, 9));
    }
 
    private static void put(MarkSpec spec) {

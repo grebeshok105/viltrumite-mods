@@ -125,13 +125,48 @@ public final class IronManJarvis {
       return hit != null && hit.getEntity() instanceof LivingEntity living ? living : null;
    }
 
+   /**
+    * Auto lock for one-press scans: the entity under the crosshair, else the
+    * visible scannable entity closest to the view direction inside
+    * {@link IronManRules#SCAN_LOCK_CONE_DEG} and SCAN_RANGE.
+    */
+   @Nullable
+   static LivingEntity lockCandidate(ServerPlayer player) {
+      LivingEntity aimed = aimed(player);
+      if (aimed != null) {
+         return aimed;
+      }
+
+      Vec3 eye = player.getEyePosition();
+      Vec3 look = player.getLookAngle();
+      double minCos = Math.cos(Math.toRadians(IronManRules.SCAN_LOCK_CONE_DEG));
+      LivingEntity best = null;
+      double bestCos = minCos;
+      AABB box = player.getBoundingBox().inflate(IronManRules.SCAN_RANGE);
+      for (LivingEntity living : player.level().getEntitiesOfClass(LivingEntity.class, box, e -> scannable(e, player))) {
+         Vec3 to = living.getBoundingBox().getCenter().subtract(eye);
+         double length = to.length();
+         if (length < 1.0E-3 || length > IronManRules.SCAN_RANGE) {
+            continue;
+         }
+
+         double cos = to.scale(1.0 / length).dot(look);
+         if (cos > bestCos && player.hasLineOfSight(living)) {
+            bestCos = cos;
+            best = living;
+         }
+      }
+
+      return best;
+   }
+
    static void scanTick(ServerPlayer player, IronManState state) {
       if (!state.scan.active()) {
          return;
       }
 
-      LivingEntity aimed = aimed(player);
-      int aimedId = aimed == null ? -1 : aimed.getId();
+      LivingEntity offered = state.scan.seeking() ? lockCandidate(player) : null;
+      int aimedId = offered == null ? -1 : offered.getId();
       int id = state.scan.resolve(aimedId);
       Entity target = id < 0 ? null : player.level().getEntity(id);
       boolean alive = target instanceof LivingEntity living && scannable(living, player);

@@ -34,8 +34,10 @@ public final class IronManRules {
    // Nano suit (spec §4.2)
    public static final int SUIT_DEPLOY_TICKS = 20;
    public static final int SUIT_RETRACT_TICKS = 20;
-   public static final double NANO_ARMOR = 14.0;
-   public static final double NANO_TOUGHNESS = 4.0;
+   public static final double NANO_ARMOR = 28.0;
+   public static final double NANO_TOUGHNESS = 8.0;
+   /** Extra max health while any suit is on (doubles Tony's 20 HP). */
+   public static final double SUIT_HEALTH_BONUS = 20.0;
    public static final double NANO_KNOCKBACK_RES = 0.3;
    /** Nano punch on the ground (vanilla LMB damage factor). */
    public static final float NANO_MELEE_FACTOR = 1.5F;
@@ -220,6 +222,8 @@ public final class IronManRules {
    /** Scan (spec §11.2): aim this long on the same target. */
    public static final int SCAN_TICKS = 30;
    public static final double SCAN_RANGE = 48.0;
+   /** One-press scan: half-angle of the auto-lock cone around the view (degrees). */
+   public static final double SCAN_LOCK_CONE_DEG = 25.0;
    /** Line of sight / aim may be lost this long before the scan is cancelled. */
    public static final int SCAN_LOS_GRACE = 10;
    /** A started scan without any target gives up after this. */

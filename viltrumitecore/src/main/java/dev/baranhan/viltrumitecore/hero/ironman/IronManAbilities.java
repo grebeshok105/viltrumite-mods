@@ -18,18 +18,18 @@ public final class IronManAbilities {
    public static final String COUNTERMEASURES = "ironman:countermeasures";
    public static final String HELMET = "ironman:helmet";
    public static final String VERONICA = "ironman:veronica";
-   /** Page 1 (slots 0-5): Unibeam, missiles, nano arsenal (spec §6.2). */
+   /** Page 1 (slots 0-5), keys R Y Z V: everything for combat — Unibeam, missiles, nano arsenal / signature, countermeasures. */
    public static final int UNIBEAM_SLOT = 0;
    public static final int MISSILES_SLOT = 1;
    public static final int NANO_ARSENAL_SLOT = 2;
-   /** Page 2 (slots 6-11), index 4 = fifth key (B): Scan, Countermeasures, Veronica, Helmet, Suit, Legion reserve. */
+   public static final int COUNTERMEASURES_SLOT = 3;
+   /** Page 2 (slots 6-11), keys R Y Z V: scan, Veronica, helmet, suit (utility and looks). */
    public static final int SCAN_SLOT = 6;
-   public static final int COUNTERMEASURES_SLOT = 6 + 1;
-   public static final int VERONICA_SLOT = 6 + 2;
-   public static final int HELMET_SLOT = 6 + 3;
-   public static final int SUIT_SLOT = 6 + 4;
+   public static final int VERONICA_SLOT = 6 + 1;
+   public static final int HELMET_SLOT = 6 + 2;
+   public static final int SUIT_SLOT = 6 + 3;
    /** Own slots in panel order. Later stages append. */
-   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, SUIT, SCAN, COUNTERMEASURES, HELMET, VERONICA};
+   private static final String[] OWN = {UNIBEAM, MISSILES, NANO_ARSENAL, COUNTERMEASURES, SCAN, VERONICA, HELMET, SUIT};
 
    private IronManAbilities() {
    }
@@ -120,6 +120,24 @@ public final class IronManAbilities {
       loadout[HELMET_SLOT] = HELMET;
       loadout[VERONICA_SLOT] = VERONICA;
       return loadout;
+   }
+
+   /**
+    * Former default layouts (scan/flares/Veronica/helmet on page 2, suit on B).
+    * A save still holding one exactly is moved to the current default on login.
+    */
+   public static String[][] previousDefaultLoadouts() {
+      String[] old = new String[18];
+      Arrays.fill(old, "");
+      old[0] = UNIBEAM;
+      old[1] = MISSILES;
+      old[2] = NANO_ARSENAL;
+      old[6] = SCAN;
+      old[7] = COUNTERMEASURES;
+      old[8] = VERONICA;
+      old[9] = HELMET;
+      old[10] = SUIT;
+      return new String[][]{old};
    }
 
    @Nullable
