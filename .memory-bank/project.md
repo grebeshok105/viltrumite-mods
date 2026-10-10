@@ -46,7 +46,7 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Owner snapshot sections: `HeroRegistry.pushOwnerSection` / `ClientHeroData.section`; Iron Man uses `MARKS` (missile locks). `extraCooldowns[0]` = nano-lost lock.
 - `IronManFlags` bits 27-29 = stage 2 pose bits, 30-31 reserved.
 - `client/render/vfx/ScorchRenderer` + `ScorchBuffer` are shared (beam scorch marks).
-- Client: `IronManCrosshair` (per tool), `IronManCombatParts` (own nano blade/hammer/shield/missile pod geo in `geo/ironman/nano/`, made by `tools/assets/make_ironman_stage2_parts.py`; no Satsu sources), `NanoDamageVisuals` (baked damage masks, reload listener). Missiles are pixel VFX only. Arm swing poses are third person only.
+- Client: `IronManCrosshair` (per tool), `IronManCombatParts` (Satsu nano parts in `geo/ironman/nano/`, `tools/assets/convert_ironman_stage2_parts.py`; missile flaps = `full_body` `shoulder_rockets`, except Mark 7 (own flaps) and Mark 42), `NanoDamageVisuals` (baked damage masks, reload listener). Missiles are pixel VFX only. Arm swing poses are third person only.
 - Sounds: `tools/sfx/ironman_stage2.sh`; icons/crosshairs: `tools/assets/make_ironman_stage2_icons.py`.
 
 ## Iron Man helmet and JARVIS (Stage 3)
@@ -67,11 +67,18 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Part flight is client-only: server syncs `EQUIP_PHASE`, the SUIT timeline (`EquipTimeline`, 50 t delivery / 20 t enter), `variant` (mark + parts) and the parts source as `actionTarget`.
 - Signatures: `mark/MarkSignature` per mark (`MarkSignatures`), state in `IronManState.signature`; slot 3 in a mark and the RMB `SIGNATURE` tool route to it; cooldown in `extraCooldowns[3]`.
 
+- Archive models (`IronMan_Hulkbuster_models.zip`, user-supplied, not committed): Satsu GeckoLib geo is read as is by `BakedGeoModel`; Sind Tabula `.tbl` goes through `tools/tabula2geo.py` (Bedrock y = 24 - Java y, x kept, turn angles kept: `BakedGeoModel`'s (-x, -y, z) equals a Java `ModelPart` turn).
+- Satsu mark skins: `full_body` UVs are the vanilla skin layout; `all_helmet` = three head boxes, baked into the head rows (`tools/bake_suit_skin.py`). Extras read the raw suit texture (`<mark>_suit.png`): their UVs also use the head rows.
+- `each_part` has no back piece: the chest is split into its front faces (`chest`) and rear faces (`back`). 7-part arms = arm + shoulder.
+- Sind Mark 42 pieces are full limb shells with partial textures in a 160 px atlas; the Sind generic `lights` skin texture is not in the archive, so the Mark 42 glow is baked from the pieces' `mark42_lights`.
+- Box UV vs per-face UV in `BakedGeoModel`: dict `east` = Bedrock +x side, the box's second strip; scale a cube only after making its UV explicit (`explicit_uv` in `convert_ironman_sind.py`).
+
 ## Iron Man Hulkbuster (Stage 5)
 - `hulkbuster/HulkbusterLayer` is a layer over the suit (NBT `Hulkbuster`): the suit under it is untouched. Saved DROPPING/ASSEMBLING become ACTIVE with `needsFitCheck`; the first server tick checks the room or refuses (no cooldown).
 - Size goes only through `HeroDefinition.bodyScale` (`HeroSizeEvents`, Forge `EntityEvent.Size`). Before growing, `IronManHulkbuster.freeSpot` checks the real final box (standing 0.6×1.8 × 1.7) with `level.noCollision`, searches 2 blocks, else refuses.
 - Damage order: shield → Hulkbuster (whole hit, no spill) → mark → nano armor → Tony. The shield is ×1.5 inside.
 - Grab and throw use `ControlManager` PULL (acquire / release with an effect id); the Viltrumite legacy grab is not reused (decompiled, unverified). Every end of a carry calls `IronManHulkbuster.releaseGrab`.
+- Mark 48 art is Sind (native 68 px tall, drawn at 1.7 × 32/68). Clips are baked from the Sind `.fsk` scripts by `tools/fsk2anim.py`; the Fisk semantics of `animate2` and `curve` are assumed (unverified). The jackhammer is the Sind left-arm swap; `grab_hold` has no Sind source.
 - Inside the Hulkbuster, slots 1–3 (UNIBEAM / MISSILES / NANO_ARSENAL actions) are grab / jump slam / hop; RMB tools JACKHAMMER ↔ HULK_REPULSOR; no flight (`wantsFlight` false while any part is on).
 
 ## Rendering gotchas
