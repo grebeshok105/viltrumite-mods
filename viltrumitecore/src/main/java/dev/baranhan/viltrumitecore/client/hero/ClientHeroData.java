@@ -12,7 +12,7 @@ import java.util.UUID;
  * targets) written by HeroControlS2CPacket for render and HUD consumers.
  */
 public final class ClientHeroData {
-   private static int[] carrierEntityIds = new int[0];
+   private static final dev.baranhan.viltrumitecore.hero.OwnerSections SECTIONS = new dev.baranhan.viltrumitecore.hero.OwnerSections();
    private static Map<UUID, HeroControlS2CPacket.DomeInfo> domes = Map.of();
    private static Map<UUID, HeroControlS2CPacket.ControlInfo> controls = Map.of();
 
@@ -20,15 +20,30 @@ public final class ClientHeroData {
    }
 
    public static void setCarriers(int[] ids) {
-      carrierEntityIds = ids == null ? new int[0] : ids;
+      setSection(dev.baranhan.viltrumitecore.hero.OwnerSection.CARRIERS, dev.baranhan.viltrumitecore.hero.HeroOwnerSnapshot.Section.of(ids == null ? new int[0] : ids));
+   }
+
+   /** Replaces one owner section (expiry counts from the client game time now). */
+   public static void setSection(dev.baranhan.viltrumitecore.hero.OwnerSection section, dev.baranhan.viltrumitecore.hero.HeroOwnerSnapshot.Section value) {
+      SECTIONS.set(section, value, now());
+   }
+
+   /** Live ids of an owner section. */
+   public static int[] section(dev.baranhan.viltrumitecore.hero.OwnerSection section) {
+      return SECTIONS.ids(section, now());
    }
 
    public static int[] carriers() {
-      return carrierEntityIds;
+      return section(dev.baranhan.viltrumitecore.hero.OwnerSection.CARRIERS);
    }
 
    public static int heartCount() {
-      return carrierEntityIds.length;
+      return carriers().length;
+   }
+
+   private static long now() {
+      net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+      return client.level == null ? 0L : client.level.getGameTime();
    }
 
    /** Replaces the whole control view (full snapshot for the current dimension). */

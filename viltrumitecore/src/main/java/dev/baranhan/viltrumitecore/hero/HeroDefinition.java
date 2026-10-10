@@ -16,6 +16,23 @@ public interface HeroDefinition {
    /** Whether this hero may use mod flight at all. Vanilla creative/spectator flight is unaffected. */
    boolean allowsFlight(Player player);
 
+   /**
+    * Server: does this hero want vanilla {@code mayfly} now (heroes outside the
+    * legacy kit, which grants it itself). Applied by {@link HeroFlightGrant}.
+    */
+   default boolean grantsFlightAbility(Player player) {
+      return false;
+   }
+
+   /**
+    * Flight tuning for this player, or null for the original flight. Read on
+    * BOTH sides from synced data (installed as the FlightProfiles resolver).
+    */
+   @javax.annotation.Nullable
+   default dev.baranhan.viltrumiteflight.util.FlightProfile flightProfile(Player player) {
+      return null;
+   }
+
    /** Whether this hero may use the legacy viltrumite ability kit and stats. */
    boolean allowsLegacyAbilities(Player player);
 
@@ -49,6 +66,33 @@ public interface HeroDefinition {
       return null;
    }
 
+   /**
+    * Icon of an ability slot for this player right now (e.g. a slot whose
+    * ability depends on the worn suit), or null. Client reads this; default:
+    * the player-independent {@link #abilityIcon(String)}.
+    */
+   @javax.annotation.Nullable
+   default net.minecraft.resources.ResourceLocation abilityIcon(String abilityId, Player player) {
+      return this.abilityIcon(abilityId);
+   }
+
+   /**
+    * Hitbox and eye height factor of this player (both sides, Forge
+    * EntityEvent.Size in HeroSizeEvents). Call refreshDimensions() when it
+    * changes. Default 1 = vanilla.
+    */
+   default float bodyScale(Player player) {
+      return 1.0F;
+   }
+
+   /**
+    * Factor on the legacy flight speed (no profile): CRUISE/SONIC velocity uses
+    * the player's max flight speed × this. Both sides (movement is client-side).
+    */
+   default float flightSpeedScale(Player player) {
+      return 1.0F;
+   }
+
    /** Whether the legacy three-page ability bar swap is meaningful for this hero. */
    default boolean allowsAbilityPages(Player player) {
       return this.allowsLegacyAbilities(player);
@@ -77,6 +121,53 @@ public interface HeroDefinition {
 
    /** May this target be placed under the given control kind right now. */
    boolean allowsExternalControl(LivingEntity target, ControlKind kind);
+
+   /**
+    * Action this hero claims for a mouse button right now, or null for vanilla.
+    * Called on BOTH sides (client cancels vanilla, server gates the press in
+    * {@link HeldInputs}); must only read synced data on the client.
+    */
+   default HeroAction mouseAction(MouseButton button, Player player) {
+      return null;
+   }
+
+   /**
+    * Action for the guard key (vanilla swap-hands, default F) right now, or
+    * null for the vanilla swap. Both sides, synced data only on the client:
+    * when non-null the client consumes the swap key and sends held edges.
+    */
+   @javax.annotation.Nullable
+   default HeroAction guardAction(Player player) {
+      return null;
+   }
+
+   /** Server: cancel the vanilla main/off-hand swap for this player right now (also forged packets). */
+   default boolean blocksHandSwap(Player player) {
+      return false;
+   }
+
+   /**
+    * Descriptive protections / weak spots / conditions of this hero right now
+    * for analysis (Iron Man scan). Must mirror the real damage code; never
+    * invent. Server side. Default: nothing known.
+    */
+   default ScanInfo scanInfo(Player self) {
+      return ScanInfo.EMPTY;
+   }
+
+   /** Hidden from scans (Iron Man scan skips this player). */
+   default boolean hiddenFromScan(Player self) {
+      return false;
+   }
+
+   /** Hidden from target-acquiring senses (Homelander focus skips this player). Server side. */
+   default boolean hiddenFromFocus(Player self) {
+      return false;
+   }
+
+   /** A claimed press was refused by canAct (feedback only, e.g. a locked message). */
+   default void onInputRefused(ServerPlayer player, HeroAction action) {
+   }
 
    /** Multiplier on this hero's ordinary melee attack damage (heart bonus). */
    default float meleeDamageFactor(Player player) {
@@ -110,6 +201,26 @@ public interface HeroDefinition {
 
    /** Server: this hero player took damage (after armor, before health change). */
    default void onHurt(ServerPlayer player, net.minecraft.world.damagesource.DamageSource source, float amount) {
+   }
+
+   /**
+    * Server, LivingAttackEvent (before armor, knockback, hurt animation): this
+    * hero's own damage layers in the fixed order shield → Hulkbuster → mark
+    * (see {@link HeroDamageLayers}). {@link DamageAbsorb#ABSORBED} cancels the
+    * whole hit. Also runs once for the direct path (control payouts).
+    */
+   default DamageAbsorb absorbIncoming(ServerPlayer self, net.minecraft.world.damagesource.DamageSource source, float raw) {
+      return DamageAbsorb.PASS;
+   }
+
+   /** Server, LivingDamageEvent (after armor/enchantments/Resistance): final HP loss, e.g. HP floors. */
+   default float clampFinalDamage(ServerPlayer self, net.minecraft.world.damagesource.DamageSource source, float afterArmor) {
+      return afterArmor;
+   }
+
+   /** Server, LivingHurtEvent: damage this hero deals to {@code target} (multipliers). */
+   default float modifyOutgoingDamage(ServerPlayer attacker, LivingEntity target, net.minecraft.world.damagesource.DamageSource source, float amount) {
+      return amount;
    }
 
    /** Server: the player changed dimension (no full cleanup; stop channels if needed). */

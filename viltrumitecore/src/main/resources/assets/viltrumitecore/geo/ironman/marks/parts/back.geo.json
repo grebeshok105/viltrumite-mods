@@ -1,0 +1,194 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.back",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0.0,
+            18.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                19,
+                -3
+              ],
+              "size": [
+                8,
+                5,
+                6
+              ],
+              "inflate": 0.25,
+              "uv": {
+                "south": {
+                  "uv": [
+                    32,
+                    20
+                  ],
+                  "uv_size": [
+                    8,
+                    5
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -4,
+                19,
+                -3
+              ],
+              "size": [
+                8,
+                5,
+                6
+              ],
+              "inflate": 0.5,
+              "uv": {
+                "south": {
+                  "uv": [
+                    32,
+                    36
+                  ],
+                  "uv_size": [
+                    8,
+                    5
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -4,
+                12,
+                -2
+              ],
+              "size": [
+                8,
+                7.5,
+                4
+              ],
+              "inflate": 0.25,
+              "uv": {
+                "south": {
+                  "uv": [
+                    32,
+                    25
+                  ],
+                  "uv_size": [
+                    8,
+                    7
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                3,
+                17,
+                -2.4
+              ],
+              "size": [
+                1,
+                1.5,
+                0
+              ],
+              "inflate": 0.25,
+              "pivot": [
+                3.5,
+                17.75,
+                -2.5
+              ],
+              "rotation": [
+                12.5,
+                0,
+                0
+              ],
+              "uv": {
+                "south": {
+                  "uv": [
+                    21,
+                    20
+                  ],
+                  "uv_size": [
+                    -1,
+                    1
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -4,
+                17,
+                -2.4
+              ],
+              "size": [
+                1,
+                1.5,
+                0
+              ],
+              "inflate": 0.25,
+              "pivot": [
+                -3.5,
+                17.75,
+                -2.5
+              ],
+              "rotation": [
+                12.5,
+                0,
+                0
+              ],
+              "uv": {
+                "south": {
+                  "uv": [
+                    20,
+                    20
+                  ],
+                  "uv_size": [
+                    1,
+                    1
+                  ]
+                }
+              }
+            },
+            {
+              "origin": [
+                -4,
+                12,
+                -2
+              ],
+              "size": [
+                8,
+                7.5,
+                4
+              ],
+              "inflate": 0.5,
+              "uv": {
+                "south": {
+                  "uv": [
+                    32,
+                    42
+                  ],
+                  "uv_size": [
+                    8,
+                    6
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

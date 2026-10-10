@@ -40,7 +40,7 @@ public class ViltrumiteAbility {
    /** Icon as this player's hero draws it (HeroDefinition.abilityIcon), else the registry icon. */
    public ResourceLocation getIcon(Player player) {
       if (player != null) {
-         ResourceLocation override = dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).abilityIcon(this.id);
+         ResourceLocation override = dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).abilityIcon(this.id, player);
          if (override != null) {
             return override;
          }

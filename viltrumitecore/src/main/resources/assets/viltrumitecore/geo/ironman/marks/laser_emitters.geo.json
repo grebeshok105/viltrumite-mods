@@ -1,0 +1,239 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.laser_emitters",
+        "texture_width": 32,
+        "texture_height": 32
+      },
+      "bones": [
+        {
+          "name": "armorRightArm",
+          "pivot": [
+            -5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "player",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "armorRightArm"
+        },
+        {
+          "name": "inner",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "player",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                16,
+                16
+              ],
+              "inflate": 0.015
+            }
+          ]
+        },
+        {
+          "name": "laser",
+          "pivot": [
+            -8.0,
+            13.0,
+            0.0
+          ],
+          "parent": "player"
+        },
+        {
+          "name": "coverLayer",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "laser"
+        },
+        {
+          "name": "rightArmLayerCube",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "coverLayer",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                16
+              ],
+              "inflate": 0.525
+            }
+          ]
+        },
+        {
+          "name": "cover",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "laser"
+        },
+        {
+          "name": "rightArmCube",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "cover",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                4.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 0.025
+            }
+          ]
+        },
+        {
+          "name": "emitter",
+          "pivot": [
+            -7.0,
+            11.75,
+            0.5
+          ],
+          "parent": "laser"
+        },
+        {
+          "name": "cube",
+          "pivot": [
+            -7.0,
+            13.6,
+            0.0
+          ],
+          "parent": "emitter",
+          "rotation": [
+            0.0,
+            0.0,
+            -60.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7.5,
+                12.1,
+                -1.0
+              ],
+              "size": [
+                1.0,
+                2.0,
+                2.0
+              ],
+              "uv": [
+                20,
+                6
+              ],
+              "inflate": -0.1
+            }
+          ]
+        },
+        {
+          "name": "cube_1",
+          "pivot": [
+            -7.0,
+            11.75,
+            0.5
+          ],
+          "parent": "emitter",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                11.75,
+                -1.5
+              ],
+              "size": [
+                1.0,
+                3.0,
+                3.0
+              ],
+              "uv": [
+                16,
+                0
+              ],
+              "inflate": -0.1
+            }
+          ]
+        },
+        {
+          "name": "cube_2",
+          "pivot": [
+            -7.0,
+            11.75,
+            0.5
+          ],
+          "parent": "emitter",
+          "cubes": [
+            {
+              "origin": [
+                -8.0,
+                11.75,
+                -0.5
+              ],
+              "size": [
+                1.0,
+                3.0,
+                1.0
+              ],
+              "uv": [
+                16,
+                6
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

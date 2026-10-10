@@ -8,7 +8,7 @@ plugins {
 // core uses classes from viltrumiteflight
 evaluationDependsOn(':viltrumiteflight')
 
-version = '1.14.6'
+version = '1.23.2'
 group = 'dev.baranhan.viltrumitecore'
 base { archivesName = 'viltrumitecore-forge' }
 

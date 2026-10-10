@@ -55,8 +55,20 @@ public class ViltrumiteCoreClient {
       for (String skin : event.getSkins()) {
          if (event.getSkin(skin) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer renderer) {
             renderer.addLayer(new dev.baranhan.viltrumitecore.client.homelander.HomelanderEyesLayer(renderer));
+            renderer.addLayer(new dev.baranhan.viltrumitecore.client.ironman.ReactorGlowLayer(renderer));
+            renderer.addLayer(new dev.baranhan.viltrumitecore.client.ironman.IronManSkinLayer(renderer));
+            renderer.addLayer(new dev.baranhan.viltrumitecore.client.anim.render.PlayerGeoLayer(renderer));
+            dev.baranhan.viltrumitecore.client.ironman.mark.MarkVisuals.addLayers(renderer);
+            dev.baranhan.viltrumitecore.client.ironman.mark.sig.SignatureVisuals.addLayers(renderer);
          }
       }
+   }
+
+   @SubscribeEvent
+   public static void onRegisterReloadListeners(net.minecraftforge.client.event.RegisterClientReloadListenersEvent event) {
+      event.registerReloadListener(dev.baranhan.viltrumitecore.client.ironman.IronManSuitTextures.INSTANCE);
+      event.registerReloadListener(dev.baranhan.viltrumitecore.client.ironman.NanoDamageVisuals.INSTANCE);
+      event.registerReloadListener(dev.baranhan.viltrumitecore.client.ironman.mark.MarkSkins.INSTANCE);
    }
 
    @SubscribeEvent
@@ -64,6 +76,7 @@ public class ViltrumiteCoreClient {
       event.enqueueWork(() -> {
          RegulusClient.registerSkins();
          dev.baranhan.viltrumitecore.client.homelander.HomelanderClient.registerSkins();
+         dev.baranhan.viltrumitecore.client.ironman.IronManClient.registerSkins();
          CosmeticLoader.init();
          ViltrumiteCameraConfig.load();
          ViltrumitePostProcessingConfig.load();

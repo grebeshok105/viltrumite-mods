@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 public class RaceSelectionScreen extends Screen {
    private static final ResourceLocation HOMELANDER_SKIN = new ResourceLocation("viltrumitecore", "textures/entity/hero/homelander.png");
    private static final ResourceLocation REGULUS_SKIN = new ResourceLocation("viltrumitecore", "textures/entity/hero/regulus.png");
+   private static final ResourceLocation IRON_MAN_SKIN = new ResourceLocation("viltrumitecore", "textures/entity/hero/ironman.png");
 
    public RaceSelectionScreen() {
       super(Component.translatable("gui.viltrumitecore.race_selection.title"));
@@ -29,10 +30,14 @@ public class RaceSelectionScreen extends Screen {
          this.sendHeroChoice(HeroId.REGULUS);
          this.onClose();
       }).bounds(centerX - 50, centerY - 20, 100, 20).build());
+      this.addRenderableWidget(Button.builder(Component.translatable("gui.viltrumitecore.race_selection.become_ironman"), button -> {
+         this.sendHeroChoice(HeroId.IRON_MAN);
+         this.onClose();
+      }).bounds(centerX + 55, centerY - 20, 100, 20).build());
       this.addRenderableWidget(Button.builder(Component.translatable("gui.viltrumitecore.race_selection.remain_human"), button -> {
          this.sendHeroChoice(HeroId.HUMAN);
          this.onClose();
-      }).bounds(centerX + 55, centerY - 20, 100, 20).build());
+      }).bounds(centerX - 50, centerY + 6, 100, 20).build());
    }
 
    private void sendLegacyChoice(boolean choseViltrumite) {
@@ -53,6 +58,7 @@ public class RaceSelectionScreen extends Screen {
       // Head previews above each hero button: base face + hat layer, drawn skin-flat like a player head.
       drawHead(guiGraphics, HOMELANDER_SKIN, centerX - 105 - 12, centerY - 48);
       drawHead(guiGraphics, REGULUS_SKIN, centerX - 12, centerY - 48);
+      drawHead(guiGraphics, IRON_MAN_SKIN, centerX + 105 - 12, centerY - 48);
    }
 
    private static void drawHead(GuiGraphics guiGraphics, ResourceLocation skin, int x, int y) {

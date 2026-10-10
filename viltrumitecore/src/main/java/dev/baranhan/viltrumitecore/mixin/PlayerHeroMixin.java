@@ -33,6 +33,10 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
    @Unique
    private boolean legacyLoadoutPending;
    @Unique
+   private static final String GRANTED_MAYFLY_KEY = "HeroGrantedMayfly";
+   @Unique
+   private boolean heroGrantedMayfly;
+   @Unique
    private static final EntityDataAccessor<Integer> HERO_ID = SynchedEntityData.defineId(Player.class, EntityDataSerializers.INT);
    @Unique
    private static final EntityDataAccessor<String> HERO_SNAPSHOT = SynchedEntityData.defineId(Player.class, EntityDataSerializers.STRING);
@@ -139,8 +143,20 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
          this.heroSessionId = UUID.randomUUID();
       }
 
+      dev.baranhan.viltrumitecore.hero.HeldInputs.tick(serverPlayer);
       HeroRegistry.get(serverPlayer).tick(serverPlayer);
+      dev.baranhan.viltrumitecore.hero.HeroFlightGrant.sync(serverPlayer);
       HeroRegistry.syncSnapshot(serverPlayer);
+   }
+
+   @Override
+   public boolean viltrumitecore$isMayflyGranted() {
+      return this.heroGrantedMayfly;
+   }
+
+   @Override
+   public void viltrumitecore$setMayflyGranted(boolean granted) {
+      this.heroGrantedMayfly = granted;
    }
 
    @Override
@@ -164,6 +180,7 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
    private void viltrumitecore$writeHeroData(CompoundTag nbt, CallbackInfo ci) {
       Player player = (Player)(Object)this;
       new HeroSession(this.getHeroId(), this.heroSessionId == null ? UUID.randomUUID() : this.heroSessionId, this.heroTotemConsumed).save(nbt);
+      nbt.putBoolean(GRANTED_MAYFLY_KEY, this.heroGrantedMayfly);
       HeroRegistry.get(player).saveHeroState(player, nbt);
    }
 
@@ -176,6 +193,7 @@ public abstract class PlayerHeroMixin implements HeroPlayer {
 
       HeroId legacy = HeroId.fromLegacyBoolean(nbt.getBoolean("IsViltrumite"));
       this.legacyLoadoutPending = isLegacyViltrumiteSave(nbt);
+      this.heroGrantedMayfly = nbt.getBoolean(GRANTED_MAYFLY_KEY);
       HeroSession session = HeroSession.load(nbt, legacy);
       // Restore path: identity + session fields, never a lifecycle entry.
       this.viltrumitecore$setHeroSession(session);

@@ -15,6 +15,7 @@
     "GrabbedEntityPhysicsMixin",
     "LivingEntityGrabFailsafeMixin",
     "LivingEntityHeroDamageMixin",
+    "LivingEntityHurtAccessor",
     "LivingEntityMixin",
     "LivingEntityStatsMixin",
     "MowziesRepelBypassMixin",
@@ -25,6 +26,7 @@
     "PlayerHeroMeleeMixin",
     "PlayerHeroMixin",
     "PlayerStatsMixin",
+    "ShulkerBulletAccessor",
     "SolidEntityBypassMixin",
     "WroughtnautDamageBypassMixin"
   ],
