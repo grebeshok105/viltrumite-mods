@@ -218,8 +218,10 @@ public final class IronManJarvis {
          mob.setTarget(null);
       }
 
-      if (mob.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).filter(t -> t == player).isPresent()) {
-         mob.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
+      // Most goal-based mobs have no ATTACK_TARGET memory registered: getMemory would throw (crash on flares).
+      net.minecraft.world.entity.ai.Brain<?> brain = mob.getBrain();
+      if (brain.hasMemoryValue(MemoryModuleType.ATTACK_TARGET) && brain.getMemory(MemoryModuleType.ATTACK_TARGET).filter(t -> t == player).isPresent()) {
+         brain.eraseMemory(MemoryModuleType.ATTACK_TARGET);
       }
    }
 
