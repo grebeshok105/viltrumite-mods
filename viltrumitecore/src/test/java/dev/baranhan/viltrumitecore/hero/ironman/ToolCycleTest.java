@@ -40,6 +40,15 @@ class ToolCycleTest {
    }
 
    @Test
+   void emptySuitInteractionWorksWithoutArmor() {
+      assertSame(dev.baranhan.viltrumitecore.hero.HeroAction.INTERACT, IronManHero.secondaryAction(false, false, true));
+      assertSame(dev.baranhan.viltrumitecore.hero.HeroAction.INTERACT, IronManHero.secondaryAction(true, false, true));
+      assertNull(IronManHero.secondaryAction(false, false, false));
+      assertSame(dev.baranhan.viltrumitecore.hero.HeroAction.SECONDARY_USE, IronManHero.secondaryAction(true, false, false));
+      assertNull(IronManHero.secondaryAction(true, true, true));
+   }
+
+   @Test
    void unknownToolIdIsRepulsor() {
       assertSame(RightTool.REPULSOR, RightTool.byId(99));
       assertTrue(RightTool.NANO_HAMMER.nanoWeapon());
