@@ -5,6 +5,7 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 ## Origin
 - The original author (package prefix `dev.baranhan`) gave the mods to the repository owner. Only the release JARs existed. The sources in this repo were decompiled from them.
 - Original JARs: `original-jars/viltrumitecore-forge-1.10.3.jar`, `original-jars/viltrumiteflight-forge-1.6.7.jar`.
+- Built JARs (since core 1.24.1): `reforgedcodex-core-<ver>.jar`, `reforgedcodex-flight-<ver>.jar` (only `archivesName` renamed; mod ids/packages stay `viltrumitecore`/`viltrumiteflight`).
 
 ## Direction
 - Goal: revival on a new architecture, then many heroes and characters.

@@ -7,7 +7,7 @@ plugins {
 
 version = '1.10.0'
 group = 'dev.baranhan.viltrumiteflight'
-base { archivesName = 'viltrumiteflight-forge' }
+base { archivesName = 'reforgedcodex-flight' }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 

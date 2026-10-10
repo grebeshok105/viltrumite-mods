@@ -10,7 +10,7 @@ evaluationDependsOn(':viltrumiteflight')
 
 version = '1.24.1'
 group = 'dev.baranhan.viltrumitecore'
-base { archivesName = 'viltrumitecore-forge' }
+base { archivesName = 'reforgedcodex-core' }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
