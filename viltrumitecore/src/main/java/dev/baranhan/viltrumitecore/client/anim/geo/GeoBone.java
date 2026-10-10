@@ -51,6 +51,8 @@ public class GeoBone {
       this.scaleX = 1.0F;
       this.scaleY = 1.0F;
       this.scaleZ = 1.0F;
+      // Models are shared per resource: a bone one pose hid must not stay hidden for the next user.
+      this.hidden = false;
    }
 
    public boolean hasCubeRotationFree() {
