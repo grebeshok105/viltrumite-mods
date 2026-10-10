@@ -23,7 +23,6 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 
 /**
@@ -52,6 +51,10 @@ public final class SignatureVisuals {
    private static final double TURRET_UNFOLD_SECONDS = 0.8333;
    /** Turret unfold 0..1 and the frame time it was last stepped, per player (render thread). */
    private static final WeakHashMap<AbstractClientPlayer, float[]> TURRET_OPEN = new WeakHashMap<>();
+   /** Turret travel limits (degrees): wider turns or pitches push the gun into the head or the shoulder. */
+   private static final float TURRET_MAX_YAW = 75.0F;
+   private static final float TURRET_MAX_UP = 50.0F;
+   private static final float TURRET_MAX_DOWN = 40.0F;
    private static final List<PlayerGeoLayer.Pass> GLOVE_PASSES = Mark42Parts.passes(SuitPart.FOURTEEN.get(5));
 
    private SignatureVisuals() {
@@ -101,7 +104,8 @@ public final class SignatureVisuals {
          }
          case WAR_MACHINE_MK2 -> {
             float open = turretOpen(player, active, partialTick);
-            float yaw = turretYaw(player, snapshot, partialTick) * open;
+            float yaw = turretYaw(player, partialTick) * open;
+            float pitch = turretPitch(player, partialTick) * open;
             out.add(new PlayerGeoLayer.Part(TURRET, TURRET_PASSES, geo -> {
                Animation unfold = AnimCache.animation(TURRET_CLIPS, "start_on");
                if (unfold != null && open > 0.0F) {
@@ -110,6 +114,8 @@ public final class SignatureVisuals {
 
                GeoBone turret = geo.getBone("turret");
                if (turret != null) {
+                  // Gimbal: pitch about the body's right axis first, then yaw (renderBone applies X, then Y).
+                  turret.rotX = pitch;
                   turret.rotY = yaw;
                }
             }));
@@ -172,17 +178,22 @@ public final class SignatureVisuals {
       return open[0];
    }
 
-   /** Turret yaw (radians) that turns the barrel towards the synced aim point, relative to the body. */
-   static float turretYaw(AbstractClientPlayer player, HeroPublicSnapshot snapshot, float partialTick) {
-      Vec3 target = snapshot.actionTarget();
-      Vec3 from = player.getPosition(partialTick).add(0.0, 1.42, 0.0);
-      Vec3 to = target == null ? player.getViewVector(partialTick) : target.subtract(from);
-      double yaw = Math.toRadians(Mth.lerp(partialTick, player.yBodyRotO, player.yBodyRot));
-      double cos = Math.cos(yaw);
-      double sin = Math.sin(yaw);
-      double forward = -to.x * sin + to.z * cos;
-      double left = to.x * cos + to.z * sin;
-      return (float)Math.atan2(-left, forward);
+   /**
+    * Turret yaw (radians) relative to the body: the head turn, read from the
+    * interpolated rotations (the synced aim point updates at 20 Hz and made
+    * the gun jitter). A positive bone rotY turns the barrel to the wearer's
+    * left in the world (the two x/y flips of PlayerGeoLayer and the entity
+    * renderer cancel), Minecraft yaw grows to the right: hence the minus.
+    */
+   static float turretYaw(AbstractClientPlayer player, float partialTick) {
+      float head = Mth.rotLerp(partialTick, player.yHeadRotO, player.yHeadRot);
+      float body = Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot);
+      return -Mth.clamp(Mth.wrapDegrees(head - body), -TURRET_MAX_YAW, TURRET_MAX_YAW) * Mth.DEG_TO_RAD;
+   }
+
+   /** Turret pitch (radians): a positive bone rotX lifts the barrel, Minecraft pitch grows downwards. */
+   static float turretPitch(AbstractClientPlayer player, float partialTick) {
+      return -Mth.clamp(player.getViewXRot(partialTick), -TURRET_MAX_UP, TURRET_MAX_DOWN) * Mth.DEG_TO_RAD;
    }
 
    private static PlayerGeoLayer.Pass cutout(String name) {
