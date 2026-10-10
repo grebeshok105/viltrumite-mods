@@ -118,7 +118,7 @@ public final class EmptySuitRenderer extends EntityRenderer<EmptySuitEntity> {
       door(model, "right_arm_door", 0.0F, 100.0F, EmptySuitEntity.enterDoor(EmptySuitEntity.GROUP_ARMS, t));
       door(model, "body_door_left", 0.0F, -110.0F, EmptySuitEntity.enterDoor(EmptySuitEntity.GROUP_CHEST, t));
       door(model, "body_door_right", 0.0F, 110.0F, EmptySuitEntity.enterDoor(EmptySuitEntity.GROUP_CHEST, t));
-      door(model, "faceplate", 105.0F, 0.0F, EmptySuitEntity.enterDoor(EmptySuitEntity.GROUP_FACE, t));
+      door(model, "faceplate", -105.0F, 0.0F, EmptySuitEntity.enterDoor(EmptySuitEntity.GROUP_FACE, t));
    }
 
    private static void door(BakedGeoModel model, String name, float x, float y, float open) {
