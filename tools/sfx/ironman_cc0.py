@@ -6,7 +6,8 @@ tools/sfx/ironman_stage1.sh stay. Every event below is built from the Kenney rec
 (mix, pitch, fade, loudness), mono 44.1 kHz Vorbis. Events in MUTED have no sound (no beeps, no
 synthetic chimes); sounds.json lists them with an empty sound list.
 
-Run: python3 tools/sfx/ironman_cc0.py KENNEY_SCIFI_DIR KENNEY_IMPACT_DIR
+Run: python3 tools/sfx/ironman_cc0.py KENNEY_SCIFI_DIR KENNEY_IMPACT_DIR [event,event...]
+Recipes "name_2", "name_3" are random variants of the event "name" (listed together in sounds.json).
 """
 import base64
 import json
@@ -72,7 +73,22 @@ RECIPES = {
     "camo_off": ([("forceField_004", 0.9, -2, 0)], 0.7),
     "starboost": ([("thrusterFire_000", 0.8, 0, 0), ("lowFrequency_explosion_000", 1.6, -6, 0)], 1.2),
     "pulse_unibeam": ([("laserLarge_004", 0.5, 0, 0), ("lowFrequency_explosion_001", 1.8, -8, 0)], 0.7),
-    "shoulder_gun": ([("impactPunch_medium_000", 1.8, -2, 0), ("impactMetal_light_003", 2.0, -6, 0)], 0.15),
+    # War Machine gun (PR 19 iteration 2): three punchier shots (body + crack + mechanism), picked at random.
+    "shoulder_gun": ([("impactPunch_heavy_004", 1.6, 0, 0), ("explosionCrunch_000", 2.6, -5, 0), ("impactMetal_light_003", 2.1, -9, 0.01)], 0.22),
+    "shoulder_gun_2": ([("impactPunch_heavy_002", 1.7, 0, 0), ("explosionCrunch_002", 2.8, -6, 0), ("impactMetal_light_001", 2.3, -10, 0.01)], 0.22),
+    "shoulder_gun_3": ([("impactPunch_heavy_000", 1.55, 0, 0), ("explosionCrunch_004", 2.5, -6, 0), ("impactTin_medium_002", 2.0, -11, 0.01)], 0.22),
+    # Bullets passing close by: a sped-up noise burst with a fade in, the tone of a fast round.
+    "bullet_whiz": ([("thrusterFire_004", 3.2, 0, 0), ("laserSmall_002", 0.5, -12, 0.02)], 0.28, 0.1),
+    "bullet_whiz_2": ([("thrusterFire_001", 3.5, 0, 0), ("laserSmall_000", 0.45, -12, 0.02)], 0.26, 0.09),
+    "bullet_whiz_3": ([("thrusterFire_002", 3.0, 0, 0), ("laserSmall_004", 0.55, -13, 0.03)], 0.3, 0.11),
+    # Bullet into blocks: chips and dust, one with a ricochet ping.
+    "bullet_impact": ([("impactMining_000", 1.35, 0, 0), ("impactGeneric_light_001", 1.5, -6, 0)], 0.3),
+    "bullet_impact_2": ([("impactMining_002", 1.45, 0, 0), ("impactGeneric_light_003", 1.6, -6, 0)], 0.3),
+    "bullet_impact_3": ([("impactMining_003", 1.3, 0, 0), ("impactPlate_light_002", 1.7, -7, 0)], 0.3),
+    "bullet_impact_4": ([("impactMining_001", 1.4, -2, 0), ("impactMetal_000", 2.2, -5, 0.01), ("laserSmall_003", 1.1, -14, 0.03)], 0.45),
+    # Bullet into a body or armour.
+    "bullet_hit": ([("impactPunch_medium_001", 1.25, 0, 0), ("impactMetal_light_002", 1.6, -7, 0)], 0.3),
+    "bullet_hit_2": ([("impactPunch_medium_003", 1.3, 0, 0), ("impactSoft_medium_002", 1.4, -5, 0)], 0.3),
     "slam_impact": ([("lowFrequency_explosion_000", 0.9, 0, 0), ("impactPlate_heavy_000", 0.6, -2, 0)], 1.6),
     "hulkbuster_drop": ([("lowFrequency_explosion_001", 0.7, 0, 0), ("impactPlate_heavy_004", 0.5, -2, 0.05)], 2.0),
     "hulkbuster_assemble": ([("doorClose_000", 0.6, 0, 0), ("impactPlate_heavy_002", 0.6, -1, 0.15), ("impactMetal_heavy_000", 0.7, -4, 0.3)], 1.0),
@@ -97,7 +113,7 @@ def find(dirs, stem):
     raise FileNotFoundError(stem)
 
 
-def build(dirs, name, layers, length, tmp):
+def build(dirs, name, layers, length, tmp, fade_in=0.0):
     inputs, filters = [], []
     for i, (stem, pitch, gain, delay) in enumerate(layers):
         inputs += ["-i", find(dirs, stem)]
@@ -106,19 +122,28 @@ def build(dirs, name, layers, length, tmp):
                        % (i, int(44100 * pitch), gain, int(delay * 1000), i))
     mix = "".join("[l%d]" % i for i in range(len(layers)))
     fade = max(0.05, min(0.25, length * 0.25))
-    filters.append("%samix=inputs=%d:duration=longest:normalize=0,atrim=0:%s,afade=t=out:st=%s:d=%s,loudnorm=I=-16:TP=-1.5:LRA=11[out]"
-                   % (mix, len(layers), length, max(0.0, length - fade), fade))
+    fade_in_filter = "afade=t=in:st=0:d=%s," % fade_in if fade_in > 0 else ""
+    filters.append("%samix=inputs=%d:duration=longest:normalize=0,atrim=0:%s,%safade=t=out:st=%s:d=%s,loudnorm=I=-16:TP=-1.5:LRA=11[out]"
+                   % (mix, len(layers), length, fade_in_filter, max(0.0, length - fade), fade))
     out = os.path.join(tmp, name + ".ogg")
     subprocess.run(["ffmpeg", "-v", "error", "-y"] + inputs + ["-filter_complex", ";".join(filters), "-map", "[out]", "-ac", "1", "-ar", "44100",
                     "-c:a", "libvorbis", "-q:a", "5", out], check=True)
     return out
 
 
-def main(scifi, impact):
+def event_of(recipe):
+    """Variant recipes "name_2", "name_3" ... are extra files of the event "name"."""
+    base, _, n = recipe.rpartition("_")
+    return base if n.isdigit() and base in RECIPES else recipe
+
+
+def main(scifi, impact, only=None):
     dirs = [scifi, impact]
     with tempfile.TemporaryDirectory() as tmp:
-        for name, (layers, length) in RECIPES.items():
-            path = build(dirs, name, layers, length, tmp)
+        for name, recipe in RECIPES.items():
+            if only and event_of(name) not in only:
+                continue
+            path = build(dirs, name, recipe[0], recipe[1], tmp, recipe[2] if len(recipe) > 2 else 0.0)
             with open(path, "rb") as f, open(os.path.join(OUT, name + ".ogg.b64"), "w", encoding="ascii") as out:
                 out.write(base64.encodebytes(f.read()).decode("ascii"))
     for name in MUTED:
@@ -133,10 +158,13 @@ def main(scifi, impact):
         name = event[len("ironman_"):]
         if name in MUTED or name not in RECIPES and name not in FLIGHT:
             entry["sounds"] = []
+        elif name in RECIPES:
+            entry["sounds"] = ["viltrumitecore:ironman/" + r for r in RECIPES if event_of(r) == name]
     with open(SOUNDS_JSON, "w", encoding="utf-8") as f:
         json.dump(sounds, f, indent=2, ensure_ascii=False)
         f.write("\n")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    # Optional third argument: comma-separated events to rebuild (others keep their files).
+    main(sys.argv[1], sys.argv[2], set(sys.argv[3].split(",")) if len(sys.argv) > 3 else None)
