@@ -46,7 +46,8 @@ public final class MarkVisuals {
          return Optional.empty();
       }
 
-      return Optional.of(MarkSkins.INSTANCE.skin(state.mark(), !state.helmetClosed()));
+      float closed = dev.baranhan.viltrumitecore.client.ironman.HelmetAnim.progress(player, snapshot, net.minecraft.client.Minecraft.getInstance().getFrameTime());
+      return Optional.of(MarkSkins.INSTANCE.skin(state.mark(), closed < 0.999F));
    }
 
    public static void collectParts(AbstractClientPlayer player, HeroPublicSnapshot snapshot, float partialTick, boolean firstPerson, List<PlayerGeoLayer.Part> out) {
@@ -59,6 +60,13 @@ public final class MarkVisuals {
          PlayerGeoLayer.Part extras = MarkExtras.part(state.mark(), IronManCombatParts.flapOpen(player, snapshot, partialTick));
          if (extras != null) {
             out.add(extras);
+         }
+
+         if (!firstPerson) {
+            PlayerGeoLayer.Part plate = MarkFaceplate.part(state.mark(), dev.baranhan.viltrumitecore.client.ironman.HelmetAnim.progress(player, snapshot, partialTick));
+            if (plate != null) {
+               out.add(plate);
+            }
          }
 
          return;

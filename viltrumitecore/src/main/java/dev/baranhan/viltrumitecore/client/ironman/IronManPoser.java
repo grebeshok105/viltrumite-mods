@@ -133,8 +133,7 @@ public final class IronManPoser {
       }
 
       // Stage 3: hand to the face while the helmet folds / unfolds (spec §10).
-      float toggle = HelmetAnim.toggleProgress(entity);
-      float gesture = toggle < 0.0F ? 0.0F : Mth.sin(toggle * Mth.PI);
+      float gesture = HelmetAnim.gesture(entity, partialTick);
 
       ThrusterFlames.Mode mode = entity instanceof AbstractClientPlayer player ? ThrusterFlames.mode(player, snapshot) : ThrusterFlames.Mode.NONE;
       Weights w = WEIGHTS.computeIfAbsent(entity, e -> new Weights());
@@ -174,7 +173,7 @@ public final class IronManPoser {
 
       if (gesture > 0.001F) {
          // Left hand up to the faceplate: aimed from the head axes, so it follows any head turn.
-         Vector3f dir = new Vector3f(ArmAim.look(model.head)).mul(0.45F).add(ArmAim.up(model.head).mul(0.8F)).add(ArmAim.right(model.head).mul(0.4F)).normalize();
+         Vector3f dir = new Vector3f(ArmAim.look(model.head)).mul(0.55F).add(ArmAim.up(model.head).mul(0.62F)).add(ArmAim.right(model.head).mul(0.34F)).normalize();
          ArmAim.aim(model.leftArm, dir, 0.0F, gesture);
       }
 

@@ -61,6 +61,43 @@ public final class HelmetAnim {
       return s[2] > 0.5F ? s[1] : 1.0F - s[1];
    }
 
+   /** Hand-to-helmet gesture length (ticks): rise, short hold, lower. */
+   public static final int GESTURE_TICKS = 22;
+
+   /**
+    * Weight 0..1 of the hand-to-helmet gesture. It plays only when the helmet
+    * is toggled with the suit staying on (helmet key, or the helmet closing
+    * right after the nano formed); never when the suit comes off (exit,
+    * retract). Smooth in and out (no snap).
+    */
+   public static float gesture(Entity entity, float partialTick) {
+      float[] s = STATE.get(entity);
+      if (s == null || s[3] < 0.0F) {
+         return 0.0F;
+      }
+
+      float x = Math.min(1.0F, (s[3] + partialTick) / GESTURE_TICKS);
+      if (x < 0.36F) {
+         return smooth(x / 0.36F);
+      }
+
+      if (x < 0.58F) {
+         return 1.0F;
+      }
+
+      return 1.0F - smooth((x - 0.58F) / 0.42F);
+   }
+
+   public static boolean gesturing(Entity entity) {
+      float[] s = STATE.get(entity);
+      return s != null && s[3] >= 0.0F;
+   }
+
+   private static float smooth(float x) {
+      x = Math.max(0.0F, Math.min(1.0F, x));
+      return x * x * x * (x * (x * 6.0F - 15.0F) + 10.0F);
+   }
+
    /** Helmet part frame: reveal frames from the head start up to the full mask (0 = not drawn). */
    public static int frame(float progress) {
       if (progress <= 0.0F) {
@@ -86,7 +123,15 @@ public final class HelmetAnim {
          }
 
          boolean closed = closedFlag(snapshot);
-         float[] s = STATE.computeIfAbsent(player, p -> new float[]{closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F});
+         float[] s = STATE.computeIfAbsent(player, p -> new float[]{closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, closed ? 1.0F : 0.0F, -1.0F});
+         boolean worn = IronManView.worn(snapshot) && dev.baranhan.viltrumitecore.client.ironman.mark.MarkState.of(snapshot).equipPhase() == 0;
+         if (closed != s[2] > 0.5F) {
+            // Gesture only for a toggle with the suit on; the suit coming off (exit, retract) gets none.
+            s[3] = worn ? 0.0F : -1.0F;
+         } else if (s[3] >= 0.0F) {
+            s[3] = !worn || s[3] + 1.0F > GESTURE_TICKS ? -1.0F : s[3] + 1.0F;
+         }
+
          s[0] = s[1];
          s[1] = step(s[1], closed);
          s[2] = closed ? 1.0F : 0.0F;
