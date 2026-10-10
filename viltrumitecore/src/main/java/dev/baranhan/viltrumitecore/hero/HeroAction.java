@@ -30,7 +30,17 @@ public enum HeroAction {
    /** Guard key (F) held: shield. */
    GUARD,
    /** RMB on a HeroInteractable entity instead of the tool. */
-   INTERACT;
+   INTERACT,
+   /** Iron Man helmet toggle (stage 3). */
+   HELMET,
+   /** Iron Man scan: press starts, press again cancels. */
+   SCAN,
+   /** Iron Man flares. */
+   COUNTERMEASURES,
+   /** Iron Man Stage 4: call Veronica; again while the pod stands = suit menu. */
+   VERONICA,
+   /** Iron Man Stage 4: the worn mark's signature (page 1 slot 3 in a mark; timeline id). */
+   SIGNATURE;
 
    public static HeroAction byId(int ordinal) {
       HeroAction[] values = values();

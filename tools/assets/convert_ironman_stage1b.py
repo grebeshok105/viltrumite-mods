@@ -101,13 +101,16 @@ def main(src):
         palm.append(flame_bone("armor" + side + "Arm", "flame" + side, bone["cubes"][0], 12))
     write_geo("geo/ironman/flames/palms.geo.json", palm, 4, 4)
 
-    # Back stabilizers: Satsu places them on the wing flaps (z 6..10); Mark 50
-    # has no flaps in Stage 1, so two small jets sit on the shoulder blades.
+    # Back stabilizers: the four flames at the tips of the nano stabilizer rods
+    # (Stage 2 converter). Each cube's own rotation moves to a child bone so
+    # scaleY stretches the flame along its rod.
     stab = bones_of(src, "geo/flames/stabilizer_flames/main.geo.json")["armorBody"]["cubes"]
     body = [{"name": "armorBody", "pivot": [0, 24, 0]}]
-    for side, x in (("Right", -2.5), ("Left", 1.0)):
-        cube = {"origin": [x, 18.5, 2.0], "size": [1.5, 1.5, 3.0], "uv": stab[0]["uv"]}
-        body.append({"name": "stab" + side, "parent": "armorBody", "pivot": [x + 0.75, 19.25, 2.0], "cubes": [cube]})
+    for cube in stab:
+        side = "Right" if cube["origin"][0] < 0 else "Left"
+        name = "stab" + side + ("" if cube["origin"][1] > 20 else "Low")
+        flat = {k: v for k, v in cube.items() if k not in ("pivot", "rotation")}
+        body.append({"name": name, "parent": "armorBody", "pivot": cube["pivot"], "rotation": cube["rotation"], "cubes": [flat]})
     write_geo("geo/ironman/flames/stabilizer.geo.json", body, 4, 4)
 
     for i in range(8):

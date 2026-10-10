@@ -41,6 +41,11 @@ public final class IronManClient {
                return Optional.empty();
             }
 
+            Optional<ResourceLocation> mark = dev.baranhan.viltrumitecore.client.ironman.mark.MarkVisuals.skin(player, snapshot);
+            if (mark.isPresent()) {
+               return mark;
+            }
+
             int frame = IronManView.frame(snapshot, Minecraft.getInstance().getFrameTime());
             return frame <= 0 ? Optional.empty() : Optional.of(IronManSuitTextures.INSTANCE.skin(frame));
          }
@@ -56,6 +61,10 @@ public final class IronManClient {
          }
       });
       PlayerGeoLayer.register(new IronManPartsProvider());
+      PlayerGeoLayer.register(new dev.baranhan.viltrumitecore.client.ironman.hulkbuster.HulkbusterDocking());
+      dev.baranhan.viltrumitecore.client.ironman.mark.MarkVisuals.init();
+      dev.baranhan.viltrumitecore.client.ironman.mark.sig.SignatureVisuals.init();
+      dev.baranhan.viltrumitecore.client.render.vfx.OutlineTargets.register(ScanHighlight::colorOf);
       PanelStyles.register(HeroId.IRON_MAN, new IronManPanelStyle());
    }
 }

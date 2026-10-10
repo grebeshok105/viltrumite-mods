@@ -177,6 +177,8 @@ public final class IronManCombatVfx {
       for (Entity entity : level.entitiesForRendering()) {
          if (entity instanceof MicroMissileEntity missile && random.nextInt(2) == 0) {
             level.addParticle(ParticleTypes.SMOKE, missile.getX(), missile.getY(), missile.getZ(), 0.0, 0.01, 0.0);
+         } else if (entity instanceof dev.baranhan.viltrumitecore.entity.FlareEntity flare && flare.life() < IronManRules.FLARE_LIFE - 10) {
+            level.addParticle(random.nextInt(3) == 0 ? ParticleTypes.SMALL_FLAME : ParticleTypes.SMOKE, flare.getX(), flare.getY(), flare.getZ(), 0.0, 0.02, 0.0);
          }
       }
 
@@ -218,7 +220,7 @@ public final class IronManCombatVfx {
       boolean any = SCORCH.size() > 0 || ClientHeroData.section(OwnerSection.MARKS).length > 0;
       if (!any) {
          for (Entity entity : level.entitiesForRendering()) {
-            if (entity instanceof RepulsorBlastEntity || entity instanceof MicroMissileEntity) {
+            if (entity instanceof RepulsorBlastEntity || entity instanceof MicroMissileEntity || entity instanceof dev.baranhan.viltrumitecore.entity.FlareEntity) {
                any = true;
                break;
             }
@@ -267,6 +269,8 @@ public final class IronManCombatVfx {
                drawBlast(buffer, cameraPos, camera, blast, partialTick);
             } else if (entity instanceof MicroMissileEntity missile) {
                drawMissile(buffer, cameraPos, camera, missile, partialTick);
+            } else if (entity instanceof dev.baranhan.viltrumitecore.entity.FlareEntity flare) {
+               FlareRenderer.draw(buffer, cameraPos, camera, flare, partialTick);
             }
          }
 

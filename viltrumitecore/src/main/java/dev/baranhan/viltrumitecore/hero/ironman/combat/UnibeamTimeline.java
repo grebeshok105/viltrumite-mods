@@ -28,6 +28,7 @@ public final class UnibeamTimeline {
 
    private Phase phase = Phase.IDLE;
    private int ticks;
+   private int chargeTicks = IronManRules.UNIBEAM_CHARGE;
    private boolean overdraft;
 
    public Phase phase() {
@@ -51,6 +52,21 @@ public final class UnibeamTimeline {
       return this.phase == Phase.OVERHEAT;
    }
 
+   /** Charge ticks of the current beam (suit-dependent, spec §13.6). */
+   public int chargeTicks() {
+      return this.chargeTicks;
+   }
+
+   /** Start the charge with the suit's charge time; false when busy, overheated or weapons are locked. */
+   public boolean press(boolean weaponsLocked, int chargeTicks) {
+      boolean started = this.press(weaponsLocked);
+      if (started) {
+         this.chargeTicks = Math.max(1, chargeTicks);
+      }
+
+      return started;
+   }
+
    /** Start the charge; false when busy, overheated or weapons are locked. */
    public boolean press(boolean weaponsLocked) {
       if (this.phase != Phase.IDLE || weaponsLocked) {
@@ -65,7 +81,7 @@ public final class UnibeamTimeline {
       this.ticks++;
       switch (this.phase) {
          case CHARGE -> {
-            if (this.ticks >= IronManRules.UNIBEAM_CHARGE) {
+            if (this.ticks >= this.chargeTicks) {
                return Event.CHARGED;
             }
          }

@@ -157,9 +157,9 @@ public final class IronManRules {
    public static final int MISSILE_MARKS = 4;
    public static final double MISSILE_LOCK_RANGE = 64.0;
    public static final float MISSILE_LOCK_DEG = 4.0F;
-   public static final float MISSILE_HIT = 5.0F;
-   public static final float MISSILE_SPLASH = 2.0F;
-   public static final double MISSILE_SPLASH_RADIUS = 2.0;
+   public static final float MISSILE_HIT = 8.0F;
+   public static final float MISSILE_SPLASH = 4.0F;
+   public static final double MISSILE_SPLASH_RADIUS = 3.0;
    public static final double MISSILE_SPEED = 1.3;
    /** Homing turn per tick (fraction of the way to the target direction). */
    public static final double MISSILE_TURN = 0.22;
@@ -202,6 +202,38 @@ public final class IronManRules {
    /** Heavy hit (after armor) that shows nano damage zones. */
    public static final float NANO_DAMAGE_HIT = 6.0F;
    public static final int NANO_REPAIR_TICKS = 60;
+
+   // ---- Stage 3: helmet, JARVIS, scan, countermeasures (spec §10, §11) ----
+   /** Nanite fold / unfold of the helmet. */
+   public static final int HELMET_TOGGLE_TICKS = 12;
+   /** Threat list refresh period and range (spec §11.1). */
+   public static final int THREAT_SCAN_INTERVAL = 5;
+   public static final double THREAT_RANGE = 32.0;
+   /** A player looking at us: cos of the view cone half angle. */
+   public static final double THREAT_LOOK_DOT = 0.95;
+   /** Projectile arrows: path passes this close to the player. */
+   public static final double THREAT_PROJECTILE_MISS = 2.0;
+   /** JARVIS hints: low energy warning below this. */
+   public static final float JARVIS_LOW_ENERGY = 20.0F;
+   /** Voice: global gap after a line ends, ticks (≥ 4 s). */
+   public static final int JARVIS_GLOBAL_GAP = 80;
+   /** Scan (spec §11.2): aim this long on the same target. */
+   public static final int SCAN_TICKS = 30;
+   public static final double SCAN_RANGE = 48.0;
+   /** Line of sight / aim may be lost this long before the scan is cancelled. */
+   public static final int SCAN_LOS_GRACE = 10;
+   /** A started scan without any target gives up after this. */
+   public static final int SCAN_IDLE_TIMEOUT = 200;
+   /** Through-wall highlight and card lifetime after a scan. */
+   public static final int SCAN_HIGHLIGHT_TICKS = 200;
+   /** Countermeasures (spec §11.3). */
+   public static final int COUNTERMEASURES_COOLDOWN = 400;
+   public static final int FLARE_COUNT = 8;
+   public static final int FLARE_LIFE = 60;
+   public static final double FLARE_HOMING_RANGE = 24.0;
+   public static final double FLARE_MOB_RANGE = 32.0;
+   /** Mobs lose the player for this long (~2 s). */
+   public static final int FLARE_FORGET_TICKS = 40;
 
    private static final dev.baranhan.viltrumiteflight.util.FlightProfile GLIDE_PROFILE = new dev.baranhan.viltrumiteflight.util.FlightProfile(
       1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, true, FLIGHT_GLIDE_SINK);

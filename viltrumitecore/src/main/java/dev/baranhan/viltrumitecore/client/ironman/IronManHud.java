@@ -1,8 +1,10 @@
 package dev.baranhan.viltrumitecore.client.ironman;
 
+import dev.baranhan.viltrumitecore.client.ironman.mark.MarkState;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManFlags;
 import dev.baranhan.viltrumitecore.hero.ironman.IronManRules;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumiteflight.util.FlightState;
 import dev.baranhan.viltrumiteflight.util.ViltrumiteFlightPlayer;
 import net.minecraft.client.Minecraft;
@@ -18,12 +20,13 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 /**
- * Suit HUD (spec §15, Stage 1 without the helmet system): left — energy bar
+ * Suit HUD (spec §15): left — energy bar
  * (cyan, amber below 30, red blinking at 0, "gliding" label) and three
  * overheat pips (Unibeam overheat counter, red on the last), the overheat
  * lock bar, the overdraft warning and "weapons offline"; in flight — speed and altitude below
  * (the right edge belongs to the ability panel).
- * Hidden while the suit is off.
+ * Hidden while the suit is off. Stage 3: with the helmet open only the energy
+ * bar (+ weapons offline / gliding) stays; the JARVIS rows need the closed helmet.
  */
 @EventBusSubscriber(
    modid = "viltrumitecore",
@@ -62,7 +65,8 @@ public final class IronManHud {
 
       GuiGraphics graphics = event.getGuiGraphics();
       Font font = client.font;
-      if (!IronManView.worn(snapshot) && !IronManView.transitioning(snapshot)) {
+      MarkState markState = MarkState.of(snapshot);
+      if (!IronManView.worn(snapshot) && !IronManView.transitioning(snapshot) && markState.equipPhase() == IronManFlags.EQUIP_NONE) {
          // Nanites lost after a core explosion (spec §9.4): countdown until the suit can deploy.
          int lock = snapshot.extraCooldown(0);
          if (lock > 0) {
@@ -77,6 +81,11 @@ public final class IronManHud {
       boolean blink = (player.tickCount / 5) % 2 == 0;
       int x = 8;
       int y = graphics.guiHeight() / 2 - 20;
+      if (markState.equipPhase() != IronManFlags.EQUIP_NONE) {
+         String phase = markState.equipPhase() == IronManFlags.EQUIP_EQUIPPING ? "equipping" : markState.equipPhase() == IronManFlags.EQUIP_EXITING ? "exiting" : "partial";
+         graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman." + phase), x, y - 10, blink ? 0xFF50D8FF : 0xFF2A8FB8, true);
+      }
+
       graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.energy"), x, y, 0x9FE8FF, true);
       int barY = y + 11;
       graphics.fill(x - 1, barY - 1, x + WIDTH + 1, barY + HEIGHT + 1, 0xA0081420);
@@ -90,8 +99,46 @@ public final class IronManHud {
       graphics.fill(mark, barY - 1, mark + 1, barY + HEIGHT + 1, 0xC0FFFFFF);
       String value = Math.round(energy) + "%";
       graphics.drawString(font, value, x + WIDTH + 4, barY - 2, color & 0xFFFFFF, true);
+      // Stage 4: mark durability row under the energy bar (spec §15.2), with or without the helmet.
+      int below = barY + HEIGHT + 4;
+      if (markState.mark() != null && markState.markOn()) {
+         float frac = markState.durabilityFraction();
+         graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.durability"), x, below, 0x9FE8FF, true);
+         int durY = below + 10;
+         graphics.fill(x - 1, durY - 1, x + WIDTH + 1, durY + 3, 0xA0081420);
+         graphics.fill(x, durY, x + Math.round(WIDTH * frac), durY + 2, frac < 0.25F ? (blink ? 0xFFFF4030 : 0xFFFFB020) : 0xFF50D8FF);
+         graphics.drawString(font, Math.round(frac * 100.0F) + "%", x + WIDTH + 4, durY - 2, 0xFFFFFF, true);
+         below += 16;
+      }
+
+      // Stage 5: Hulkbuster durability (spec §15.2), gold accent of the Mark 48.
+      if (IronManView.flag(snapshot, IronManFlags.Field.HULKBUSTER_PHASE) != 0) {
+         float hulkFrac = IronManVariant.hulkDurability(snapshot.variant());
+         graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.hulkbuster"), x, below, 0xFFE0A0, true);
+         int hulkY = below + 10;
+         graphics.fill(x - 1, hulkY - 1, x + WIDTH + 1, hulkY + 3, 0xA0081420);
+         graphics.fill(x, hulkY, x + Math.round(WIDTH * hulkFrac), hulkY + 2, hulkFrac < 0.25F ? (blink ? 0xFFFF4030 : 0xFFFFB020) : 0xFFE0A030);
+         graphics.drawString(font, Math.round(hulkFrac * 100.0F) + "%", x + WIDTH + 4, hulkY - 2, 0xFFFFFF, true);
+         below += 16;
+      }
+
+      // Stage 3 (spec §15.2): without the closed helmet only energy, durability and the panel.
+      if (!HelmetAnim.closedFlag(snapshot)) {
+         int bareY = below;
+         if (snapshot.resourceLocked()) {
+            graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.weapons_offline"), x, bareY, blink ? 0xFF4030 : 0x903020, true);
+            bareY += 10;
+         }
+
+         if (IronManView.glide(snapshot)) {
+            graphics.drawString(font, Component.translatable("hud.viltrumitecore.ironman.glide"), x, bareY, blink ? 0xFFB020 : 0xFF6030, true);
+         }
+
+         return;
+      }
+
       // Overheat pips: Unibeam overheats so far (spec §9.1); the third one is the overdraft.
-      int pipY = barY + HEIGHT + 4;
+      int pipY = below;
       int overheats = IronManView.flag(snapshot, IronManFlags.Field.OVERHEAT_COUNT);
       boolean overdraft = IronManView.flag(snapshot, IronManFlags.Field.OVERDRAFT) != 0;
       boolean sputter = IronManView.flag(snapshot, IronManFlags.Field.OVERDRAFT_SPUTTER) != 0;

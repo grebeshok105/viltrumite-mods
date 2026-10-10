@@ -45,8 +45,13 @@ class IronManHeroTest {
       assertEquals(IronManAbilities.UNIBEAM, loadout[0]);
       assertEquals(IronManAbilities.MISSILES, loadout[1]);
       assertEquals(IronManAbilities.NANO_ARSENAL, loadout[2]);
+      // Page 2 (spec §6.2): scan, countermeasures, Veronica, helmet, suit, (Legion reserved).
+      assertEquals(IronManAbilities.SCAN, loadout[6]);
+      assertEquals(IronManAbilities.COUNTERMEASURES, loadout[7]);
+      assertEquals(IronManAbilities.VERONICA, loadout[8]);
+      assertEquals(IronManAbilities.HELMET, loadout[9]);
       for (int i = 3; i < 18; i++) {
-         if (i != 10) {
+         if (i < 6 || i > 10) {
             assertEquals("", loadout[i], "slot " + i);
          }
       }
@@ -54,12 +59,16 @@ class IronManHeroTest {
 
    @Test
    void suitSlotSendsSuitAction() {
-      assertEquals(4, this.hero.heroInputSlots().length);
+      assertEquals(8, this.hero.heroInputSlots().length);
       assertTrue(java.util.Arrays.asList(this.hero.heroInputSlots()).contains(IronManAbilities.SUIT));
       assertSame(HeroAction.SUIT, this.hero.heroActionFor(IronManAbilities.SUIT));
       assertSame(HeroAction.UNIBEAM, this.hero.heroActionFor(IronManAbilities.UNIBEAM));
       assertSame(HeroAction.MISSILES, this.hero.heroActionFor(IronManAbilities.MISSILES));
       assertSame(HeroAction.NANO_ARSENAL, this.hero.heroActionFor(IronManAbilities.NANO_ARSENAL));
+      assertSame(HeroAction.SCAN, this.hero.heroActionFor(IronManAbilities.SCAN));
+      assertSame(HeroAction.COUNTERMEASURES, this.hero.heroActionFor(IronManAbilities.COUNTERMEASURES));
+      assertSame(HeroAction.HELMET, this.hero.heroActionFor(IronManAbilities.HELMET));
+      assertSame(HeroAction.VERONICA, this.hero.heroActionFor(IronManAbilities.VERONICA));
       assertEquals(null, this.hero.heroActionFor("viltrumite:punch"));
    }
 

@@ -14,6 +14,8 @@ public final class HomelanderClient {
    }
 
    public static void registerSkins() {
+      // Focus outline first: it wins over later sources on the same entity.
+      dev.baranhan.viltrumitecore.client.render.vfx.OutlineTargets.register(FocusClient::colorOf);
       HeroSkins.register(HeroId.HOMELANDER, new HeroSkins.Provider() {
          @Override
          public ResourceLocation defaultSkin() {

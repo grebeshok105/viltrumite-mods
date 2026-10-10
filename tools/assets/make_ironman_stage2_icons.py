@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Iron Man Stage 2 GUI art, own work (panel art style of make_ironman_icons.py):
 ability icons 64x64 (unibeam, missiles, nano_arsenal) and crosshairs 32x32
-per RMB tool (repulsor, blade, hammer, laser, gun, jackhammer, hulk_repulsor).
+per RMB tool (repulsor, blade, hammer, laser, gun, jackhammer, hulk_repulsor),
+mob effect icon 18x18 (sunder).
 
 Run: python3 tools/assets/make_ironman_stage2_icons.py [OUT_ROOT]
 Default OUT_ROOT writes base64 files under viltrumitecore/src/main/binassets.
@@ -198,6 +199,26 @@ def crosshair(kind):
     return img
 
 
+def sunder_effect():
+    """18x18 mob effect icon: a cyan nano blade cutting a cracked armor plate."""
+    img = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
+    px = img.load()
+    for y in range(3, 16):
+        half = 6 if y < 11 else 6 - (y - 10)
+        for x in range(9 - half, 9 + half):
+            edge = x in (9 - half, 9 + half - 1) or y in (3, 15)
+            px[x, y] = STEEL if edge else (70, 78, 92, 255)
+    for i, (x, y) in enumerate(((9, 4), (8, 6), (10, 8), (9, 10), (8, 12), (9, 14))):
+        px[x, y] = RED if i % 2 else RED_D
+    for i in range(14):
+        x, y = 2 + i, 15 - i
+        if 0 <= x < 18 and 0 <= y < 18:
+            px[x, y] = WHITE if 4 <= i <= 9 else CYAN
+            if y + 1 < 18:
+                px[x, y + 1] = CYAN_D
+    return img
+
+
 def write(img, rel, out_root):
     path = os.path.join(out_root, rel)
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -216,6 +237,8 @@ def main(out_root):
         write(fn(), "ability/ironman/%s.png" % name, out_root)
     for kind in ("repulsor", "blade", "hammer", "laser", "gun", "jackhammer", "hulk_repulsor"):
         write(crosshair(kind), "ironman/crosshair/%s.png" % kind, out_root)
+    # Mob effect icons live next to gui/: textures/mob_effect/.
+    write(sunder_effect(), "../mob_effect/sunder.png", out_root)
 
 
 if __name__ == "__main__":

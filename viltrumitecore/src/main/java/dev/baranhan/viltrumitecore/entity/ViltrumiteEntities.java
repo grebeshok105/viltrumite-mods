@@ -27,6 +27,24 @@ public class ViltrumiteEntities {
       () -> Builder.<MicroMissileEntity>of(MicroMissileEntity::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(10).updateInterval(1).fireImmune().noSave().build("micro_missile")
    );
 
+   public static final RegistryObject<EntityType<FlareEntity>> FLARE = ENTITIES.register(
+      "flare",
+      () -> Builder.<FlareEntity>of(FlareEntity::new, MobCategory.MISC).sized(0.2F, 0.2F).clientTrackingRange(8).updateInterval(1).fireImmune().noSave().build("flare")
+   );
+
+   public static final RegistryObject<EntityType<VeronicaPodEntity>> VERONICA_POD = ENTITIES.register(
+      "veronica_pod", () -> EntityType.Builder.<VeronicaPodEntity>of(VeronicaPodEntity::new, MobCategory.MISC).sized(1.6F, 3.0F).clientTrackingRange(16).updateInterval(1).build("veronica_pod")
+   );
+   public static final RegistryObject<EntityType<EmptySuitEntity>> EMPTY_SUIT = ENTITIES.register(
+      "empty_suit", () -> EntityType.Builder.<EmptySuitEntity>of(EmptySuitEntity::new, MobCategory.MISC).sized(0.6F, 1.8F).clientTrackingRange(10).updateInterval(2).build("empty_suit")
+   );
+   public static final RegistryObject<EntityType<SuitDebrisEntity>> SUIT_DEBRIS = ENTITIES.register(
+      "suit_debris", () -> EntityType.Builder.<SuitDebrisEntity>of(SuitDebrisEntity::new, MobCategory.MISC).sized(0.4F, 0.4F).clientTrackingRange(8).updateInterval(2).build("suit_debris")
+   );
+   public static final RegistryObject<EntityType<RocketFistEntity>> ROCKET_FIST = ENTITIES.register(
+      "rocket_fist", () -> EntityType.Builder.<RocketFistEntity>of(RocketFistEntity::new, MobCategory.MISC).sized(0.4F, 0.4F).clientTrackingRange(8).updateInterval(1).build("rocket_fist")
+   );
+
    public static void register(IEventBus eventBus) {
       ENTITIES.register(eventBus);
    }

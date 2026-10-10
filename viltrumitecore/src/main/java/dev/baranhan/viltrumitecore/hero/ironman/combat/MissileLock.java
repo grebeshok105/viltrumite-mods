@@ -15,12 +15,19 @@ public final class MissileLock {
    private boolean held;
    private int ticks;
    private final List<Integer> marks = new ArrayList<>(IronManRules.MISSILE_MARKS);
+   private int maxMarks = IronManRules.MISSILE_MARKS;
 
    public boolean press(boolean weaponsLocked) {
+      return this.press(weaponsLocked, IronManRules.MISSILE_MARKS);
+   }
+
+   /** Open the flaps; {@code maxMarks} = marks this suit can hold (spec §13.7: War Machine 8). */
+   public boolean press(boolean weaponsLocked, int maxMarks) {
       if (this.held || weaponsLocked) {
          return false;
       }
 
+      this.maxMarks = Math.max(1, maxMarks);
       this.held = true;
       this.ticks = 0;
       this.marks.clear();
@@ -47,7 +54,7 @@ public final class MissileLock {
 
    /** Candidate under the crosshair. True when it became a new mark. */
    public boolean offer(int entityId, boolean lineOfSight) {
-      if (!this.flapsOpen() || !lineOfSight || this.marks.size() >= IronManRules.MISSILE_MARKS || this.marks.contains(entityId)) {
+      if (!this.flapsOpen() || !lineOfSight || this.marks.size() >= this.maxMarks || this.marks.contains(entityId)) {
          return false;
       }
 
@@ -88,7 +95,12 @@ public final class MissileLock {
    }
 
    public static int missileCount(int marks) {
-      return marks <= 0 ? IronManRules.MISSILE_MARKS : Math.min(marks, IronManRules.MISSILE_MARKS);
+      return missileCount(marks, IronManRules.MISSILE_MARKS);
+   }
+
+   /** Missiles in a volley: one per mark, or the suit's full rack without marks. */
+   public static int missileCount(int marks, int max) {
+      return marks <= 0 ? max : Math.min(marks, max);
    }
 
    /** Inside the lock cone around the aim and in range. */

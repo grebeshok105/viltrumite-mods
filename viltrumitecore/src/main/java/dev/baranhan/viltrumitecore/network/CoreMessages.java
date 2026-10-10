@@ -205,6 +205,24 @@ public class CoreMessages {
          .encoder(dev.baranhan.viltrumitecore.network.packet.FlashS2CPacket::toBytes)
          .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.FlashS2CPacket::handle)
          .add();
+
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.ScanCardS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.ScanCardS2CPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.ScanCardS2CPacket::toBytes)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.ScanCardS2CPacket::handle)
+         .add();
+
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.VeronicaMenuS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.VeronicaMenuS2CPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.VeronicaMenuS2CPacket::toBytes)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.VeronicaMenuS2CPacket::handle)
+         .add();
+
+      net.messageBuilder(dev.baranhan.viltrumitecore.network.packet.VeronicaChooseC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+         .decoder(dev.baranhan.viltrumitecore.network.packet.VeronicaChooseC2SPacket::new)
+         .encoder(dev.baranhan.viltrumitecore.network.packet.VeronicaChooseC2SPacket::toBytes)
+         .consumerMainThread(dev.baranhan.viltrumitecore.network.packet.VeronicaChooseC2SPacket::handle)
+         .add();
    }
 
    public static <MSG> void sendToServer(MSG message) {

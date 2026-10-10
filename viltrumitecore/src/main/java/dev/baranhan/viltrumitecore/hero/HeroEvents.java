@@ -67,6 +67,7 @@ public final class HeroEvents {
          }
 
          newAbility.setActivePage(oldAbility.getActivePage());
+         newAbility.setOfferedAbilities(oldAbility.getOfferedAbilities());
          HeroRegistry.repairLoadout(newPlayer);
       }
    }
@@ -220,6 +221,7 @@ public final class HeroEvents {
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeldInputs.releaseAll(player);
+         HeroDamageLayers.forget(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DISCONNECT);
       }
    }

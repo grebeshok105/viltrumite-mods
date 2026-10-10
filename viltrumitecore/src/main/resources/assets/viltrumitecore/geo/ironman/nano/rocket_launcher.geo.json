@@ -1,0 +1,108 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.rocket_launcher",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorRightArm",
+          "pivot": [
+            -5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "rocket_launcher",
+          "parent": "armorRightArm",
+          "pivot": [
+            1,
+            -1,
+            -5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -7,
+                13,
+                -4
+              ],
+              "size": [
+                2,
+                4,
+                1
+              ],
+              "inflate": 0.5,
+              "uv": {
+                "north": {
+                  "uv": [
+                    41,
+                    25
+                  ],
+                  "uv_size": [
+                    2,
+                    4
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    40,
+                    25
+                  ],
+                  "uv_size": [
+                    1,
+                    4
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    44,
+                    25
+                  ],
+                  "uv_size": [
+                    2,
+                    4
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    43,
+                    25
+                  ],
+                  "uv_size": [
+                    1,
+                    4
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    40,
+                    27
+                  ],
+                  "uv_size": [
+                    1,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    46,
+                    23
+                  ],
+                  "uv_size": [
+                    2,
+                    -1
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

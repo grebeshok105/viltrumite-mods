@@ -28,7 +28,7 @@ public class HeroOwnerSnapshotS2CPacket {
 
    public HeroOwnerSnapshotS2CPacket(FriendlyByteBuf buffer) {
       this.sectionId = buffer.readVarInt();
-      int count = Math.min(MAX_IDS, buffer.readVarInt());
+      int count = Math.max(0, Math.min(MAX_IDS, buffer.readVarInt()));
       this.ids = new int[count];
       this.expireTicks = new int[count];
       for (int i = 0; i < count; i++) {

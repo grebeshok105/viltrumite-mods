@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -57,7 +56,7 @@ import net.minecraft.world.phys.Vec3;
  * timelines in {@code combat/} and applies them to the world. Every entry
  * point assumes an Iron Man player; input methods check the suit themselves.
  */
-final class IronManCombat {
+public final class IronManCombat {
    private IronManCombat() {
    }
 
@@ -69,10 +68,17 @@ final class IronManCombat {
    }
 
    /** Palm in front of the shoulder, where the bolt leaves. */
-   static Vec3 hand(ServerPlayer player, boolean rightHand) {
+   public static Vec3 hand(ServerPlayer player, boolean rightHand) {
       Vec3 look = player.getLookAngle();
       Vec3 side = right(look).scale(rightHand ? 0.38 : -0.38);
       return player.getEyePosition().add(0.0, -0.35, 0.0).add(side).add(look.scale(0.7));
+   }
+
+   /** Outer forearm launcher muzzle with the arm raised along the look (IronManPoser missile stance). */
+   public static Vec3 forearm(ServerPlayer player, boolean rightHand) {
+      Vec3 look = player.getLookAngle();
+      Vec3 side = right(look).scale(rightHand ? 0.46 : -0.46);
+      return player.getEyePosition().add(0.0, -0.32, 0.0).add(side).add(look.scale(0.62));
    }
 
    /** Arc reactor: the Unibeam origin. */
@@ -83,7 +89,7 @@ final class IronManCombat {
    }
 
    /** Crosshair point: first block or entity along the look within range. */
-   static Vec3 aimPoint(ServerPlayer player, double range) {
+   public static Vec3 aimPoint(ServerPlayer player, double range) {
       Vec3 eye = player.getEyePosition();
       Vec3 end = eye.add(player.getLookAngle().scale(range));
       BlockHitResult block = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
@@ -94,7 +100,7 @@ final class IronManCombat {
    }
 
    @Nullable
-   static LivingEntity entityInReach(ServerPlayer player, double reach) {
+   public static LivingEntity entityInReach(ServerPlayer player, double reach) {
       Vec3 eye = player.getEyePosition();
       Vec3 end = eye.add(player.getLookAngle().scale(reach));
       BlockHitResult block = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
@@ -104,12 +110,16 @@ final class IronManCombat {
       return hit != null && hit.getEntity() instanceof LivingEntity living ? living : null;
    }
 
-   static void push(Entity target, Vec3 velocity) {
+   public static void push(Entity target, Vec3 velocity) {
+      if (target instanceof LivingEntity living && !HeroRegistry.allowsImpulse(living)) {
+         return;
+      }
+
       target.setDeltaMovement(target.getDeltaMovement().add(velocity));
       target.hurtMarked = true;
    }
 
-   static void sound(ServerPlayer player, SoundEvent sound, float pitch) {
+   public static void sound(ServerPlayer player, SoundEvent sound, float pitch) {
       IronManSounds.play(player, sound, 1.0F, pitch);
    }
 
@@ -130,9 +140,11 @@ final class IronManCombat {
       }
 
       Vec3 aim = aimPoint(player, IronManRules.REPULSOR_RANGE);
-      boolean volley = shot.kind() == Repulsor.Kind.VOLLEY;
+      // Mark 42: while the rocket fist is away only the left palm fires (spec §13.3).
+      boolean rightAway = state.suit.markWorn() && state.suit.mark() == dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId.MARK_42 && state.signature.entityId >= 0;
+      boolean volley = shot.kind() == Repulsor.Kind.VOLLEY && !rightAway;
       double knockback = Repulsor.knockback(shot.power());
-      for (boolean rightHand : volley ? new boolean[]{true, false} : new boolean[]{shot.rightHand()}) {
+      for (boolean rightHand : volley ? new boolean[]{true, false} : new boolean[]{shot.rightHand() && !rightAway}) {
          Vec3 from = hand(player, rightHand);
          Vec3 dir = aim.subtract(from);
          dir = dir.lengthSqr() < 1.0E-4 ? player.getLookAngle() : dir.normalize();
@@ -141,18 +153,20 @@ final class IronManCombat {
 
       sound(player, volley ? IronManCombatSounds.REPULSOR_VOLLEY.get() : IronManCombatSounds.REPULSOR_SHOT.get(), 0.9F + player.getRandom().nextFloat() * 0.2F);
       state.recoilTicks = IronManRules.REPULSOR_RECOIL_TICKS;
-      state.recoilRight = volley || shot.rightHand();
+      state.recoilRight = volley || shot.rightHand() && !rightAway;
       // Movement: brake backwards in flight, lift when firing down in a hover, ground shockwave.
       FlightState flight = IronManHero.flightState(player);
       boolean flying = flight != null && flight != FlightState.NONE;
       Vec3 look = player.getLookAngle();
       Vec3 velocity = player.getDeltaMovement();
       double speed = velocity.length();
+      // Heavy marks barely move from their own shots (spec §13.8: recoil ×0.2).
+      double recoil = state.spec().recoilMul();
       if (Repulsor.brakes(flying, speed < 1.0E-4 ? 0.0 : look.dot(velocity.scale(1.0 / speed)), speed)) {
-         player.setDeltaMovement(velocity.scale(Repulsor.brakeFactor(shot.power())));
+         player.setDeltaMovement(velocity.scale(Mth.lerp(recoil, 1.0, Repulsor.brakeFactor(shot.power()))));
          player.hurtMarked = true;
       } else if (Repulsor.lifts(flight == FlightState.HOVER, player.getXRot())) {
-         player.setDeltaMovement(velocity.x, Math.max(velocity.y, Repulsor.liftVelocity(shot.power())), velocity.z);
+         player.setDeltaMovement(velocity.x, Math.max(velocity.y, Repulsor.liftVelocity(shot.power()) * recoil), velocity.z);
          player.hurtMarked = true;
       }
 
@@ -173,16 +187,23 @@ final class IronManCombat {
             continue;
          }
 
-         target.hurt(player.damageSources().playerAttack(player), IronManRules.REPULSOR_SHOCKWAVE_DAMAGE);
-         Vec3 out = distance < 1.0E-3 ? Vec3.ZERO : new Vec3(away.x / distance, 0.0, away.z / distance);
-         push(target, out.scale(IronManRules.REPULSOR_SHOCKWAVE_KNOCKBACK).add(0.0, 0.5, 0.0));
+         if (target.hurt(player.damageSources().playerAttack(player), IronManRules.REPULSOR_SHOCKWAVE_DAMAGE)) {
+            Vec3 out = distance < 1.0E-3 ? Vec3.ZERO : new Vec3(away.x / distance, 0.0, away.z / distance);
+            push(target, out.scale(IronManRules.REPULSOR_SHOCKWAVE_KNOCKBACK).add(0.0, 0.5, 0.0));
+         }
       }
    }
 
    // ---- Unibeam and overdraft (§8.2, §9) ----
 
    static void unibeamPress(ServerPlayer player, IronManState state) {
-      if (state.unibeam.press(state.energy.weaponsLocked())) {
+      // Mark 42 without its chest plate has no Unibeam (spec §13.3).
+      if (!state.spec().unibeamOnline()) {
+         sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F);
+         return;
+      }
+
+      if (state.unibeam.press(state.energy.weaponsLocked(), state.spec().unibeamCharge())) {
          sound(player, IronManCombatSounds.UNIBEAM_CHARGE.get(), 1.0F);
       } else if (state.energy.weaponsLocked() || state.unibeam.overheated()) {
          sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F);
@@ -210,10 +231,7 @@ final class IronManCombat {
 
       state.overheat.add();
       sound(player, IronManCombatSounds.UNIBEAM_OVERHEAT.get(), 1.0F);
-      if (state.overheat.warn()) {
-         sound(player, IronManCombatSounds.JARVIS_WARNING.get(), 1.0F);
-         player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.overheat_warning"), true);
-      }
+      // The second-overheat warning is a JARVIS line on the owner's client (helmet closed, JarvisVoice).
    }
 
    static void unibeamTick(ServerPlayer player, IronManState state) {
@@ -221,13 +239,13 @@ final class IronManCombat {
       switch (event) {
          case CHARGED -> {
             boolean overdraft = state.overheat.nextIsOverdraft();
-            if (overdraft || state.energy.spend(IronManRules.COST_UNIBEAM)) {
+            if (state.energy.spend(IronManRules.COST_UNIBEAM)) {
                state.unibeam.startBeam(overdraft);
                state.beamDir = player.getLookAngle();
                flash(player, overdraft ? 0.35F : 0.18F, IronManRules.FLASH_OWNER_TICKS);
                if (overdraft) {
+                  // JARVIS line on the owner's client (JarvisVoice); the HUD shows it always.
                   state.overdraft.start();
-                  player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.overdraft"), true);
                }
             } else {
                state.unibeam.refuse();
@@ -247,8 +265,6 @@ final class IronManCombat {
       Overdraft.Event core = state.overdraft.tick();
       if (core == Overdraft.Event.SPUTTER) {
          sound(player, IronManCombatSounds.OVERDRAFT_SPUTTER.get(), 1.0F);
-         sound(player, IronManCombatSounds.JARVIS_WARNING.get(), 1.2F);
-         player.displayClientMessage(Component.translatable("hud.viltrumitecore.ironman.overdraft_critical"), true);
       } else if (core == Overdraft.Event.EXPLODE) {
          coreExplosion(player, state);
       }
@@ -300,12 +316,15 @@ final class IronManCombat {
          }
 
          target.invulnerableTime = 0;
-         target.hurt(player.damageSources().playerAttack(player), UnibeamTimeline.damageAt(from.distanceTo(center), overdraft));
-         push(target, dir.scale(IronManRules.UNIBEAM_PUSH));
-         if (target instanceof Mob mob) {
-            mob.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, IronManRules.UNIBEAM_MOB_BLIND_TICKS, 0, false, false));
-            mob.setTarget(null);
-         } else if (target instanceof ServerPlayer victim) {
+         if (target.hurt(player.damageSources().playerAttack(player), UnibeamTimeline.damageAt(from.distanceTo(center), overdraft))) {
+            push(target, dir.scale(IronManRules.UNIBEAM_PUSH));
+            if (target instanceof Mob mob) {
+               mob.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, IronManRules.UNIBEAM_MOB_BLIND_TICKS, 0, false, false));
+               mob.setTarget(null);
+            }
+         }
+
+         if (target instanceof ServerPlayer victim) {
             flash(victim, overdraft ? 1.0F : 0.9F, UnibeamTimeline.flashTicks(IronManRules.FLASH_BEAM_TICKS, true));
          }
       }
@@ -358,7 +377,13 @@ final class IronManCombat {
          }
       }
 
-      state.suit.scatter(IronManRules.NANO_LOST_TICKS);
+      if (state.suit.markOn()) {
+         // Spec §9.4: a mark falls apart like a break and Tony gets the nano; no nano lock then.
+         dev.baranhan.viltrumitecore.hero.ironman.mark.IronManMarks.breakMark(player, state);
+      } else {
+         state.suit.scatter(IronManRules.NANO_LOST_TICKS);
+      }
+
       state.overheat.resetByExplosion();
       state.stopCombat();
       sound(player, IronManCombatSounds.NANITE_DISSOLVE.get(), 0.7F);
@@ -373,7 +398,7 @@ final class IronManCombat {
    // ---- missiles (§8.3) ----
 
    static void missilesPress(ServerPlayer player, IronManState state) {
-      if (!state.missiles.press(state.energy.weaponsLocked())) {
+      if (!state.missiles.press(state.energy.weaponsLocked(), state.spec().missileMarks())) {
          sound(player, IronManCombatSounds.REPULSOR_FIZZLE.get(), 0.8F);
       }
    }
@@ -396,7 +421,8 @@ final class IronManCombat {
          }
       }
 
-      if (state.missiles.flapsOpen()) {
+      // Spec §10: marks need the JARVIS targeting (helmet closed), also against forged input.
+      if (state.missiles.flapsOpen() && state.canMarkTargets()) {
          Vec3 eye = player.getEyePosition();
          Vec3 look = player.getLookAngle();
          double range = IronManRules.MISSILE_LOCK_RANGE;
@@ -430,15 +456,24 @@ final class IronManCombat {
 
       ServerLevel level = player.serverLevel();
       List<Integer> targets = volley.targets();
-      int count = MissileLock.missileCount(targets.size());
+      if (targets.isEmpty()) {
+         // Spec §11.1: JARVIS auto-lock on the nearest threat (helmet closed, missiles only).
+         Integer auto = IronManJarvis.autoLock(player, state);
+         if (auto != null) {
+            targets = List.of(auto);
+         }
+      }
+
+      int count = MissileLock.missileCount(targets.size(), state.spec().missileMarks());
+      float damageMul = state.spec().missileMul();
       Vec3 look = player.getLookAngle();
-      Vec3 right = right(look);
       for (int i = 0; i < count; i++) {
          Entity target = targets.isEmpty() ? null : level.getEntity(targets.get(i % targets.size()));
          float offset = MissileLock.fanOffset(i, count);
-         Vec3 dir = look.yRot((float)Math.toRadians(-offset)).add(0.0, 0.12, 0.0).normalize();
-         Vec3 from = player.getEyePosition().add(0.0, -0.25, 0.0).add(right.scale(i % 2 == 0 ? 0.35 : -0.35)).add(look.scale(0.2));
-         MicroMissileEntity.launch(player, from, dir, target);
+         Vec3 dir = look.yRot((float)Math.toRadians(-offset)).normalize();
+         // From the forearm launchers (arms aimed along the look), alternating sides.
+         Vec3 from = forearm(player, i % 2 == 0);
+         MicroMissileEntity.launch(player, from, dir, target, damageMul);
       }
 
       sound(player, IronManCombatSounds.MISSILE_LAUNCH.get(), 1.0F);
@@ -463,7 +498,10 @@ final class IronManCombat {
          return;
       }
 
-      RightTool next = ToolCycle.next(state.rightTool, state.arsenal.weapon(), null);
+      // A mark passes its signature as the RMB alternative when it has one (spec §6.1).
+      RightTool alternative = state.suit.markWorn() && dev.baranhan.viltrumitecore.hero.ironman.mark.MarkSignatures.of(state.suit.mark()).onRmb()
+         ? RightTool.SIGNATURE : null;
+      RightTool next = ToolCycle.next(state.rightTool, state.arsenal.weapon(), alternative);
       if (next == state.rightTool) {
          return;
       }
@@ -478,7 +516,7 @@ final class IronManCombat {
    /** LMB with a formed weapon. */
    static void strike(ServerPlayer player, IronManState state) {
       RightTool weapon = state.arsenal.weapon();
-      if (weapon == null || state.arsenal.forming() || state.strikeTicks > 0) {
+      if (weapon == null || state.arsenal.forming() || state.strikeTicks > 0 || state.energy.weaponsLocked()) {
          return;
       }
 
@@ -521,14 +559,15 @@ final class IronManCombat {
       LivingEntity target = entityInReach(player, IronManRules.HAMMER_REACH);
       if (target != null) {
          double height = heightAboveGround(level, target);
-         target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER);
-         if (HammerLaunch.slamsDown(target.onGround(), height)) {
-            Vec3 v = target.getDeltaMovement();
-            target.setDeltaMovement(v.x * 0.3, IronManRules.HAMMER_SLAM_DOWN, v.z * 0.3);
-            target.hurtMarked = true;
-         } else {
-            Vec3 look = player.getLookAngle();
-            push(target, new Vec3(look.x, 0.0, look.z).normalize().scale(IronManRules.HAMMER_KNOCKBACK).add(0.0, 0.45, 0.0));
+         if (target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER)) {
+            if (!HammerLaunch.slamsDown(target.onGround(), height)) {
+               Vec3 look = player.getLookAngle();
+               push(target, new Vec3(look.x, 0.0, look.z).normalize().scale(IronManRules.HAMMER_KNOCKBACK).add(0.0, 0.45, 0.0));
+            } else if (HeroRegistry.allowsImpulse(target)) {
+               Vec3 v = target.getDeltaMovement();
+               target.setDeltaMovement(v.x * 0.3, IronManRules.HAMMER_SLAM_DOWN, v.z * 0.3);
+               target.hurtMarked = true;
+            }
          }
 
          sound(player, IronManCombatSounds.HAMMER_HIT.get(), 1.0F);
@@ -562,16 +601,17 @@ final class IronManCombat {
             continue;
          }
 
-         target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM);
-         Vec3 v = target.getDeltaMovement();
-         target.setDeltaMovement(v.x, Math.max(v.y, IronManRules.HAMMER_SLAM_LIFT), v.z);
-         target.hurtMarked = true;
+         if (target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM) && HeroRegistry.allowsImpulse(target)) {
+            Vec3 v = target.getDeltaMovement();
+            target.setDeltaMovement(v.x, Math.max(v.y, IronManRules.HAMMER_SLAM_LIFT), v.z);
+            target.hurtMarked = true;
+         }
       }
    }
 
    /** RMB with the blade: dash to the crosshair target (≤ 8 blocks), stops before walls. */
    static void bladeDash(ServerPlayer player, IronManState state) {
-      if (state.dashTicks > 0 || state.arsenal.forming()) {
+      if (state.dashTicks > 0 || state.arsenal.forming() || state.energy.weaponsLocked()) {
          return;
       }
 
@@ -643,11 +683,13 @@ final class IronManCombat {
          return;
       }
 
-      target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM);
-      Vec3 velocity = player.getLookAngle().scale(HammerLaunch.speed(charge)).add(0.0, 0.25, 0.0);
-      target.setDeltaMovement(velocity);
-      target.hurtMarked = true;
-      state.hammerLaunch.launch(target.getId());
+      if (target.hurt(player.damageSources().playerAttack(player), IronManRules.HAMMER_SLAM) && HeroRegistry.allowsImpulse(target)) {
+         Vec3 velocity = player.getLookAngle().scale(HammerLaunch.speed(charge)).add(0.0, 0.25, 0.0);
+         target.setDeltaMovement(velocity);
+         target.hurtMarked = true;
+         state.hammerLaunch.launch(target.getId());
+      }
+
       sound(player, IronManCombatSounds.HAMMER_HIT.get(), 0.8F);
    }
 
@@ -722,7 +764,8 @@ final class IronManCombat {
       }
 
       Vec3 toSource = source.getSourcePosition().subtract(self.getEyePosition());
-      Shield.Block block = state.shield.hit(self.level().getGameTime(), self.getLookAngle(), toSource, state.energy);
+      float strength = state.hulkbuster.active() ? dev.baranhan.viltrumitecore.hero.ironman.hulkbuster.HulkbusterKit.SHIELD_STRENGTH : state.spec().shieldMul();
+      Shield.Block block = state.shield.hit(self.level().getGameTime(), self.getLookAngle(), toSource, state.energy, strength);
       if (block == Shield.Block.PASS) {
          return DamageAbsorb.PASS;
       }
@@ -746,7 +789,7 @@ final class IronManCombat {
    // ---- nano damage (§4.2) ----
 
    static void onHurt(ServerPlayer player, IronManState state, float amount) {
-      if (!state.suit.worn() || amount < IronManRules.NANO_DAMAGE_HIT) {
+      if (!state.suit.nano() || amount < IronManRules.NANO_DAMAGE_HIT) {
          return;
       }
 

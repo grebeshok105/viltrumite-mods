@@ -3,7 +3,9 @@ package dev.baranhan.viltrumitecore.client.ironman;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
+import dev.baranhan.viltrumitecore.hero.ironman.IronManVariant;
 import dev.baranhan.viltrumitecore.hero.ironman.combat.RightTool;
+import dev.baranhan.viltrumitecore.hero.ironman.mark.MarkId;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
@@ -27,6 +29,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 )
 public final class IronManCrosshair {
    private static final int SIZE = 32;
+   private static final ResourceLocation GUN = new ResourceLocation("viltrumitecore", "textures/gui/ironman/crosshair/gun.png");
    private static final ResourceLocation[] TEXTURES = new ResourceLocation[RightTool.values().length];
 
    static {
@@ -38,7 +41,7 @@ public final class IronManCrosshair {
    private IronManCrosshair() {
    }
 
-   /** Texture name per tool; SIGNATURE uses the Stage 4 mark visuals (laser until then). */
+   /** Texture name per tool; SIGNATURE is the laser (Mark 7) and see {@link #texture} for the other marks. */
    public static String textureName(RightTool tool) {
       return switch (tool) {
          case REPULSOR -> "repulsor";
@@ -48,6 +51,20 @@ public final class IronManCrosshair {
          case JACKHAMMER -> "jackhammer";
          case HULK_REPULSOR -> "hulk_repulsor";
       };
+   }
+
+   /** SIGNATURE shows the worn mark's reticle: laser for Mark 7, gun for War Machine, repulsor for the rest. */
+   static ResourceLocation texture(HeroPublicSnapshot snapshot, RightTool tool) {
+      if (tool != RightTool.SIGNATURE) {
+         return TEXTURES[tool.ordinal()];
+      }
+
+      MarkId mark = IronManVariant.mark(snapshot.variant());
+      if (mark == MarkId.WAR_MACHINE_MK2) {
+         return GUN;
+      }
+
+      return mark == MarkId.MARK_7 ? TEXTURES[tool.ordinal()] : TEXTURES[RightTool.REPULSOR.ordinal()];
    }
 
    @SubscribeEvent
@@ -63,7 +80,8 @@ public final class IronManCrosshair {
       }
 
       HeroPublicSnapshot snapshot = IronManView.of(player);
-      if (snapshot == null || !IronManView.worn(snapshot)) {
+      // Stage 3: the tool crosshair is part of the helmet display; open helmet → vanilla crosshair.
+      if (snapshot == null || !IronManView.worn(snapshot) || !HelmetAnim.closedFlag(snapshot)) {
          return;
       }
 
@@ -76,7 +94,7 @@ public final class IronManCrosshair {
       RenderSystem.defaultBlendFunc();
       float alpha = snapshot.resourceLocked() ? 0.45F : 1.0F;
       graphics.setColor(1.0F, 1.0F, 1.0F, alpha);
-      graphics.blit(TEXTURES[tool.ordinal()], cx - SIZE / 2, cy - SIZE / 2, 0, 0, SIZE, SIZE, SIZE, SIZE);
+      graphics.blit(texture(snapshot, tool), cx - SIZE / 2, cy - SIZE / 2, 0, 0, SIZE, SIZE, SIZE, SIZE);
       graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
       float charge = IronManView.channel(snapshot, HeroAction.SECONDARY_USE) ? IronManView.progress(snapshot, HeroAction.SECONDARY_USE, client.getFrameTime()) : 0.0F;
       if (charge > 0.0F) {
