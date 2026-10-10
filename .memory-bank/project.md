@@ -48,7 +48,7 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Owner snapshot sections: `HeroRegistry.pushOwnerSection` / `ClientHeroData.section`; Iron Man uses `MARKS` (missile locks). `extraCooldowns[0]` = nano-lost lock.
 - `IronManFlags` bits 27-29 = stage 2 pose bits, 30-31 reserved.
 - `client/render/vfx/ScorchRenderer` + `ScorchBuffer` are shared (beam scorch marks).
-- Client: `IronManCrosshair` (per tool), `IronManCombatParts` (Satsu nano parts in `geo/ironman/nano/`, `tools/assets/convert_ironman_stage2_parts.py`; missile flaps = `full_body` `shoulder_rockets`, except Mark 7 (own flaps) and Mark 42), `NanoDamageVisuals` (baked damage masks, reload listener). Missiles are pixel VFX only. Arm swing poses are third person only.
+- Client: `IronManCrosshair` (per tool), `IronManCombatParts` (Satsu nano parts in `geo/ironman/nano/`, `tools/assets/convert_ironman_stage2_parts.py`; shield = one 19x14 forearm plate in both views, mark = the same plate with the hex field; missiles = Sind shoulder pods for every suit, `geo/ironman/missiles/`), `NanoDamageVisuals` (baked damage masks, reload listener). Missiles are pixel VFX only. Arm swing poses are third person only.
 - Sounds: `tools/sfx/ironman_stage2.sh`; icons/crosshairs: `tools/assets/make_ironman_stage2_icons.py`.
 
 ## Iron Man helmet and JARVIS (Stage 3)
@@ -83,6 +83,12 @@ Read this file before every task. Keep it short. See `AGENTS.md` §6 for the rul
 - Grab and throw use `ControlManager` PULL (acquire / release with an effect id); the Viltrumite legacy grab is not reused (decompiled, unverified). Every end of a carry calls `IronManHulkbuster.releaseGrab`.
 - Mark 48 art is Sind (native 68 px tall, drawn at 1.7 × 32/68). Clips are baked from the Sind `.fsk` scripts by `tools/fsk2anim.py`; the Fisk semantics of `animate2` and `curve` are assumed (unverified). The jackhammer is the Sind left-arm swap; `grab_hold` has no Sind source.
 - Inside the Hulkbuster, slots 1–3 (UNIBEAM / MISSILES / NANO_ARSENAL actions) are grab / jump slam / hop; RMB tools JACKHAMMER ↔ HULK_REPULSOR; no flight (`wantsFlight` false while any part is on).
+
+## Iron Man fixes, iteration 1 (2026-10-10)
+- Sounds: only the thruster loops are synthesized; the rest is built from Kenney CC0 packs by `tools/sfx/ironman_cc0.py`. Beeping events (fizzle, JARVIS chime and voice, scan) have empty sound lists on purpose. Film audio is not used (copyright).
+- First-person shield guard: `IronManFirstPerson` + `IronManFirstPersonShieldMixin` (renderArmWithItem after pushPose). The quaternion and translate were solved against the vanilla FP arm transform so the plate faces forward at view (-0.42, -0.30, -0.85); unverified in game.
+- Empty suit exit: the shell opens on hinges (`tools/assets/opening_shell.py`), the player renders as Tony with no plates during EXITING, and Tony walks out (`IronManMarks.walkOut`, ticks 8-20). No launch, no `suit_expulsion`.
+- Per-call `Mth.lerp(k, …)` smoothing in pose code runs twice per frame with the shader shadow pass and follows the frame rate: always ease by `System.nanoTime` dt.
 
 ## Rendering gotchas
 - Through-wall entity highlights: use the vanilla glowing path. Per-entity colour, client-only: mixin `Minecraft.shouldEntityAppearGlowing` → true and `Entity.getTeamColor` → colour (guard `level().isClientSide`), see `OutlineGlowMixin` / `OutlineTeamColorMixin`. Sources register in `client/render/vfx/OutlineTargets` (first registered source that returns a colour wins; Homelander focus first, Iron Man scan highlight next). Drawing into `outlineBufferSource()` by hand is unreliable (the outline post pass runs only when some entity glows). `RenderStateShard` constants (`NO_DEPTH_TEST` etc.) are protected and unavailable to mod code.

@@ -15,6 +15,7 @@ The code is the source of truth. If this file and the code disagree, trust the c
 3. Every hero and every active ability MUST have animations: a third-person body pose, a first-person pose, and a visual effect. A hero without animations is not done.
 4. Extend the existing classes and patterns. Do not copy a system to make a "better" one.
 5. If a new effect needs a capability the system does not have, stop and ask the user before you add it.
+6. Ease weights by real time (`System.nanoTime` dt with `1 - exp(-k·dt)`), never with a fixed per-call `Mth.lerp(k, …)`: pose code runs once per render pass (twice with the shader shadow pass) and per frame, so a fixed factor changes speed with the frame rate.
 
 ## 2. System map
 
@@ -113,7 +114,8 @@ Use a `PlayerRenderer.setupRotations` TAIL mixin (`PunchRendererCoreMixin` 1500,
 
 ## 5. First person
 
-- Each ability has a `FirstPersonXMixin` (Barrage, Block, Chop, Chop2, Grab, Gun, Punch, Thunderclap). Read the nearest one before you write a new one. Copy its structure.
+- Each ability has a `FirstPersonXMixin` (Barrage, Block, Chop, Chop2, Grab, Gun, Punch, Thunderclap; Homelander; Iron Man: `IronManFirstPersonShieldMixin` → `IronManFirstPerson` for every combat pose and the shield guard). Read the nearest one before you write a new one. Copy its structure.
+- An arm that is not the main hand renders in first person only through `AlwaysVisibleOffhandMixin`; a hero adds its `wantsOffhand(player)` there.
 - Flight applies `PoseDataManager.FP` in `ItemInHandRendererMixin` and resets arm pivots in `PlayerRendererMixin`. Do not fight these transforms.
 - Blocking uses `FirstPersonBlockAnimationManager`, a separate weight manager. A pose that renders in both views needs a separate first-person weight.
 
@@ -277,10 +279,13 @@ For new effects, age by ticks with partialTick (Thunderclap pattern). Do not use
 
 - `VeronicaPodRenderer`: `veronica_pod.geo.json` with `open`/`close` clips
   (`AnimationController.restart` on each phase change). Doors swing open after landing.
-- `EmptySuitRenderer`: Satsu `full_body` shell + helmet box (mark skin), the mark
-  extras, interior (`ironman_interior.png`), the 30-tick `open` clip; the Satsu
-  `suit_expulsion` tendrils spread and draw back during the clip. Body frame:
-  `mulPose(YP(180 - yRot))`, scale 0.9375.
+- `EmptySuitRenderer`: opening shell (Satsu `full_body` + helmet cut into a back
+  half and hinged front plates by `tools/assets/opening_shell.py`, mark skin),
+  interior lining (`ironman_interior.png` 128 px + glow), `open` (30 ticks) /
+  `enter` (10 ticks) clips on the door bones; mark extras only while standing
+  closed. Body frame: `mulPose(YP(180 - yRot))`, scale 0.9375.
+- `VeronicaPodRenderer`: Veronica after the Age of Ultron stills (twin hulls are
+  the door bones), cutout + glow pass.
 - `SuitDebrisRenderer`: one suit piece, tumbling, fades and shrinks in the last 20 ticks.
 - `MarkVfx`: pixel motes (fire trail, engine flames, sparks, dust ring) and a
   heat aura (`PixelVfx.bodyShell`). Motes age by client ticks and clear on logout.
