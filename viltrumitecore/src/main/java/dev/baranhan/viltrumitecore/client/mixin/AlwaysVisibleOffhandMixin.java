@@ -58,7 +58,7 @@ public abstract class AlwaysVisibleOffhandMixin {
                boolean isThunderclapping = corePlayer.getThunderclapTicks() > 0;
                boolean isBarraging = corePlayer.isBarraging();
                shouldRender = isBlocking || isGrabbing || isLeftPunching || isLeftChopping || isThunderclapping || isBarraging
-                  || RegulusAnimationManager.wantsOffhand(player);
+                  || RegulusAnimationManager.wantsOffhand(player) || dev.baranhan.viltrumitecore.client.ironman.IronManFirstPerson.wantsOffhand(player);
             }
 
             if (shouldRender) {

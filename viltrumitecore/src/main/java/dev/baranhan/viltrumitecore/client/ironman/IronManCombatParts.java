@@ -20,8 +20,8 @@ import net.minecraft.util.Mth;
 /**
  * Stage 2 geo parts on the player (animation-system §7.1), converted from the
  * Satsu addon by tools/assets/convert_ironman_stage2_parts.py: the nano blade
- * (katar) or hammer (mallet) on the right fist, the nano shield on the left
- * forearm or the mark force field, the shoulder rockets and the nano forearm
+ * (katar) or hammer (mallet) on the right fist, the shield plate on the left
+ * forearm (nano texture, or the hex force field in a mark), the shoulder rockets and the nano forearm
  * rocket launcher while missiles are held, and the repulsor palm glow while
  * charging. Forming and dissolving grow / shrink the weapon from the wrist
  * (nanite wave, spec §4.2, §8.4) from the synced NANO_ARSENAL timeline. Arm
@@ -34,8 +34,6 @@ public final class IronManCombatParts {
    public static final ResourceLocation ROCKETS = geo("shoulder_rockets");
    public static final ResourceLocation LAUNCHER = geo("rocket_launcher");
    public static final ResourceLocation LAUNCHER_FIRST_PERSON = geo("rocket_launcher_first_person");
-   public static final ResourceLocation ENERGY_SHIELD = new ResourceLocation("viltrumitecore", "geo/ironman/marks/energy_shield.geo.json");
-   public static final ResourceLocation ENERGY_SHIELD_FIRST_PERSON = new ResourceLocation("viltrumitecore", "geo/ironman/marks/energy_shield_first_person.geo.json");
    private static final List<PlayerGeoLayer.Pass> BLADE_PASSES = List.of(PlayerGeoLayer.Pass.cutout(texture("nano_blade")), PlayerGeoLayer.Pass.glow(texture("nano_blade_glow")));
    private static final List<PlayerGeoLayer.Pass> HAMMER_PASSES = List.of(PlayerGeoLayer.Pass.cutout(texture("nano_hammer")), PlayerGeoLayer.Pass.glow(texture("nano_hammer_glow")));
    private static final List<PlayerGeoLayer.Pass> SHIELD_PASSES = List.of(PlayerGeoLayer.Pass.cutout(texture("nano_shield")));
@@ -87,12 +85,8 @@ public final class IronManCombatParts {
       }
 
       if (IronManFlags.is(snapshot.heroFlags(), IronManFlags.Field.SHIELD_UP)) {
-         // A mark raises the electro-magnetic force field instead of the nano plate.
-         if (mark) {
-            out.add(new PlayerGeoLayer.Part(firstPerson ? ENERGY_SHIELD_FIRST_PERSON : ENERGY_SHIELD, FIELD_PASSES));
-         } else {
-            out.add(new PlayerGeoLayer.Part(SHIELD, SHIELD_PASSES));
-         }
+         // Same forearm plate in both views; a mark fills it with the hex force field.
+         out.add(new PlayerGeoLayer.Part(SHIELD, mark ? FIELD_PASSES : SHIELD_PASSES));
       }
 
       // Palm glow while the repulsor charges (reuses the palm flame geo, short and bright).

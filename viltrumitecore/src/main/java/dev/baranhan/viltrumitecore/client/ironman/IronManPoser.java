@@ -216,8 +216,9 @@ public final class IronManPoser {
       }
 
       if (w.guard > 0.001F) {
-         // Left forearm across the front, shield plate facing forward.
-         rotate(model.leftArm, w.guard, -1.45F + headX * 0.5F, 0.75F + headY, -0.15F);
+         // Left forearm across the chest, the plate on its outer side facing forward (shield point up).
+         rotate(model.leftArm, w.guard, -1.45F + headX * 0.5F, 1.15F + headY * 0.5F, -0.1F);
+         model.leftArm.z = Mth.lerp(w.guard, model.leftArm.z, -3.5F);
       }
 
       if (c.slash() >= 0.0F) {

@@ -43,9 +43,9 @@ class CombatPartsParseTest {
 
    @Test
    void shieldsAndBodyPartsSitOnTheirPlayerParts() throws IOException {
-      assertTop(load("geo/ironman/nano/nano_shield.geo.json"), PlayerBoneMap.Part.LEFT_ARM);
-      assertTop(load("geo/ironman/marks/energy_shield.geo.json"), PlayerBoneMap.Part.BODY);
-      assertTop(load("geo/ironman/marks/energy_shield_first_person.geo.json"), PlayerBoneMap.Part.RIGHT_ARM);
+      BakedGeoModel shield = load("geo/ironman/nano/nano_shield.geo.json");
+      assertTop(shield, PlayerBoneMap.Part.LEFT_ARM);
+      assertNotNull(shield.getBone("shield"));
       BakedGeoModel rockets = load("geo/ironman/nano/shoulder_rockets.geo.json");
       assertTop(rockets, PlayerBoneMap.Part.BODY);
       assertNotNull(rockets.getBone("shoulder_rockets"));

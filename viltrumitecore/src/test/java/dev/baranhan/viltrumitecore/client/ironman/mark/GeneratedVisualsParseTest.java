@@ -29,10 +29,9 @@ class GeneratedVisualsParseTest {
    }
 
    @Test
-   void emptySuitAndShieldParse() throws IOException {
+   void emptySuitInteriorParses() throws IOException {
       assertEquals(6, load("geo/ironman/marks/empty_suit.geo.json").topLevelBones().size());
       assertEquals(6, load("geo/ironman/marks/empty_suit_interior.geo.json").topLevelBones().size());
-      assertEquals(1, load("geo/ironman/marks/energy_shield.geo.json").topLevelBones().size());
    }
 
    @Test

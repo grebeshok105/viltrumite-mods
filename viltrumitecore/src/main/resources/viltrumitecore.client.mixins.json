@@ -23,6 +23,7 @@
     "EntityShadowMixin",
     "FirstPersonBarrageMixin",
     "FirstPersonBlockMixin",
+    "IronManFirstPersonShieldMixin",
     "FirstPersonChop2Mixin",
     "FirstPersonChopMixin",
     "FirstPersonGrabMixin",
