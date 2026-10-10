@@ -713,7 +713,10 @@ public abstract class PlayerEntityCoreMixin implements ViltrumiteCorePlayer {
       this.tickStrength(player);
       this.tickThunderclap(player);
       this.tickBarrage(player);
-      if (!player.isCreative() && !player.isSpectator() && !this.isViltrumite() && !player.getTags().contains("ViltrumiteGrabbed")) {
+      // Legacy: no vanilla flight outside the shared kit. Heroes with their own flight (Iron Man in the suit)
+      // get mayfly through HeroFlightGrant; wiping it here every tick (both sides) broke survival flight.
+      if (!player.isCreative() && !player.isSpectator() && !this.isViltrumite() && !player.getTags().contains("ViltrumiteGrabbed")
+         && !dev.baranhan.viltrumitecore.hero.HeroRegistry.get(player).allowsFlight(player)) {
          player.getAbilities().mayfly = false;
          player.getAbilities().flying = false;
          player.onUpdateAbilities();
