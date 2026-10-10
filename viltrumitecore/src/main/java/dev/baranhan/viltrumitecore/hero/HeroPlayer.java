@@ -37,6 +37,11 @@ public interface HeroPlayer {
 
    void viltrumitecore$setSyncedSnapshot(HeroPublicSnapshot snapshot);
 
+   /** True while vanilla mayfly was granted by HeroFlightGrant (NBT HeroGrantedMayfly). */
+   boolean viltrumitecore$isMayflyGranted();
+
+   void viltrumitecore$setMayflyGranted(boolean granted);
+
    /** True once after loading a legacy Viltrumite save: its saved slots must be migrated. */
    boolean viltrumitecore$consumeLegacyLoadout();
 }

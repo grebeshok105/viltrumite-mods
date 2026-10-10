@@ -4,6 +4,7 @@ import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.key;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.strike;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.under;
 
+import dev.baranhan.viltrumitecore.client.anim.pose.PoseRig;
 import dev.baranhan.viltrumitecore.client.regulus.RegulusPoser;
 import dev.baranhan.viltrumitecore.client.render.animation.RegulusAnimationManager;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
@@ -76,7 +77,7 @@ public abstract class RegulusEmbraceModelMixin<T extends LivingEntity> extends H
          return;
       }
       float elapsed = RegulusAnimationManager.castTime(entity, Minecraft.getInstance().getFrameTime());
-      RegulusPoser.Rig rig = RegulusPoser.rig((PlayerModel<?>)(Object)this, entity, this.cloak);
+      PoseRig rig = RegulusPoser.rig((PlayerModel<?>)(Object)this, entity, this.cloak);
       rig.head(RAISE_HEAD, elapsed, cast);
       rig.body(RAISE_BODY, elapsed, cast, false);
       rig.mainArm(RAISE_MAIN_ARM, elapsed, cast, false);

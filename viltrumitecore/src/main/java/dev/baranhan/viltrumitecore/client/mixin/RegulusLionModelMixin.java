@@ -4,6 +4,7 @@ import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.key;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.strike;
 import static dev.baranhan.viltrumitecore.client.regulus.RegulusPoseTiming.under;
 
+import dev.baranhan.viltrumitecore.client.anim.pose.PoseRig;
 import dev.baranhan.viltrumitecore.client.regulus.RegulusPoser;
 import dev.baranhan.viltrumitecore.client.render.animation.RegulusAnimationManager;
 import dev.baranhan.viltrumitecore.hero.HeroAction;
@@ -88,7 +89,7 @@ public abstract class RegulusLionModelMixin<T extends LivingEntity> extends Huma
          return;
       }
       PlayerModel<?> model = (PlayerModel<?>)(Object)this;
-      RegulusPoser.Rig rig = RegulusPoser.rig(model, entity, this.cloak);
+      PoseRig rig = RegulusPoser.rig(model, entity, this.cloak);
       if (stance > 0.001F) {
          float breath = (float)Math.sin(ageInTicks * 0.08F) * stance;
          rig.head(STANCE_HEAD, 0.0F, stance);

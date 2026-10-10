@@ -1,0 +1,41 @@
+{
+  "hud.viltrumitecore.ironman.equipping": {
+    "en_us": "Suit assembly",
+    "de_de": "Anzug wird angelegt",
+    "es_ar": "Ensamblando el traje",
+    "es_cl": "Ensamblando el traje",
+    "es_ec": "Ensamblando el traje",
+    "es_es": "Ensamblando el traje",
+    "es_mx": "Ensamblando el traje",
+    "es_uy": "Ensamblando el traje",
+    "es_ve": "Ensamblando el traje",
+    "tr_tr": "Zırh takılıyor",
+    "zh_cn": "战甲组装中"
+  },
+  "hud.viltrumitecore.ironman.exiting": {
+    "en_us": "Leaving the suit",
+    "de_de": "Anzug wird verlassen",
+    "es_ar": "Saliendo del traje",
+    "es_cl": "Saliendo del traje",
+    "es_ec": "Saliendo del traje",
+    "es_es": "Saliendo del traje",
+    "es_mx": "Saliendo del traje",
+    "es_uy": "Saliendo del traje",
+    "es_ve": "Saliendo del traje",
+    "tr_tr": "Zırhtan çıkılıyor",
+    "zh_cn": "正在脱下战甲"
+  },
+  "hud.viltrumitecore.ironman.partial": {
+    "en_us": "Suit incomplete",
+    "de_de": "Anzug unvollständig",
+    "es_ar": "Traje incompleto",
+    "es_cl": "Traje incompleto",
+    "es_ec": "Traje incompleto",
+    "es_es": "Traje incompleto",
+    "es_mx": "Traje incompleto",
+    "es_uy": "Traje incompleto",
+    "es_ve": "Traje incompleto",
+    "tr_tr": "Zırh eksik",
+    "zh_cn": "战甲未完成"
+  }
+}

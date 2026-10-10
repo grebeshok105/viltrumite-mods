@@ -1,0 +1,303 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.back_fire",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42Body",
+          "pivot": [
+            20.0,
+            24.0,
+            -20.0
+          ],
+          "parent": "armorBody"
+        },
+        {
+          "name": "back",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "42Body"
+        },
+        {
+          "name": "bone3",
+          "pivot": [
+            -2.0,
+            18.75,
+            2.6
+          ],
+          "parent": "back"
+        },
+        {
+          "name": "bone4",
+          "pivot": [
+            -2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone3"
+        },
+        {
+          "name": "fire3",
+          "pivot": [
+            -2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone4",
+          "rotation": [
+            -90.0,
+            -75.0,
+            -90.0
+          ]
+        },
+        {
+          "name": "fire",
+          "pivot": [
+            13.5,
+            -32.0,
+            -24.0
+          ],
+          "parent": "fire3",
+          "cubes": [
+            {
+              "origin": [
+                -12.85,
+                9.9,
+                -5.37
+              ],
+              "size": [
+                17.7,
+                17.7,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.35
+            }
+          ]
+        },
+        {
+          "name": "fire_1",
+          "pivot": [
+            -2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone4",
+          "rotation": [
+            -165.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -10.5,
+                9.875,
+                -5.4
+              ],
+              "size": [
+                16.0,
+                17.75,
+                16.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": -7.375,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire2",
+          "pivot": [
+            -2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone4",
+          "rotation": [
+            -165.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "fire_2",
+          "pivot": [
+            13.5,
+            -32.0,
+            -24.0
+          ],
+          "parent": "fire2",
+          "cubes": [
+            {
+              "origin": [
+                -12.875,
+                9.875,
+                -5.4
+              ],
+              "size": [
+                17.75,
+                17.75,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.375
+            }
+          ]
+        },
+        {
+          "name": "bone5",
+          "pivot": [
+            2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone3"
+        },
+        {
+          "name": "fire4",
+          "pivot": [
+            2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone5",
+          "rotation": [
+            -165.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -5.5,
+                9.875,
+                -5.4
+              ],
+              "size": [
+                16.0,
+                17.75,
+                16.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": -7.375,
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fire5",
+          "pivot": [
+            2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone5",
+          "rotation": [
+            -165.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "fire_3",
+          "pivot": [
+            14.5,
+            -32.0,
+            -24.0
+          ],
+          "parent": "fire5",
+          "cubes": [
+            {
+              "origin": [
+                -7.875,
+                9.875,
+                -5.4
+              ],
+              "size": [
+                17.75,
+                17.75,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.375
+            }
+          ]
+        },
+        {
+          "name": "fire6",
+          "pivot": [
+            2.5,
+            18.75,
+            2.6
+          ],
+          "parent": "bone5",
+          "rotation": [
+            -90.0,
+            -75.0,
+            -90.0
+          ]
+        },
+        {
+          "name": "fire_4",
+          "pivot": [
+            14.5,
+            -32.0,
+            -24.0
+          ],
+          "parent": "fire6",
+          "cubes": [
+            {
+              "origin": [
+                -7.875,
+                9.875,
+                -5.4
+              ],
+              "size": [
+                17.75,
+                17.75,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -7.375
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

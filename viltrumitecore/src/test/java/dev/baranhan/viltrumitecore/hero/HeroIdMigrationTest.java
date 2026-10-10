@@ -35,9 +35,16 @@ class HeroIdMigrationTest {
    }
 
    @Test
-   void homelanderIsLastOrdinal() {
+   void ironManIsLastOrdinal() {
       HeroId[] values = HeroId.values();
-      assertSame(HeroId.HOMELANDER, values[values.length - 1]);
+      assertSame(HeroId.IRON_MAN, values[values.length - 1]);
+      assertSame(HeroId.HOMELANDER, values[3]);
       assertSame(HeroId.REGULUS, values[2]);
+   }
+
+   @Test
+   void legacySetKeepsIronMan() {
+      assertSame(HeroId.IRON_MAN, HeroId.legacySet(HeroId.IRON_MAN, true));
+      assertSame(HeroId.IRON_MAN, HeroId.legacySet(HeroId.IRON_MAN, false));
    }
 }

@@ -23,6 +23,7 @@ public final class HeroRegistry {
       register(new ViltrumiteHero());
       register(new RegulusHero());
       register(new dev.baranhan.viltrumitecore.hero.homelander.HomelanderHero());
+      register(new dev.baranhan.viltrumitecore.hero.ironman.IronManHero());
       installFlightPolicy();
    }
 
@@ -37,6 +38,8 @@ public final class HeroRegistry {
             && player.getAbilities().mayfly
             && (!(player.level() instanceof ServerLevel level) || !ControlManager.get(level).preventsFlight(player))
       );
+      dev.baranhan.viltrumiteflight.util.FlightProfiles.setResolver(player -> get(player).flightProfile(player));
+      dev.baranhan.viltrumiteflight.util.FlightProfiles.setSpeedScaleResolver(player -> get(player).flightSpeedScale(player));
    }
 
    public static void register(HeroDefinition definition) {
@@ -68,6 +71,11 @@ public final class HeroRegistry {
       return !(target instanceof Player player) || get(player).allowsExternalControl(target, kind);
    }
 
+   /** Knockback gate for hero pushes: IMPULSE allowed and the target is not anchored by a control. */
+   public static boolean allowsImpulse(net.minecraft.world.entity.LivingEntity target) {
+      return allowsExternalControl(target, dev.baranhan.viltrumitecore.hero.control.ControlKind.IMPULSE) && !HeroDamage.isAnchored(target);
+   }
+
    /**
     * Explicit hero transition: full lifecycle. No-op when the id is unchanged,
     * so selecting the current hero is never an exit/re-entry exploit.
@@ -82,6 +90,7 @@ public final class HeroRegistry {
          return;
       }
 
+      HeldInputs.releaseAll(player);
       get(current).cleanup(player, CleanupReason.HERO_CHANGE);
       heroPlayer.viltrumitecore$setHeroState(null);
 
@@ -91,6 +100,8 @@ public final class HeroRegistry {
          for (int slot = 0; slot < 18; slot++) {
             abilityUser.setAbilityInSlot(slot, slot < loadout.length ? loadout[slot] : "");
          }
+
+         abilityUser.setOfferedAbilities(defaultIds(loadout));
       }
 
       heroPlayer.viltrumitecore$setHeroSession(new HeroSession(id, UUID.randomUUID(), false));
@@ -101,6 +112,7 @@ public final class HeroRegistry {
 
       FlightPermissions.resetModFlight(player);
       get(id).enter(player);
+      HeroFlightGrant.sync(player);
       syncSnapshot(player);
    }
 
@@ -143,12 +155,19 @@ public final class HeroRegistry {
       heroPlayer.viltrumitecore$setSyncedSnapshot(snapshot);
    }
 
-   /** Owner-private snapshot push; only the owner sees carrier ids etc. */
+   /** Owner-private snapshot push of the CARRIERS section (carrier ids, focus targets). */
    public static void pushOwnerSnapshot(ServerPlayer player, HeroOwnerSnapshot snapshot) {
-      if (!snapshot.equals(((HeroPlayer)player).viltrumitecore$getOwnerSnapshot())) {
-         ((HeroPlayer)player).viltrumitecore$setOwnerSnapshot(snapshot);
+      pushOwnerSection(player, OwnerSection.CARRIERS, snapshot.section(OwnerSection.CARRIERS));
+   }
+
+   /** Replaces one owner-only section and sends it when it changed; other sections stay. */
+   public static void pushOwnerSection(ServerPlayer player, OwnerSection section, HeroOwnerSnapshot.Section value) {
+      HeroOwnerSnapshot current = ((HeroPlayer)player).viltrumitecore$getOwnerSnapshot();
+      HeroOwnerSnapshot.Section safe = value == null ? HeroOwnerSnapshot.Section.EMPTY : value;
+      if (!current.section(section).equals(safe)) {
+         ((HeroPlayer)player).viltrumitecore$setOwnerSnapshot(current.with(section, safe));
          dev.baranhan.viltrumitecore.network.CoreMessages.sendToPlayer(
-            new dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket(snapshot.carrierEntityIds()), player
+            new dev.baranhan.viltrumitecore.network.packet.HeroOwnerSnapshotS2CPacket(section, safe), player
          );
       }
    }
@@ -156,7 +175,9 @@ public final class HeroRegistry {
    /**
     * Repair the slots after login / a repeated choice: a slot holding an ability
     * the current hero does not own (e.g. a migrated Viltrumite save) resets the
-    * whole loadout to the hero's default.
+    * whole loadout to the hero's default. Otherwise default abilities the hero
+    * never gave this player (added by a later version) are filled in once; an
+    * ability the player removed stays removed.
     */
    public static void repairLoadout(ServerPlayer player) {
       if (!(player instanceof ViltrumiteAbilityUser abilityUser)) {
@@ -171,7 +192,75 @@ public final class HeroRegistry {
 
       if (needsLoadoutReset(slots, hero::ownsAbility)) {
          resetLoadout(player);
+         return;
       }
+
+      String[] defaults = hero.defaultLoadout();
+      // A save from before the offered set: what is in the slots counts as given.
+      java.util.Set<String> offered = abilityUser.getOfferedAbilities();
+      if (offered == null) {
+         offered = defaultIds(slots);
+      }
+
+      String[] filled = fillMissingDefaults(slots, defaults, offered);
+      for (int slot = 0; slot < 18; slot++) {
+         if (!java.util.Objects.equals(filled[slot], slots[slot])) {
+            abilityUser.setAbilityInSlot(slot, filled[slot]);
+         }
+      }
+
+      java.util.Set<String> given = new java.util.LinkedHashSet<>(offered);
+      given.addAll(defaultIds(defaults));
+      abilityUser.setOfferedAbilities(given);
+   }
+
+   /** Non-empty ids of a slot array. */
+   public static java.util.Set<String> defaultIds(String[] slots) {
+      java.util.Set<String> ids = new java.util.LinkedHashSet<>();
+      for (String id : slots) {
+         if (id != null && !id.isEmpty()) {
+            ids.add(id);
+         }
+      }
+
+      return ids;
+   }
+
+   /**
+    * Slots with every default ability that is not in {@code offered} present: a
+    * missing one goes to its default slot when that is empty, else to the first
+    * empty slot; with no empty slot it stays out. Filled slots are never overwritten.
+    */
+   public static String[] fillMissingDefaults(String[] slots, String[] defaults, java.util.Set<String> offered) {
+      String[] out = new String[slots.length];
+      java.util.Set<String> present = new java.util.HashSet<>();
+      for (int i = 0; i < slots.length; i++) {
+         out[i] = slots[i] == null ? "" : slots[i];
+         if (!out[i].isEmpty()) {
+            present.add(out[i]);
+         }
+      }
+
+      for (int i = 0; i < defaults.length; i++) {
+         String id = defaults[i];
+         if (id == null || id.isEmpty() || present.contains(id) || offered.contains(id)) {
+            continue;
+         }
+
+         int target = i < out.length && out[i].isEmpty() ? i : -1;
+         for (int j = 0; target < 0 && j < out.length; j++) {
+            if (out[j].isEmpty()) {
+               target = j;
+            }
+         }
+
+         if (target >= 0) {
+            out[target] = id;
+            present.add(id);
+         }
+      }
+
+      return out;
    }
 
    /** Put the hero's default loadout into all 18 slots (legacy save migration, repair). */
@@ -185,6 +274,8 @@ public final class HeroRegistry {
          String id = slot < loadout.length ? loadout[slot] : null;
          abilityUser.setAbilityInSlot(slot, id == null ? "" : id);
       }
+
+      abilityUser.setOfferedAbilities(defaultIds(loadout));
    }
 
    /** True when any non-empty slot holds an ability the hero does not own. */

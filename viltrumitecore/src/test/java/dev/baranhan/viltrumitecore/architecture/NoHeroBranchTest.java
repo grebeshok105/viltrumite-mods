@@ -19,13 +19,12 @@ import org.junit.jupiter.api.Test;
  */
 class NoHeroBranchTest {
    private static final Path ROOT = Path.of("src/main/java/dev/baranhan/viltrumitecore");
-   private static final Pattern BRANCH = Pattern.compile("HeroId\\.(VILTRUMITE|REGULUS|HOMELANDER)\\b");
+   private static final Pattern BRANCH = Pattern.compile("HeroId\\.(VILTRUMITE|REGULUS|HOMELANDER|IRON_MAN)\\b");
    private static final Pattern HERO_PLACE = Pattern.compile(
-      "(hero|client)/(regulus|homelander|viltrumite)/.*|client/mixin/(Regulus|Homelander|FirstPersonRegulus|FirstPersonHomelander)\\w*\\.java|client/render/vfx/(Regulus|Homelander)\\w*\\.java"
+      "(hero|client)/(regulus|homelander|viltrumite|ironman)/.*|client/mixin/(Regulus|Homelander|IronMan|FirstPersonRegulus|FirstPersonHomelander)\\w*\\.java|client/render/vfx/(Regulus|Homelander|IronMan)\\w*\\.java"
    );
    private static final Set<String> LEGACY = Set.of(
       "ability/ViltrumiteAbilities.java",
-      "client/AbilityInputManager.java",
       "client/ViltrumiteCoreClient.java",
       "client/gui/RaceSelectionScreen.java",
       "client/mixin/GameRendererDashMixin.java",

@@ -1,0 +1,254 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.back",
+        "texture_width": 160,
+        "texture_height": 160
+      },
+      "bones": [
+        {
+          "name": "armorBody",
+          "pivot": [
+            0.0,
+            18.0,
+            0.0
+          ]
+        },
+        {
+          "name": "42Body",
+          "pivot": [
+            20.0,
+            24.0,
+            -20.0
+          ],
+          "parent": "armorBody"
+        },
+        {
+          "name": "back",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "42Body"
+        },
+        {
+          "name": "Body",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "back",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                32
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "back",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                32
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "disc",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "back"
+        },
+        {
+          "name": "Body_1",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "disc",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                88,
+                16
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "outerback",
+          "pivot": [
+            0.0,
+            24.0,
+            -10.0
+          ],
+          "parent": "back"
+        },
+        {
+          "name": "lefttrap",
+          "pivot": [
+            3.0,
+            21.0,
+            2.0
+          ],
+          "parent": "outerback"
+        },
+        {
+          "name": "Body_2",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "lefttrap",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                48
+              ],
+              "inflate": 0.05
+            }
+          ]
+        },
+        {
+          "name": "Body_Layer_1",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "parent": "lefttrap",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                48
+              ],
+              "inflate": 0.55
+            }
+          ]
+        },
+        {
+          "name": "righttrap",
+          "pivot": [
+            -3.0,
+            21.0,
+            2.0
+          ],
+          "parent": "outerback",
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                112,
+                48
+              ],
+              "inflate": 0.05,
+              "mirror": true
+            },
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8.0,
+                12.0,
+                4.0
+              ],
+              "uv": [
+                136,
+                48
+              ],
+              "inflate": 0.55,
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -8,10 +8,10 @@ import java.util.Map;
  * Used for deferred restore bookkeeping so entries for entities that never
  * rejoin cannot accumulate without bound.
  */
-final class BoundedMap<K, V> extends LinkedHashMap<K, V> {
+public final class BoundedMap<K, V> extends LinkedHashMap<K, V> {
    private final int capacity;
 
-   BoundedMap(int capacity) {
+   public BoundedMap(int capacity) {
       super(16, 0.75F, false);
       this.capacity = capacity;
    }

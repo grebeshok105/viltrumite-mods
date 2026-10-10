@@ -56,6 +56,10 @@ public final class HeroEvents {
       HeroRegistry.restoreHero(newPlayer, event.isWasDeath() && session != null ? session.refreshTotem() : session);
       // The hero decides what carries over to the clone (Regulus: cooldowns).
       HeroRegistry.get(newPlayer).cloneHeroState(original, newPlayer);
+      // Keep the flight-grant marker with the mayfly it describes; the next sync settles it.
+      if (newPlayer instanceof HeroPlayer cloneHero) {
+         cloneHero.viltrumitecore$setMayflyGranted(originalHero.viltrumitecore$isMayflyGranted());
+      }
 
       if (newPlayer instanceof ViltrumiteAbilityUser newAbility && original instanceof ViltrumiteAbilityUser oldAbility) {
          for (int slot = 0; slot < 18; slot++) {
@@ -63,6 +67,7 @@ public final class HeroEvents {
          }
 
          newAbility.setActivePage(oldAbility.getActivePage());
+         newAbility.setOfferedAbilities(oldAbility.getOfferedAbilities());
          HeroRegistry.repairLoadout(newPlayer);
       }
    }
@@ -76,6 +81,7 @@ public final class HeroEvents {
 
       if (entity instanceof ServerPlayer player && player instanceof HeroPlayer heroPlayer) {
          // The hero's own cleanup runs before the death completes.
+         HeldInputs.releaseAll(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DEATH);
       }
 
@@ -214,6 +220,8 @@ public final class HeroEvents {
    @SubscribeEvent
    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
       if (event.getEntity() instanceof ServerPlayer player) {
+         HeldInputs.releaseAll(player);
+         HeroDamageLayers.forget(player);
          HeroRegistry.get(player).cleanup(player, CleanupReason.DISCONNECT);
       }
    }
@@ -225,11 +233,47 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroFlightGrant.sync(player);
          if (player instanceof HeroPlayer heroPlayer && heroPlayer.viltrumitecore$consumeLegacyLoadout()) {
             HeroRegistry.resetLoadout(player);
          } else {
             HeroRegistry.repairLoadout(player);
          }
+      }
+   }
+
+   /**
+    * Guard seam: a hero that owns the swap-hands key cancels the vanilla swap
+    * on the server too, so a forged swap packet does nothing.
+    */
+   @SubscribeEvent
+   public static void onSwapHands(net.minecraftforge.event.entity.living.LivingSwapItemsEvent.Hands event) {
+      if (event.getEntity() instanceof ServerPlayer player && HeroRegistry.get(player).blocksHandSwap(player)) {
+         event.setCanceled(true);
+      }
+   }
+
+   /** Damage layers, step 1: absorbIncoming before armor and knockback (HeroDamageLayers). */
+   @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
+   public static void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0.0F && HeroDamageLayers.onAttack(player, event.getSource(), event.getAmount())) {
+         event.setCanceled(true);
+      }
+   }
+
+   /** Damage layers: partial absorb of this hit and the hero attacker's outgoing hook. */
+   @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.HIGH)
+   public static void onLivingHurtLayers(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+      if (!event.getEntity().level().isClientSide() && event.getAmount() > 0.0F) {
+         event.setAmount(HeroDamageLayers.onHurt(event.getEntity(), event.getSource(), event.getAmount()));
+      }
+   }
+
+   /** Damage layers, last step: clampFinalDamage after armor, enchantments and Resistance. */
+   @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+   public static void onLivingDamage(net.minecraftforge.event.entity.living.LivingDamageEvent event) {
+      if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0.0F) {
+         event.setAmount(HeroDamageLayers.onDamage(player, event.getSource(), event.getAmount()));
       }
    }
 
@@ -246,6 +290,7 @@ public final class HeroEvents {
       if (event.getEntity() instanceof ServerPlayer player) {
          HeroControlSync.sendBaseline(player);
          ControlManager.restorePendingTarget(player);
+         HeroFlightGrant.sync(player);
          // The bound Evangelium returns on respawn when it is missing (spec 11.2).
          if (player instanceof HeroPlayer heroPlayer && heroPlayer.getHeroId() == HeroId.REGULUS) {
             Evangelium.grant(player);

@@ -56,4 +56,29 @@ class HeroPublicSnapshotTest {
          new int[]{120, 0, 0, 0, 0, 0}, false, -1, null, 736, true, 3);
       assertFalse(a.equals(b));
    }
+
+   @Test
+   void extraCooldownsRoundTrip() {
+      HeroPublicSnapshot snapshot = new HeroPublicSnapshot(HeroId.IRON_MAN, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1,
+         new int[HeroPublicSnapshot.COOLDOWN_COUNT], false, -1, null, 1000, false, 5, new int[]{600, 0, 40});
+      HeroPublicSnapshot decoded = HeroPublicSnapshot.decode(snapshot.encode());
+      assertEquals(600, decoded.extraCooldown(0));
+      assertEquals(40, decoded.extraCooldown(2));
+      assertEquals(0, decoded.extraCooldown(9));
+      assertEquals(snapshot, decoded);
+   }
+
+   @Test
+   void oldEncodingDecodesNoExtraCooldowns() {
+      HeroPublicSnapshot decoded = HeroPublicSnapshot.decode(withResource(null).encode());
+      assertEquals(0, decoded.extraCooldowns().length);
+      assertEquals(0, decoded.extraCooldown(0));
+   }
+
+   @Test
+   void extraCooldownsCapped() {
+      HeroPublicSnapshot snapshot = new HeroPublicSnapshot(HeroId.IRON_MAN, -1, 0, 0, 0, false, 0, 0, false, false, 0, 0, -1,
+         new int[HeroPublicSnapshot.COOLDOWN_COUNT], false, -1, null, 0, false, 0, new int[40]);
+      assertEquals(HeroPublicSnapshot.EXTRA_COOLDOWN_MAX, snapshot.extraCooldowns().length);
+   }
 }

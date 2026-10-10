@@ -37,6 +37,23 @@ Default hooks (override only when needed):
 | `onDimensionChange(ServerPlayer)` | nothing; stop channels |
 | `abilityIcon(String id)` | null; hero-specific icon for any slot (kit slots drawn as this hero), read by panel and HUD via `ViltrumiteAbility.getIcon(player)` |
 | `saveHeroState` / `loadHeroState` / `cloneHeroState` | drop state |
+| `grantsFlightAbility(Player)` | false; vanilla `mayfly` for heroes without the legacy kit (`HeroFlightGrant`, own NBT marker) |
+| `flightProfile(Player)` | null = legacy flight; else `FlightProfile` (speedMul, throttle up/down, lock cap, inertia, turn rate, hover damping, glide); both sides |
+| `absorbIncoming(ServerPlayer, DamageSource, float)` | `DamageAbsorb.PASS`; LivingAttackEvent, before armor (shields, layers) |
+| `clampFinalDamage(ServerPlayer, DamageSource, float)` | unchanged; LivingDamageEvent, after armor (HP floors) |
+| `modifyOutgoingDamage(ServerPlayer, LivingEntity, DamageSource, float)` | unchanged; this hero as attacker |
+| `mouseAction(MouseButton, Player)` | null = vanilla; claimed buttons go through `HeldInputs` (press gated once, release always routed); both sides |
+| `onInputRefused(ServerPlayer, HeroAction)` | nothing; feedback when a claimed press fails `canAct` |
+| `guardAction(Player)` | null = vanilla swap-hands key (F); non-null: client consumes the key, edges go through `HeldInputs` as `MouseButton.GUARD`; both sides |
+| `blocksHandSwap(Player)` | false; server cancels `LivingSwapItemsEvent.Hands` (also forged packets) |
+| `abilityIcon(String, Player)` | `abilityIcon(String)`; icon of a slot for this player now (Iron Man slot 3 = the worn mark's signature) |
+| `bodyScale(Player)` | 1; hitbox and eye height factor, both sides (`HeroSizeEvents` on Forge `EntityEvent.Size`; call `refreshDimensions()` on change, the client refreshes in `BodyScaleClient`); check room with `BodyScale.findFree` before growing |
+| `flightSpeedScale(Player)` | 1; factor on the legacy (no profile) CRUISE/SONIC speed, both sides (flight `FlightProfiles.setSpeedScaleResolver`) |
+| `hiddenFromFocus(Player)` | false; true = Homelander focus skips this player (Mark 15) |
+| `scanInfo(Player)` | `ScanInfo.EMPTY`; server-side extra lines for the Iron Man scan card (`protections` / `weakSpots` / `conditions` as translatable `ScanLine`s). Read by scanners on the server only; never send secrets the player could not see |
+| `hiddenFromScan(Player)` | false; true = the scan skips this player (no progress, no card) |
+
+Snapshots: `HeroPublicSnapshot.extraCooldowns` (max `EXTRA_COOLDOWN_MAX`, per-hero meaning; Iron Man index 0 = nano-lost lock ticks, 1 = countermeasures cooldown, 2 = Veronica, 3 = mark signature). `variant` and `resource2` are generic hero-owned ints written after the extras (older encodings decode 0); Iron Man: `IronManVariant` (mark + parts on the body) and mark durability ×10. Owner-only data: `HeroRegistry.pushOwnerSection(player, OwnerSection, Section)` replaces one typed section (`CARRIERS`, `THREATS`, `MARKS`, `SCAN`; enum is append-only, wire = ordinal); client reads `ClientHeroData.section(...)`.
 
 New behaviour that shared code must ask about → add a new default hook here. Do not branch on `HeroId` in shared code.
 
@@ -67,7 +84,6 @@ New behaviour that shared code must ask about → add a new default hook here. D
 These files check `HeroId.REGULUS` directly. When a new hero needs the same behaviour, replace the branch with a `HeroDefinition` hook instead of adding a second branch:
 
 - `ability/ViltrumiteAbilities` — Regulus slot registration and grey-out.
-- `client/AbilityInputManager` — Regulus key routing.
 - `client/ViltrumiteCoreClient` — Regulus punch key block (hero input slots are generic now).
 - `client/gui/RaceSelectionScreen` — hero buttons and head preview.
 - `client/mixin/GameRendererDashMixin`, `RegulusFovMixin`, `RegulusHudMixin`, `SilhouetteRendererMixin`.

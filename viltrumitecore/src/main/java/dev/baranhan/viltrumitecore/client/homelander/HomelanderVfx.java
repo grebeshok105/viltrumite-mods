@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import dev.baranhan.viltrumitecore.ViltrumiteCore;
 import dev.baranhan.viltrumitecore.client.render.vfx.PixelVfx;
+import dev.baranhan.viltrumitecore.client.render.vfx.ScorchRenderer;
 import dev.baranhan.viltrumitecore.hero.HeroPublicSnapshot;
 import dev.baranhan.viltrumitecore.hero.homelander.EyeLasers;
 import dev.baranhan.viltrumitecore.hero.homelander.HomelanderRules;
@@ -21,7 +22,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundSource;
@@ -52,35 +52,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
    value = {Dist.CLIENT}
 )
 public final class HomelanderVfx {
-   /** Scorch mark at the exact hit point (quantized to 1/16 block) on a face. */
-   public record Scorch(int qx, int qy, int qz, Direction face) {
-      /** Tangent axes snap to the 1/16 grid; the face axis keeps the hit plane (rounded to 1/1024). */
-      static Scorch at(Vec3 p, Direction face) {
-         Direction.Axis axis = face.getAxis();
-         return new Scorch(q(p.x, axis == Direction.Axis.X), q(p.y, axis == Direction.Axis.Y), q(p.z, axis == Direction.Axis.Z), face);
-      }
-
-      private static int q(double v, boolean plane) {
-         return plane ? (int)Math.round(v * 1024.0) : Mth.floor(v * 16.0);
-      }
-
-      Vec3 center() {
-         Direction.Axis axis = this.face.getAxis();
-         return new Vec3(c(this.qx, axis == Direction.Axis.X), c(this.qy, axis == Direction.Axis.Y), c(this.qz, axis == Direction.Axis.Z));
-      }
-
-      private static double c(int q, boolean plane) {
-         return plane ? q / 1024.0 : (q + 0.5) / 16.0;
-      }
-   }
-
-   /** Last scorch hit per shooter, to draw a continuous burn line while sweeping. */
-   private record LastHit(Vec3 at, Direction face) {
-   }
-
-   private static final Map<UUID, LastHit> LAST_HIT = new HashMap<>();
-
-   private static final ScorchBuffer<Scorch> SCORCH = new ScorchBuffer<>(HomelanderRules.SCORCH_MAX, HomelanderRules.SCORCH_LIFETIME);
+   private static final ScorchRenderer SCORCH = new ScorchRenderer(HomelanderRules.SCORCH_MAX, HomelanderRules.SCORCH_LIFETIME);
    private static final Map<UUID, LaserLoop> LOOPS = new HashMap<>();
    private static ClientLevel lastLevel;
 
@@ -98,7 +70,6 @@ public final class HomelanderVfx {
       if (level != lastLevel) {
          lastLevel = level;
          SCORCH.clear();
-         LAST_HIT.clear();
          LOOPS.values().forEach(LaserLoop::finish);
          LOOPS.clear();
       }
@@ -108,15 +79,7 @@ public final class HomelanderVfx {
       }
 
       long now = level.getGameTime();
-      SCORCH.expire(now);
-      // A scorch on a block that is gone (broken, burnt, moved) disappears with it.
-      if (now % 5L == 0L) {
-         SCORCH.removeIf(scorch -> {
-            Vec3 inside = scorch.center().subtract(Vec3.atLowerCornerOf(scorch.face().getNormal()).scale(0.02));
-            BlockPos pos = BlockPos.containing(inside);
-            return level.isLoaded(pos) && level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
-         });
-      }
+      SCORCH.tick(level, now);
       RandomSource random = level.random;
       for (Player player : level.players()) {
          HeroPublicSnapshot snapshot = HomelanderPoser.homelander(player);
@@ -125,7 +88,7 @@ public final class HomelanderVfx {
             HitResult hit = EyeLasers.ray(player, HomelanderRules.LASER_RANGE);
             Vec3 at = hit.getLocation();
             if (hit instanceof BlockHitResult blockHit && hit.getType() == HitResult.Type.BLOCK) {
-               addScorchLine(player.getUUID(), at, blockHit.getDirection(), now);
+               SCORCH.addLine(player.getUUID(), at, blockHit.getDirection(), now);
                Vec3 normal = Vec3.atLowerCornerOf(blockHit.getDirection().getNormal());
                for (int i = 0; i < 2; i++) {
                   level.addParticle(ParticleTypes.SMALL_FLAME, at.x, at.y, at.z,
@@ -136,7 +99,7 @@ public final class HomelanderVfx {
                   level.addParticle(ParticleTypes.SMOKE, at.x, at.y, at.z, normal.x * 0.02, 0.03, normal.z * 0.02);
                }
             } else {
-               LAST_HIT.remove(player.getUUID());
+               SCORCH.forget(player.getUUID());
                if (hit.getType() == HitResult.Type.ENTITY && random.nextInt(2) == 0) {
                   level.addParticle(ParticleTypes.LAVA, at.x, at.y, at.z, 0.0, 0.0, 0.0);
                }
@@ -148,7 +111,7 @@ public final class HomelanderVfx {
                return loop;
             });
          } else {
-            LAST_HIT.remove(player.getUUID());
+            SCORCH.forget(player.getUUID());
             LaserLoop loop = LOOPS.remove(player.getUUID());
             if (loop != null) {
                loop.finish();
@@ -214,16 +177,7 @@ public final class HomelanderVfx {
       Tesselator tessellator = Tesselator.getInstance();
       BufferBuilder buffer = tessellator.getBuilder();
       try {
-         if (SCORCH.size() > 0) {
-            RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-            buffer.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            for (Map.Entry<Scorch, Long> entry : SCORCH.entries()) {
-               float age = (now - entry.getValue() + partialTick) / (float)HomelanderRules.SCORCH_LIFETIME;
-               int alpha = (int)(170.0F * (1.0F - Mth.clamp((age - 0.7F) / 0.3F, 0.0F, 1.0F)));
-               drawScorch(buffer, cameraPos, entry.getKey(), alpha, now - entry.getValue() < 6L);
-            }
-            tessellator.end();
-         }
+         SCORCH.render(tessellator, cameraPos, now, partialTick);
 
          if (anyLaser) {
             RenderSystem.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE);
@@ -289,69 +243,6 @@ public final class HomelanderVfx {
          PixelVfx.crossGlow(buffer, cameraPos, camera, end, pulse, 255, 120, 40, 220);
          PixelVfx.billboardPixel(buffer, cameraPos, camera, end, 0.06F, 255, 240, 210, 255);
       }
-   }
-
-   /** Burn from the previous hit to this one when both lie on the same flat surface. */
-   private static void addScorchLine(UUID shooter, Vec3 at, Direction face, long now) {
-      LastHit last = LAST_HIT.put(shooter, new LastHit(at, face));
-      if (last != null && last.face() == face) {
-         Direction.Axis axis = face.getAxis();
-         double gap = last.at().distanceTo(at);
-         if (Math.abs(last.at().get(axis) - at.get(axis)) < 1.0E-3 && gap > 0.06 && gap < 4.0) {
-            int steps = (int)Math.ceil(gap / 0.06);
-            for (int i = 1; i < steps; i++) {
-               SCORCH.add(Scorch.at(last.at().lerp(at, i / (double)steps), face), now);
-            }
-         }
-      }
-
-      SCORCH.add(Scorch.at(at, face), now);
-   }
-
-   /** Dark blotch right on the hit point, slightly off the surface; a fresh mark glows hot first. */
-   private static void drawScorch(BufferBuilder buffer, Vec3 cameraPos, Scorch scorch, int alpha, boolean hot) {
-      if (alpha <= 0) {
-         return;
-      }
-
-      Direction face = scorch.face();
-      long seed = (scorch.qx() * 73856093L) ^ (scorch.qy() * 19349663L) ^ (scorch.qz() * 83492791L) ^ face.ordinal();
-      // Snap the mark onto the face plane (the hit point already lies on it), nudged out to avoid z-fighting.
-      Vec3 c0 = scorch.center();
-      double plane = c0.get(face.getAxis());
-      Vec3 centre = switch (face.getAxis()) {
-         case X -> new Vec3(plane + face.getStepX() * 0.003, c0.y, c0.z);
-         case Y -> new Vec3(c0.x, plane + face.getStepY() * 0.003, c0.z);
-         case Z -> new Vec3(c0.x, c0.y, plane + face.getStepZ() * 0.003);
-      };
-      Vec3 u = face.getAxis() == Direction.Axis.Y ? new Vec3(1, 0, 0) : new Vec3(-face.getStepZ(), 0, face.getStepX());
-      Vec3 v = face.getAxis() == Direction.Axis.Y ? new Vec3(0, 0, 1) : new Vec3(0, 1, 0);
-      // 3x3 pixel blotch (1/16 block pixels) with seeded ragged corners.
-      for (int i = 0; i < 3; i++) {
-         for (int j = 0; j < 3; j++) {
-            boolean core = i == 1 && j == 1;
-            boolean corner = i != 1 && j != 1;
-            if (corner && ((seed >> (i * 3 + j)) & 1L) == 0L) {
-               continue;
-            }
-
-            int r = hot && core ? 255 : core ? 18 : 40;
-            int g = hot && core ? 110 : core ? 14 : 30;
-            int b = hot && core ? 30 : core ? 12 : 24;
-            Vec3 c = centre.add(u.scale((i - 1) * 0.0625)).add(v.scale((j - 1) * 0.0625)).subtract(cameraPos);
-            Vec3 hu = u.scale(0.03125);
-            Vec3 hv = v.scale(0.03125);
-            int a = core ? alpha : alpha * 2 / 3;
-            vertex(buffer, c.subtract(hu).subtract(hv), r, g, b, a);
-            vertex(buffer, c.add(hu).subtract(hv), r, g, b, a);
-            vertex(buffer, c.add(hu).add(hv), r, g, b, a);
-            vertex(buffer, c.subtract(hu).add(hv), r, g, b, a);
-         }
-      }
-   }
-
-   private static void vertex(BufferBuilder buffer, Vec3 p, int r, int g, int b, int a) {
-      buffer.vertex(p.x, p.y, p.z).color(r, g, b, a).endVertex();
    }
 
    /** Laser hum following the shooter until the beam stops. */

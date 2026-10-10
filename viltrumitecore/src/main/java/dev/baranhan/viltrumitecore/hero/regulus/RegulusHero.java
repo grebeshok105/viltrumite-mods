@@ -190,6 +190,19 @@ public class RegulusHero implements HeroDefinition {
       RegulusMovement.onSuperJump(player);
    }
 
+   /** Heart key (MIDDLE = the heart key mapping, default MMB) beats vanilla pick-block. */
+   @Override
+   public HeroAction mouseAction(dev.baranhan.viltrumitecore.hero.MouseButton button, Player player) {
+      return button == dev.baranhan.viltrumitecore.hero.MouseButton.MIDDLE ? HeroAction.ASSIGN_HEART : null;
+   }
+
+   @Override
+   public void onInputRefused(ServerPlayer player, HeroAction action) {
+      if (action == HeroAction.ASSIGN_HEART) {
+         player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.viltrumitecore.hearts.locked"), true);
+      }
+   }
+
    @Override
    public void handleInput(ServerPlayer player, HeroAction action, boolean pressed) {
       RegulusState state = ensureState(player);
@@ -474,5 +487,21 @@ public class RegulusHero implements HeroDefinition {
    public static UUID channelTarget(ServerPlayer player) {
       RegulusState state = stateOf(player);
       return state == null ? null : state.channelTargetId;
+   }
+
+   /** Scan: Lion's Heart blocks every external hit (the same state HeroDamage.decide reads). */
+   @Override
+   public dev.baranhan.viltrumitecore.hero.ScanInfo scanInfo(Player self) {
+      RegulusState state = stateOf(self);
+      return scanInfoFor(state != null && state.lionActive);
+   }
+
+   public static dev.baranhan.viltrumitecore.hero.ScanInfo scanInfoFor(boolean lionActive) {
+      if (!lionActive) {
+         return dev.baranhan.viltrumitecore.hero.ScanInfo.EMPTY;
+      }
+
+      return new dev.baranhan.viltrumitecore.hero.ScanInfo(java.util.List.of(dev.baranhan.viltrumitecore.hero.ScanLine.of("scan.viltrumitecore.regulus.lion_heart")),
+         java.util.List.of(), java.util.List.of());
    }
 }
