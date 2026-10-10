@@ -14,8 +14,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 
 /** Veronica card preview of the Mark 48 in its rest pose (feet at the origin, geo y up, the GUI y down). */
 public final class HulkbusterPreview {
-   /** Screen pixels per block; the body is 2 blocks tall. */
-   private static final float SCALE = 17.0F;
+   /** Screen pixels per block for a 2-block body; the Sind model is 68 px tall. */
+   private static final float SCALE = 17.0F * HulkbusterAssets.SIND_UNITS;
 
    private HulkbusterPreview() {
    }

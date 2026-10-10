@@ -1,6 +1,7 @@
 package dev.baranhan.viltrumitecore.client.ironman.hulkbuster;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,13 +28,18 @@ class HulkbusterAssetsParseTest {
    }
 
    @Test
-   void bodyParsesWithTheTimelineBones() throws IOException {
+   void sindBodyParsesWithTheBonesTheRendererUses() throws IOException {
       BakedGeoModel body = load("geo/ironman/hulkbuster/mark48.geo.json");
-      assertEquals(List.of("torso", "right_leg", "left_leg"), body.topLevelBones().stream().map(b -> b.name).toList());
-      for (String name : List.of("head", "back_plate_left", "back_plate_right", "right_upper_arm", "right_forearm", "right_fist", "left_fist",
-         "jackhammer", "flame_feet_left", "flame_feet_right", "flame_back_left", "flame_back_right", "right_foot")) {
+      assertEquals(List.of("bone"), body.topLevelBones().stream().map(b -> b.name).toList());
+      for (String name : List.of(HulkbusterAssets.HEAD_BONE, HulkbusterAssets.LEFT_ARM_BONE, "bodyBuster", "rightArmBuster", "lowerRightArm", "leftArmBuster",
+         "lowerLeftArm", "rightLegBuster", "leftLegBuster", "facePlate")) {
          assertNotNull(body.getBone(name), name);
       }
+
+      BakedGeoModel jackhammer = load("geo/ironman/hulkbuster/jackhammer.geo.json");
+      assertNotNull(jackhammer.getBone("wholeHandLeft"));
+      assertNotNull(load("geo/ironman/hulkbuster/fire.geo.json").getBone("repulsorFootRight"));
+      assertFalse(load("geo/ironman/hulkbuster/jackhammer_fire.geo.json").topLevelBones().isEmpty());
    }
 
    @Test
@@ -42,8 +48,8 @@ class HulkbusterAssetsParseTest {
       assertEquals(List.of("armorRightArm", "armorLeftArm"), arms.topLevelBones().stream().map(b -> b.name).toList());
       assertEquals(PlayerBoneMap.Part.RIGHT_ARM, PlayerBoneMap.of("armorRightArm"));
       assertEquals(PlayerBoneMap.Part.LEFT_ARM, PlayerBoneMap.of("armorLeftArm"));
-      assertNotNull(arms.getBone("right_fist"));
-      assertNotNull(arms.getBone("jackhammer"));
+      assertNotNull(arms.getBone("rightArmBuster"));
+      assertNotNull(arms.getBone("leftArmBuster"));
    }
 
    @Test
@@ -54,7 +60,7 @@ class HulkbusterAssetsParseTest {
          for (String name : group) {
             assertTrue(tops.contains(name), name);
             assertNotNull(PlayerBoneMap.of(name), name);
-            assertTrue(!parts.getBone(name).cubes.isEmpty(), name);
+            assertTrue(hasCubes(parts.getBone(name)), name);
          }
       }
 
@@ -75,5 +81,9 @@ class HulkbusterAssetsParseTest {
       }
 
       assertEquals(HulkbusterPoses.Clip.values().length, clips.size());
+   }
+
+   private static boolean hasCubes(dev.baranhan.viltrumitecore.client.anim.geo.GeoBone bone) {
+      return !bone.cubes.isEmpty() || bone.children.stream().anyMatch(HulkbusterAssetsParseTest::hasCubes);
    }
 }

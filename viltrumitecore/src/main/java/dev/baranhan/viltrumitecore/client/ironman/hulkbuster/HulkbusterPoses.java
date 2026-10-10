@@ -12,8 +12,8 @@ import javax.annotation.Nullable;
  * grab, slam air) follow wall time. The walk follows the limb swing distance.
  */
 public final class HulkbusterPoses {
-   /** Vanilla limb swing radians per unit of walk position: one leg cycle is 2 pi / this. */
-   private static final double LIMB_RADIANS_PER_UNIT = 0.6662;
+   /** Walk position units of one Sind Hulkbuster stride ({walk_time} = sin((limbSwing / 13) % 1)). */
+   private static final double STRIDE_UNITS = 13.0;
    /** Limb swing amount that counts as a full walk. */
    private static final float WALK_FULL_SPEED = 0.4F;
    /** Slam windup ticks before the air loop (the jump has left the ground). */
@@ -24,13 +24,13 @@ public final class HulkbusterPoses {
    private HulkbusterPoses() {
    }
 
-   /** Clips of mark48.animation.json. Lengths in seconds must match the generator. */
+   /** Clips of mark48.animation.json. Lengths in seconds must match tools/assets/convert_ironman_sind.py. */
    public enum Clip {
-      IDLE(2.0, true),
+      IDLE(5.0, true),
       WALK(1.0, true),
       PUNCH_LEFT(0.6, false),
       PUNCH_RIGHT(0.6, false),
-      JACKHAMMER(0.2, true),
+      JACKHAMMER(0.25, true),
       CHARGE(1.5, false),
       GRAB_HOLD(1.0, true),
       SLAM_LAUNCH(0.3, false),
@@ -133,10 +133,10 @@ public final class HulkbusterPoses {
       return new Pose(walk, idle, stride, overlay, overlaySeconds, flames, glow);
    }
 
-   /** Walk clip time: one walk clip is one vanilla leg cycle, so the feet keep pace with the movement. */
+   /** Walk clip time: one walk clip is one Sind stride, so the feet keep pace with the movement. */
    public static double walkSeconds(float walkPosition) {
-      double cycles = walkPosition * LIMB_RADIANS_PER_UNIT / (2.0 * Math.PI);
-      return loop(cycles, Clip.WALK.length());
+      double cycles = walkPosition / STRIDE_UNITS;
+      return loop(cycles * Clip.WALK.length(), Clip.WALK.length());
    }
 
    static HulkbusterLayer.Phase phaseOf(int ordinal) {

@@ -36,8 +36,8 @@ public final class Mark42Parts {
       return new ResourceLocation("viltrumitecore", "geo/ironman/mark_42/" + part.name() + "_fire.geo.json");
    }
 
-   /** One frame of the Sind repulsor flame texture of the piece thrusters (8 frames). */
+   /** One frame of the Sind repulsor flame texture (8 frames, shared with the Hulkbuster thrusters). */
    public static ResourceLocation fireTexture(int frame) {
-      return new ResourceLocation("viltrumitecore", "textures/entity/ironman/mark_42/fire_" + Math.floorMod(frame, 8) + ".png");
+      return new ResourceLocation("viltrumitecore", "textures/entity/ironman/repulsor_fire_" + Math.floorMod(frame, 8) + ".png");
    }
 }

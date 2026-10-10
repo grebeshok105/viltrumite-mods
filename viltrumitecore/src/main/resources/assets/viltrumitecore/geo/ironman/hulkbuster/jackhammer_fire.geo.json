@@ -1,0 +1,207 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.viltrumitecore.jackhammer_fire",
+        "texture_width": 64,
+        "texture_height": 64
+      },
+      "bones": [
+        {
+          "name": "bone",
+          "pivot": [
+            0.0,
+            10.4,
+            0.0
+          ]
+        },
+        {
+          "name": "pivotLeft",
+          "pivot": [
+            15.0,
+            54.4,
+            3.0
+          ],
+          "parent": "bone"
+        },
+        {
+          "name": "leftArmBuster",
+          "pivot": [
+            15.0,
+            54.4,
+            3.0
+          ],
+          "parent": "pivotLeft"
+        },
+        {
+          "name": "lowerLeftArm",
+          "pivot": [
+            22.5,
+            43.4,
+            10.0
+          ],
+          "parent": "leftArmBuster"
+        },
+        {
+          "name": "repulsorFistLeft",
+          "pivot": [
+            27.0959,
+            43.5209,
+            9.4528
+          ],
+          "parent": "lowerLeftArm",
+          "rotation": [
+            -23.7945,
+            4.156,
+            -9.8694
+          ]
+        },
+        {
+          "name": "foreLeftArm",
+          "pivot": [
+            26.3959,
+            43.5209,
+            9.9528
+          ],
+          "parent": "repulsorFistLeft"
+        },
+        {
+          "name": "wrist",
+          "pivot": [
+            26.3959,
+            43.5209,
+            9.9528
+          ],
+          "parent": "foreLeftArm"
+        },
+        {
+          "name": "wholeHandLeft",
+          "pivot": [
+            26.3959,
+            45.0209,
+            9.9528
+          ],
+          "parent": "wrist"
+        },
+        {
+          "name": "innerRingLeft",
+          "pivot": [
+            26.3959,
+            45.0209,
+            9.9528
+          ],
+          "parent": "wholeHandLeft"
+        },
+        {
+          "name": "handLeft",
+          "pivot": [
+            26.3959,
+            45.0209,
+            9.9528
+          ],
+          "parent": "innerRingLeft"
+        },
+        {
+          "name": "cube",
+          "pivot": [
+            21.6459,
+            15.4209,
+            6.4528
+          ],
+          "parent": "handLeft",
+          "rotation": [
+            180.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                13.6459,
+                7.4209,
+                -1.5472
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": -3.5
+            }
+          ]
+        },
+        {
+          "name": "cube_1",
+          "pivot": [
+            16.6459,
+            15.4209,
+            6.4528
+          ],
+          "parent": "handLeft",
+          "rotation": [
+            180.0,
+            0.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                8.6459,
+                7.4209,
+                -1.5472
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -3.5
+            }
+          ]
+        },
+        {
+          "name": "cube_2",
+          "pivot": [
+            21.6459,
+            15.4209,
+            11.4528
+          ],
+          "parent": "handLeft",
+          "rotation": [
+            0.0,
+            90.0,
+            180.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                13.6459,
+                7.4209,
+                3.4528
+              ],
+              "size": [
+                16.0,
+                16.0,
+                16.0
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": -3.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
