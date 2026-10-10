@@ -74,6 +74,13 @@ public final class IronManCombat {
       return player.getEyePosition().add(0.0, -0.35, 0.0).add(side).add(look.scale(0.7));
    }
 
+   /** Outer forearm launcher muzzle with the arm raised along the look (IronManPoser missile stance). */
+   public static Vec3 forearm(ServerPlayer player, boolean rightHand) {
+      Vec3 look = player.getLookAngle();
+      Vec3 side = right(look).scale(rightHand ? 0.46 : -0.46);
+      return player.getEyePosition().add(0.0, -0.32, 0.0).add(side).add(look.scale(0.62));
+   }
+
    /** Arc reactor: the Unibeam origin. */
    static Vec3 chest(ServerPlayer player) {
       Vec3 look = player.getLookAngle();
@@ -460,13 +467,12 @@ public final class IronManCombat {
       int count = MissileLock.missileCount(targets.size(), state.spec().missileMarks());
       float damageMul = state.spec().missileMul();
       Vec3 look = player.getLookAngle();
-      Vec3 right = right(look);
       for (int i = 0; i < count; i++) {
          Entity target = targets.isEmpty() ? null : level.getEntity(targets.get(i % targets.size()));
          float offset = MissileLock.fanOffset(i, count);
-         Vec3 dir = look.yRot((float)Math.toRadians(-offset)).add(0.0, 0.12, 0.0).normalize();
-         // From the shoulder launchers, alternating sides.
-         Vec3 from = player.position().add(0.0, player.getBbHeight() * 0.78, 0.0).add(right.scale(i % 2 == 0 ? 0.3 : -0.3)).add(look.scale(0.15));
+         Vec3 dir = look.yRot((float)Math.toRadians(-offset)).normalize();
+         // From the forearm launchers (arms aimed along the look), alternating sides.
+         Vec3 from = forearm(player, i % 2 == 0);
          MicroMissileEntity.launch(player, from, dir, target, damageMul);
       }
 
