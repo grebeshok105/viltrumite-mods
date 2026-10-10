@@ -109,6 +109,9 @@ public class VeronicaPodEntity extends Entity {
       this.phaseTicks = 0;
    }
 
+   /** Fall speed while settling into a crater (server only). */
+   private double settleSpeed;
+
    @Override
    public void tick() {
       super.tick();
@@ -127,7 +130,7 @@ public class VeronicaPodEntity extends Entity {
 
       switch (phase) {
          case FALLING -> this.fall(motion);
-         case LANDED -> this.setDeltaMovement(Vec3.ZERO);
+         case LANDED -> this.settle();
          case LEAVING -> {
             double up = Math.min(3.0, 0.05 + this.phaseTicks * 0.06);
             this.setDeltaMovement(0.0, up, 0.0);
@@ -158,6 +161,35 @@ public class VeronicaPodEntity extends Entity {
          dev.baranhan.viltrumitecore.hero.fx.HeroFx.shockwave(owner, at, 1.2F, this.level().getBlockState(BlockPos.containing(at).below()), 6.0F);
          IronManVeronica.onPodLanded(owner, this);
       }
+   }
+
+   /**
+    * Landed: rests on what is under it. The landing blast digs a crater under
+    * the pod (and players may dig too), so it drops into it instead of hanging
+    * in the air.
+    */
+   private void settle() {
+      this.setDeltaMovement(Vec3.ZERO);
+      Vec3 from = this.position();
+      double step = Math.min(1.2, 0.1 + this.settleSpeed);
+      Vec3 to = from.add(0.0, -step, 0.0);
+      if (to.y <= this.level().getMinBuildHeight()) {
+         return;
+      }
+
+      BlockHitResult hit = this.level().clip(new ClipContext(from.add(0.0, 0.05, 0.0), to, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, this));
+      if (hit.getType() == HitResult.Type.MISS) {
+         this.setPos(to);
+         this.settleSpeed = Math.min(1.1, this.settleSpeed + 0.08);
+         return;
+      }
+
+      Vec3 at = hit.getLocation();
+      if (from.y - at.y > 1.0E-3) {
+         this.setPos(from.x, at.y, from.z);
+      }
+
+      this.settleSpeed = 0.0;
    }
 
    /** Only an online owner decides (IronManVeronica.retired); offline owners keep the pod. */
